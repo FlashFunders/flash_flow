@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'flash_flow'
+
+options = FlashFlow::Options.parse
+FlashFlow::Config.configure!(options[:config_file])
+FlashFlow::Deploy.new(options).run

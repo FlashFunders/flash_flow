@@ -1,0 +1,10 @@
+coverage
+/.bundle
+.env
+/log/*.log
+/tmp
+/doc
+public/*
+vendor/bundle
+.DS_Store
+.idea/
