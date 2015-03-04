@@ -30,8 +30,7 @@ module FlashFlow
       raise AlreadyConfigured if instance.instance_variable_get(:@configured)
 
       yaml = YAML.load_file(config_file)
-      yaml.keys.each { |k| yaml[k.to_sym] = yaml[k]; yaml.delete(k) }
-      config = defaults.merge(yaml)
+      config = defaults.merge(symbolize_keys!(yaml))
 
       missing_attrs = []
       ATTRIBUTES.each do |attr_name|
@@ -56,6 +55,16 @@ module FlashFlow
           unmergeable_label: 'unmergeable',
           log_file: 'log/flash_flow.log'
       }
+    end
+
+    def self.symbolize_keys!(hash)
+      hash.keys.each do |k|
+        unless k.is_a?(Symbol)
+          hash[k.to_sym] = hash[k]
+          hash.delete(k)
+        end
+      end
+      hash
     end
   end
 end
