@@ -7,7 +7,6 @@ require 'flash_flow/git'
 
 module FlashFlow
   class Deploy
-    BRANCH_INFO_FILENAME = 'README.rdoc'
 
     attr_reader :cmd_runner, :branch, :pull_requests, :merge_successes, :merge_errors, :pr_title, :pr_body, :force
 
@@ -58,7 +57,7 @@ module FlashFlow
     end
 
     def write_branch_info
-      File.open(BRANCH_INFO_FILENAME, 'w') do |f|
+      File.open(Config.configuration.branch_info_filename, 'w') do |f|
         if merge_successes.empty?
           f.puts "== No merged branches"
         else

@@ -12,6 +12,10 @@ module FlashFlow
       @use_rerere = use_rerere
     end
 
+    def last_stdout
+      @cmd_runner.last_stdout
+    end
+
     def last_command
       @cmd_runner.last_command
     end
@@ -26,26 +30,27 @@ module FlashFlow
 
     def add_and_commit(files, message)
       files = [files].flatten
-      @cmd_runner.run("git add #{files.join(' ')}")
-      @cmd_runner.run("git commit -m #{message}")
+      run("add #{files.join(' ')}")
+      run("commit -m #{message}")
     end
 
     def push(branch, options)
-      @cmd_runner.run("git push #{'-f' if options[:force]} origin #{branch}")
+      run("push #{'-f' if options[:force]} origin #{branch}")
     end
 
     def merge(branch)
-      @cmd_runner.run("git merge #{branch}")
+      run("merge #{branch}")
     end
 
     def fetch_origin
-      @cmd_runner.run("git fetch origin")
+      run("fetch origin")
     end
 
     def initialize_rerere
       return unless use_rerere
+
       @cmd_runner.run('mkdir .git/rr-cache')
-      @cmd_runner.run("git checkout origin/#{merge_branch}")
+      run("checkout origin/#{merge_branch}")
       @cmd_runner.run('cp -R rr-cache/* .git/rr-cache/')
     end
 
@@ -53,8 +58,8 @@ module FlashFlow
       return unless use_rerere
       @cmd_runner.run('mkdir rr-cache')
       @cmd_runner.run('cp -R .git/rr-cache/* rr-cache/')
-      @cmd_runner.run('git add rr-cache/')
-      @cmd_runner.run("git commit -m 'Update rr-cache'")
+      run('add rr-cache/')
+      run("commit -m 'Update rr-cache'")
     end
 
     def rerere_resolve!
@@ -67,37 +72,33 @@ module FlashFlow
       end
 
       if conflicts.all? { |c| c.empty? }
-        @cmd_runner.run("git add #{merging_files.join(" ")}")
-        @cmd_runner.run('git commit --no-edit')
+        run("add #{merging_files.join(" ")}")
+        run('commit --no-edit')
         true
       else
         false
       end
     end
 
-    def git_status_porcelain
-      @cmd_runner.run("git status --porcelain")
-      @cmd_runner.last_stdout
-    end
-
     def staged_and_working_dir_files
-      git_status_porcelain.split("\n").reject { |line| line[0..1] == '??' }
+      run("status --porcelain")
+      last_stdout.split("\n").reject { |line| line[0..1] == '??' }
     end
 
     def current_branch
-      @cmd_runner.run("git rev-parse --abbrev-ref HEAD")
-      @cmd_runner.last_stdout.strip
+      run("rev-parse --abbrev-ref HEAD")
+      last_stdout.strip
     end
 
     def checkout_merge_branch
-      @cmd_runner.run("git fetch origin")
-      @cmd_runner.run("git branch -D #{merge_branch}")
-      @cmd_runner.run("git checkout -b #{merge_branch}")
-      @cmd_runner.run("git reset --hard origin/#{master_branch}")
+      run("fetch origin")
+      run("branch -D #{merge_branch}")
+      run("checkout -b #{merge_branch}")
+      run("reset --hard origin/#{master_branch}")
     end
 
     def push_merge_branch
-      @cmd_runner.run("git push -f origin #{merge_branch}")
+      run("push -f origin #{merge_branch}")
     end
 
     def in_merge_branch(&block)
@@ -106,7 +107,7 @@ module FlashFlow
       begin
         block.call
       ensure
-        @cmd_runner.run("git checkout #{@working_branch}")
+        run("checkout #{@working_branch}")
       end
     end
   end
