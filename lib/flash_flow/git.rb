@@ -28,9 +28,9 @@ module FlashFlow
       @cmd_runner.run("git #{cmd}")
     end
 
-    def add_and_commit(files, message)
+    def add_and_commit(files, message, opts={})
       files = [files].flatten
-      run("add #{files.join(' ')}")
+      run("add #{'-f ' if opts[:add] && opts[:add][:force]}#{files.join(' ')}")
       run("commit -m #{message}")
     end
 

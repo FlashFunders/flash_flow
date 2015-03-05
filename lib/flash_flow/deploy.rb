@@ -83,7 +83,7 @@ module FlashFlow
 
     def commit_branch_info
       write_branch_info
-      @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info')
+      @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
     end
 
     def merge_pull_requests
