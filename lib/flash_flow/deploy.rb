@@ -1,5 +1,4 @@
 require 'logger'
-require 'byebug'
 
 require 'flash_flow/cmd_runner'
 require 'flash_flow/github'
