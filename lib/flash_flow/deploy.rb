@@ -56,7 +56,7 @@ module FlashFlow
     end
 
     def write_branch_info
-      File.open(Config.configuration.branch_info_filename, 'w') do |f|
+      File.open(Config.configuration.branch_info_file, 'w') do |f|
         if merge_successes.empty?
           f.puts "== No merged branches"
         else
@@ -83,7 +83,7 @@ module FlashFlow
 
     def commit_branch_info
       write_branch_info
-      @git.add_and_commit(BRANCH_INFO_FILENAME, 'Branch Info')
+      @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info')
     end
 
     def merge_pull_requests
