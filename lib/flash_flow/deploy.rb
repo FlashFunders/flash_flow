@@ -89,9 +89,9 @@ module FlashFlow
       branch_not_merged = nil
       merge_errors.each do |b|
         if b == @working_branch
-          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{merge_branch}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{@git.merge_branch}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else
-          errors << "WARNING: Unable to merge branch #{b} to #{merge_branch} due to conflicts."
+          errors << "WARNING: Unable to merge branch #{b} to #{@git.merge_branch} due to conflicts."
         end
       end
       errors << branch_not_merged if branch_not_merged
