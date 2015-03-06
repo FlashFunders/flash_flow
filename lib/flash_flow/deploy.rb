@@ -3,6 +3,7 @@ require 'logger'
 require 'flash_flow/cmd_runner'
 require 'flash_flow/github'
 require 'flash_flow/git'
+require 'flash_flow/branch_info'
 
 module FlashFlow
   class Deploy
@@ -55,35 +56,11 @@ module FlashFlow
       end
     end
 
-    def write_branch_info
-      File.open(Config.configuration.branch_info_file, 'w') do |f|
-        if merge_successes.empty?
-          f.puts "== No merged branches"
-        else
-          f.puts "== Merged branches"
-          merge_successes.each do |ref|
-            f.puts ref
-            f.puts
-          end
-        end
-
-        f.puts
-
-        if merge_errors.empty?
-          f.puts "== No merge failures"
-        else
-          f.puts "== Pull requested branches that didn't merge"
-          merge_errors.each do |ref|
-            f.puts ref
-            f.puts
-          end
-        end
-      end
-    end
-
     def commit_branch_info
-      write_branch_info
-      @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
+      if Config.configuration.branch_info_file
+        BranchInfo.write(Config.configuration.branch_info_file, merge_successes, merge_errors)
+        @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
+      end
     end
 
     def merge_pull_requests
