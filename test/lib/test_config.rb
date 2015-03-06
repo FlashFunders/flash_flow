@@ -14,10 +14,7 @@ module FlashFlow
 
       }
 
-      config = Config.send(:instance)
-      config.instance_variables.each do |i|
-        config.remove_instance_variable(i)
-      end
+      reset_config!
     end
 
     def test_that_it_sets_all_attrs

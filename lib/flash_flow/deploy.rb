@@ -18,7 +18,6 @@ module FlashFlow
       @cmd_runner = CmdRunner.new(opts.merge(logger: logger))
       @github = Github.new(Config.configuration.repo, unmergeable_label: Config.configuration.unmergeable_label, locking_issue_id: Config.configuration.locking_issue_id)
       @git = Git.new(@cmd_runner, Config.configuration.merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
-      check_repo
       @working_branch = @git.current_branch
       @merge_branch = FlashFlow::Config.configuration.merge_branch
       @merge_successes, @merge_errors = [], []
@@ -29,6 +28,7 @@ module FlashFlow
     end
 
     def run
+      check_repo
       puts "Building #{@merge_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
       logger.info "\n\n### Beginning #{@merge_branch} merge ###\n\n"
 
@@ -84,7 +84,12 @@ module FlashFlow
       end
     end
 
+
     def print_errors
+      puts format_errors
+    end
+
+    def format_errors
       errors = []
       branch_not_merged = nil
       merge_errors.each do |b|
@@ -97,9 +102,9 @@ module FlashFlow
       errors << branch_not_merged if branch_not_merged
 
       if errors.empty?
-        puts "Success!"
+        "Success!"
       else
-        puts errors.join("\n")
+        errors.join("\n")
       end
     end
 
