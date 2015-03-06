@@ -31,7 +31,7 @@ module FlashFlow
     def add_and_commit(files, message, opts={})
       files = [files].flatten
       run("add #{'-f ' if opts[:add] && opts[:add][:force]}#{files.join(' ')}")
-      run("commit -m #{message}")
+      run("commit -m '#{message}'")
     end
 
     def push(branch, options)
