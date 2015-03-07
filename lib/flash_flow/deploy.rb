@@ -16,7 +16,7 @@ module FlashFlow
       @force = opts[:force]
 
       @cmd_runner = CmdRunner.new(opts.merge(logger: logger))
-      @github = Github.new(Config.configuration.repo, unmergeable_label: Config.configuration.unmergeable_label, locking_issue_id: Config.configuration.locking_issue_id)
+      @github = Github.new(Config.configuration.repo, unmergeable_label: Config.configuration.unmergeable_label)
       @git = Git.new(@cmd_runner, Config.configuration.merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
       @working_branch = @git.current_branch
       @merge_branch = FlashFlow::Config.configuration.merge_branch
@@ -34,7 +34,7 @@ module FlashFlow
 
       @git.fetch_origin
       @git.initialize_rerere
-      @github.with_lock do
+      @github.with_lock(Config.configuration.locking_issue_id) do
         open_pull_request
 
         @git.in_merge_branch do

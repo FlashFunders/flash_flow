@@ -3,6 +3,8 @@ require 'minitest/autorun'
 
 require 'flash_flow'
 
+ENV['GH_TOKEN'] = 'fake_token'
+
 class Minitest::Test
   def reset_config!
     config = FlashFlow::Config.send(:instance)
