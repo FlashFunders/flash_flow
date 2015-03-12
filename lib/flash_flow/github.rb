@@ -30,6 +30,8 @@ module FlashFlow
     end
 
     def with_lock(issue_id, &block)
+      return block.call if issue_id.nil?
+
       open_issue(issue_id)
 
       begin
