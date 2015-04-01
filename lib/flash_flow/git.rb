@@ -1,11 +1,12 @@
 module FlashFlow
   class Git
-    attr_reader :merge_branch, :master_branch, :use_rerere
+    attr_reader :merge_remote, :merge_branch, :master_branch, :use_rerere
 
     UNMERGED_STATUSES = %w{DD AU UD UA DU AA UU}
 
-    def initialize(cmd_runner, merge_branch, master_branch, use_rerere)
+    def initialize(cmd_runner, merge_remote, merge_branch, master_branch, use_rerere)
       @cmd_runner = cmd_runner
+      @merge_remote = merge_remote
       @merge_branch = merge_branch
       @master_branch = master_branch
       @working_branch = current_branch
@@ -35,22 +36,22 @@ module FlashFlow
     end
 
     def push(branch, options)
-      run("push #{'-f' if options[:force]} origin #{branch}")
+      run("push #{'-f' if options[:force]} #{merge_remote} #{branch}")
     end
 
     def merge(branch)
       run("merge #{branch}")
     end
 
-    def fetch_origin
-      run("fetch origin")
+    def fetch(remote)
+      run("fetch #{remote}")
     end
 
     def initialize_rerere
       return unless use_rerere
 
       @cmd_runner.run('mkdir .git/rr-cache')
-      run("checkout origin/#{merge_branch}")
+      run("checkout #{merge_remote}/#{merge_branch}")
       @cmd_runner.run('cp -R rr-cache/* .git/rr-cache/')
     end
 
@@ -80,6 +81,16 @@ module FlashFlow
       end
     end
 
+    def remotes
+      run('remote -v')
+      last_stdout.split("\n")
+    end
+
+    def fetch_remotes_for_url(url)
+      fetch_remotes = remotes.grep(Regexp.new(url)).grep(/ \(fetch\)/)
+      fetch_remotes.map { |remote| remote.to_s.split("\t").first }
+    end
+
     def staged_and_working_dir_files
       run("status --porcelain")
       last_stdout.split("\n").reject { |line| line[0..1] == '??' }
@@ -91,14 +102,14 @@ module FlashFlow
     end
 
     def checkout_merge_branch
-      run("fetch origin")
+      run("fetch #{merge_remote}")
       run("branch -D #{merge_branch}")
       run("checkout -b #{merge_branch}")
-      run("reset --hard origin/#{master_branch}")
+      run("reset --hard #{merge_remote}/#{master_branch}")
     end
 
     def push_merge_branch
-      run("push -f origin #{merge_branch}")
+      run("push -f #{merge_remote} #{merge_branch}")
     end
 
     def in_merge_branch(&block)

@@ -4,12 +4,12 @@ module FlashFlow
   class TestGit < Minitest::Test
     def setup
       @cmd_runner = setup_cmd_runner
-      @instance = Git.new(@cmd_runner, 'acceptance', 'master', true)
+      @instance = Git.new(@cmd_runner, 'origin', 'acceptance', 'master', true)
     end
 
     def test_initialize_rerere_checks_flag
       cmd_runner = setup_cmd_runner
-      instance = Git.new(cmd_runner, 'acceptance', 'master', false)
+      instance = Git.new(cmd_runner, 'origin', 'acceptance', 'master', false)
       instance.initialize_rerere
 
       cmd_runner.verify
@@ -26,7 +26,7 @@ module FlashFlow
 
     def test_commit_rerere_checks_flag
       cmd_runner = setup_cmd_runner
-      instance = Git.new(cmd_runner, 'acceptance', 'master', false)
+      instance = Git.new(cmd_runner, 'origin', 'acceptance', 'master', false)
       instance.commit_rerere
 
       cmd_runner.verify

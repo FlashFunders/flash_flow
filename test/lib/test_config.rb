@@ -44,11 +44,13 @@ module FlashFlow
       YAML.stub(:load_file, { 'repo' => 'some_repo' }) do
         Config.configure!('unused_file_name.yml')
         assert(true == Config.configuration.use_rerere)
+        assert('origin' == Config.configuration.merge_remote)
         assert('acceptance' == Config.configuration.merge_branch)
         assert('master' == Config.configuration.master_branch)
         assert(Config.configuration.locking_issue_id.nil?)
         assert('unmergeable' == Config.configuration.unmergeable_label)
         assert('README.rdoc' == Config.configuration.branch_info_file)
+        assert(['origin'] == Config.configuration.remotes)
       end
     end
   end

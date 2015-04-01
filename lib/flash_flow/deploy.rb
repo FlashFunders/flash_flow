@@ -17,9 +17,10 @@ module FlashFlow
 
       @cmd_runner = CmdRunner.new(opts.merge(logger: logger))
       @github = Github.new(Config.configuration.repo, unmergeable_label: Config.configuration.unmergeable_label)
-      @git = Git.new(@cmd_runner, Config.configuration.merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
-      @working_branch = @git.current_branch
+      @merge_remote = FlashFlow::Config.configuration.merge_remote
       @merge_branch = FlashFlow::Config.configuration.merge_branch
+      @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
+      @working_branch = @git.current_branch
       @merge_successes, @merge_errors = [], []
     end
 
@@ -32,7 +33,7 @@ module FlashFlow
       puts "Building #{@merge_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
       logger.info "\n\n### Beginning #{@merge_branch} merge ###\n\n"
 
-      @git.fetch_origin
+      fetch(@merge_remote)
       @git.initialize_rerere
       @github.with_lock(Config.configuration.locking_issue_id) do
         open_pull_request
@@ -56,6 +57,14 @@ module FlashFlow
       end
     end
 
+    def fetch(remote)
+      @fetched_remotes ||= {}
+      unless @fetched_remotes[remote]
+        @git.fetch(remote)
+        @fetched_remotes[remote] = true
+      end
+    end
+
     def commit_branch_info
       if Config.configuration.branch_info_file
         BranchInfo.write(Config.configuration.branch_info_file, merge_successes, merge_errors)
@@ -65,7 +74,12 @@ module FlashFlow
 
     def merge_pull_requests
       @github.pull_requests.each do |pull_request|
-        merge_or_rollback(pull_request.head.ref, pull_request.number)
+        remotes = @git.fetch_remotes_for_url(pull_request.head.repo.ssh_url)
+        remote = (Config.configuration.remotes & remotes).first
+        if remote.nil?
+          raise RuntimeError.new("No remote found for #{pull_request.head.repo.ssh_url}. Please run 'git remote add *your_remote_name* #{pull_request.head.repo.ssh_url}' and try again.")
+        end
+        merge_or_rollback(remote, pull_request.head.ref, pull_request.number)
       end
     end
 
@@ -84,7 +98,6 @@ module FlashFlow
       end
     end
 
-
     def print_errors
       puts format_errors
     end
@@ -92,11 +105,11 @@ module FlashFlow
     def format_errors
       errors = []
       branch_not_merged = nil
-      merge_errors.each do |b|
+      merge_errors.each do |r, b|
         if b == @working_branch
           branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{@git.merge_branch}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else
-          errors << "WARNING: Unable to merge branch #{b} to #{@git.merge_branch} due to conflicts."
+          errors << "WARNING: Unable to merge branch #{r}/#{b} to #{@git.merge_branch} due to conflicts."
         end
       end
       errors << branch_not_merged if branch_not_merged
@@ -108,20 +121,21 @@ module FlashFlow
       end
     end
 
-    def merge_or_rollback(ref, pull_request_number, fix_conflicts=true)
-      @git.run("merge origin/#{ref}")
+    def merge_or_rollback(remote, ref, pull_request_number, fix_conflicts=true)
+      fetch(remote)
+      @git.run("merge #{remote}/#{ref}")
 
       if @git.last_success?
-        merge_successes << ref
+        merge_successes << [remote, ref]
         @github.remove_unmergeable_label(pull_request_number)
       elsif @git.rerere_resolve!
-        merge_successes << ref
+        merge_successes << [remote, ref]
         @github.remove_unmergeable_label(pull_request_number)
       elsif fix_conflicts
         fix_translations
-        return merge_or_rollback(ref, pull_request_number, false)
+        return merge_or_rollback(remote, ref, pull_request_number, false)
       else
-        merge_errors << ref
+        merge_errors << [remote, ref]
         @git.run("reset --hard HEAD")
         @github.add_unmergeable_label(pull_request_number)
       end
