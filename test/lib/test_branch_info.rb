@@ -8,8 +8,8 @@ module FlashFlow
         <body>
           <h1>Merged branches</h1>
           <ul>
-            <li>branch 1</li>
-            <li>branch 2</li>
+            <li>origin/branch 1</li>
+            <li>other_origin/branch 2</li>
           </ul>
           <h1>No merge failures</h1>
         </body>
@@ -24,8 +24,8 @@ module FlashFlow
           <h1>No merged branches</h1>
           <h1>Pull requested branches that didn't merge</h1>
           <ul>
-            <li>fail 1</li>
-            <li>fail 2</li>
+            <li>origin/fail 1</li>
+            <li>other_origin/fail 2</li>
           </ul>
         </body>
       </html>
@@ -36,7 +36,7 @@ module FlashFlow
       io = StringIO.new
 
       File.stub(:open, true, io) do
-        BranchInfo.write('fake_name', ['branch 1', 'branch 2'], [])
+        BranchInfo.write('fake_name', [['origin', 'branch 1'], ['other_origin', 'branch 2']], [])
       end
 
       assert_equal(no_failures_output.gsub(/\s/, ''), io.string.gsub(/\s/, ''))
@@ -46,7 +46,7 @@ module FlashFlow
       io = StringIO.new
 
       File.stub(:open, true, io) do
-        BranchInfo.write('fake_name', [], ['fail 1', 'fail 2'])
+        BranchInfo.write('fake_name', [], [['origin', 'fail 1'], ['other_origin', 'fail 2']])
       end
 
       assert_equal(no_successes_output.gsub(/\s/, ''), io.string.gsub(/\s/, ''))

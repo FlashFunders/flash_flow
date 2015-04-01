@@ -25,8 +25,8 @@ module FlashFlow
 
     def self.print_list(f, list)
       f.puts '<ul>'
-      list.each do |ref|
-        f.puts "<li>#{ref}</li>"
+      list.each do |remote, ref|
+        f.puts "<li>#{remote}/#{ref}</li>"
       end
       f.puts '</ul>'
     end
