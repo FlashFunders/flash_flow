@@ -69,7 +69,11 @@ module FlashFlow
       merging_files = staged_and_working_dir_files.select { |s| UNMERGED_STATUSES.include?(s[0..1]) }.map { |s| s[3..-1] }
 
       conflicts = merging_files.map do |file|
-        File.open(file) { |f| f.grep(/>>>>/) }
+        File.open(file) do |f|
+          if f.present?
+            f.grep(/>>>>/)
+          end
+        end
       end
 
       if conflicts.all? { |c| c.empty? }
