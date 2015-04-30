@@ -1,4 +1,8 @@
 require 'octokit'
+require 'byebug'
+require 'action_view'
+require 'action_view/helpers'
+include ActionView::Helpers::DateHelper
 
 module FlashFlow
   class Github
@@ -21,9 +25,17 @@ module FlashFlow
     end
 
     def open_issue(issue_id)
-      locking_issue = octokit.issue(repo, issue_id)
-      if locking_issue.state == 'open'
-        raise RuntimeError.new('Someone else is running this script')
+       octokit.issue_events(repo, issue_id)
+       last_issue_events_page = octokit.last_response.rels[:last].get
+       locking_issue = last_issue_events_page.data.last
+
+      if locking_issue.event == 'reopened'
+        actor = locking_issue[:actor][:login]
+        time = time_ago_in_words(locking_issue[:created_at])
+        issue_link = "https://github.com/#{repo}/issues/#{issue_id}"
+
+        raise RuntimeError.new("#{actor} started running flash_flow #{time} ago.
+          To unlock flash_flow, go here: <#{issue_link}> and close the issue and re-run flash_flow.")
       else
         octokit.reopen_issue(repo, issue_id)
       end
