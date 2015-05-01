@@ -1,6 +1,5 @@
 require 'octokit'
 require 'byebug'
-
 require 'flash_flow/git'
 
 module FlashFlow

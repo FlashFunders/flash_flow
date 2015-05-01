@@ -153,6 +153,5 @@ module FlashFlow
       @git.run('add app/assets/javascripts/i18n/translations.js')
       @git.run('commit --no-edit')
     end
-
   end
 end

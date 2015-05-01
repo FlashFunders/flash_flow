@@ -8,8 +8,8 @@ module FlashFlow
   class GithubLock < Lock
     attr_accessor :repo
 
-    def initialize(repo)
-      @github = Github.new(repo)
+    def initialize(repo, github = nil)
+      @github = github || Github.new(repo)
     end
 
     def with_lock(issue_id, &block)
