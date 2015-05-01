@@ -1,6 +1,4 @@
 require 'octokit'
-require 'byebug'
-require 'flash_flow/git'
 
 module FlashFlow
   class Github
@@ -11,17 +9,6 @@ module FlashFlow
       initialize_connection!
       @repo = repo
       @unmergeable_label = opts[:unmergeable_label] || 'unmergeable'
-      @cmd_runner = CmdRunner.new(opts.merge(logger: logger))
-      @working_branch = current_branch
-    end
-
-    def logger
-      @logger ||= FlashFlow::Config.configuration.logger
-    end
-
-    def current_branch
-      @cmd_runner.run("git rev-parse --abbrev-ref HEAD")
-      @cmd_runner.last_stdout.strip
     end
 
     def initialize_connection!

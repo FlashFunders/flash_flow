@@ -1,6 +1,3 @@
-require 'action_view'
-require 'action_view/helpers'
-include ActionView::Helpers::DateHelper
 require 'flash_flow/github'
 require 'flash_flow/lock'
 
@@ -16,12 +13,7 @@ module FlashFlow
       return block.call if issue_id.nil?
 
       if @github.issue_open?(issue_id)
-        last_event = @github.get_last_event(issue_id)
-        actor = last_event[:actor][:login]
-        time = time_ago_in_words(last_event[:created_at])
-        issue_link = "https://github.com/#{repo}/issues/#{issue_id}"
-
-        raise Lock::Error.new(error_message(actor, issue_link, time))
+        raise Lock::Error.new(error_message(issue_id))
       else
         @github.open_issue(issue_id)
 
@@ -33,7 +25,12 @@ module FlashFlow
       end
     end
 
-    def error_message(actor, issue_link, time)
+    def error_message(issue_id)
+      last_event = @github.get_last_event(issue_id)
+      actor = last_event[:actor][:login]
+      time = last_event[:created_at]
+      issue_link = "https://github.com/#{repo}/issues/#{issue_id}"
+
       "#{actor} started running flash_flow #{time} ago. To unlock flash_flow,
         go here: <#{issue_link}> and close the issue and re-run flash_flow."
     end
