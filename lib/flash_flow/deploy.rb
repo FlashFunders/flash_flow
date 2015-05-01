@@ -2,8 +2,10 @@ require 'logger'
 
 require 'flash_flow/cmd_runner'
 require 'flash_flow/github'
+require 'flash_flow/github_lock'
 require 'flash_flow/git'
 require 'flash_flow/branch_info'
+require 'flash_flow/lock'
 
 module FlashFlow
   class Deploy
@@ -22,6 +24,7 @@ module FlashFlow
       @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
       @working_branch = @git.current_branch
       @merge_successes, @merge_errors = [], []
+      @github_lock = GithubLock.new(Config.configuration.repo)
     end
 
     def logger
@@ -35,18 +38,22 @@ module FlashFlow
 
       fetch(@merge_remote)
       @git.initialize_rerere
-      @github.with_lock(Config.configuration.locking_issue_id) do
-        open_pull_request
+      begin
+        @github_lock.with_lock(Config.configuration.locking_issue_id) do
+          open_pull_request
 
-        @git.in_merge_branch do
-          merge_pull_requests
-          commit_branch_info
-          @git.commit_rerere
+          @git.in_merge_branch do
+            merge_pull_requests
+            commit_branch_info
+            @git.commit_rerere
+          end
+
+          @git.push_merge_branch
         end
-
-        @git.push_merge_branch
+      rescue Lock::Error => e
+        @cmd_runner.run("git checkout #{@working_branch}")
+        raise(e)
       end
-
       print_errors
       logger.info "### Finished #{@merge_branch} merge ###"
     end
@@ -149,4 +156,3 @@ module FlashFlow
 
   end
 end
-
