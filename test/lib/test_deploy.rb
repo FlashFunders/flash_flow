@@ -39,7 +39,7 @@ module FlashFlow
       Github.stub_any_instance(:issue_open?, true) do
         Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
           assert_raises(FlashFlow::Lock::Error) { @deploy.run }
-          assert_equal(@deploy.instance_variable_get('@working_branch'.to_sym), 'pushing_branch')
+          assert_equal(@deploy.instance_variable_get('@git'.to_sym).current_branch, 'pushing_branch')
         end
       end
     end
