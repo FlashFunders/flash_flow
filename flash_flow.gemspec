@@ -2,7 +2,6 @@
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'flash_flow/version'
-
 Gem::Specification.new do |spec|
   spec.name          = "flash_flow"
   spec.version       = FlashFlow::VERSION
@@ -23,4 +22,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "byebug"
+  spec.add_development_dependency 'minitest-stub_any_instance'
 end
