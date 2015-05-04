@@ -7,6 +7,7 @@ module FlashFlow
 
     def initialize(repo, github = nil)
       @github = github || Github.new(repo)
+      @repo = repo
     end
 
     def with_lock(issue_id, &block)
@@ -30,9 +31,9 @@ module FlashFlow
       actor = last_event[:actor][:login]
       time = last_event[:created_at]
       issue_link = "https://github.com/#{repo}/issues/#{issue_id}"
+      minutes_ago = ((Time.now - time).to_i / 60) rescue 'unknown'
 
-      "#{actor} started running flash_flow #{time} ago. To unlock flash_flow,
-        go here: <#{issue_link}> and close the issue and re-run flash_flow."
+      "#{actor} started running flash_flow #{minutes_ago} minutes ago. To manually unlock flash_flow, go here: #{issue_link} and close the issue and re-run flash_flow."
     end
   end
 end

@@ -50,12 +50,14 @@ module FlashFlow
 
           @git.push_merge_branch
         end
+
+        print_errors
+        logger.info "### Finished #{@merge_branch} merge ###"
       rescue Lock::Error => e
         @cmd_runner.run("git checkout #{@working_branch}")
-        raise(e)
+        puts 'Failure!'
+        puts e.message
       end
-      print_errors
-      logger.info "### Finished #{@merge_branch} merge ###"
     end
 
     def check_repo
