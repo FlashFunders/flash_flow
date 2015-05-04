@@ -1,11 +1,13 @@
 require 'minitest_helper'
+require 'minitest/stub_any_instance'
 
 module FlashFlow
   class TestDeploy < Minitest::Test
 
     def setup
       reset_config!
-      config!(repo: 'flashfunders/flash_flow')
+      config!(repo: 'flashfunders/flash_flow', locking_issue_id: 1)
+
       @deploy = Deploy.new
     end
 
@@ -31,5 +33,15 @@ module FlashFlow
       assert_equal(@deploy.format_errors, other_branch_error)
     end
 
+    def test_check_out_to_working_branch
+      @deploy.instance_variable_set('@working_branch'.to_sym, 'pushing_branch')
+
+      Github.stub_any_instance(:issue_open?, true) do
+        Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
+          assert_raises(FlashFlow::Lock::Error) { @deploy.run }
+          assert_equal(@deploy.instance_variable_get('@working_branch'.to_sym), 'pushing_branch')
+        end
+      end
+    end
   end
 end
