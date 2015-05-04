@@ -17,6 +17,7 @@ GEM
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
     minitest (5.3.5)
+    minitest-stub_any_instance (1.0.1)
     multipart-post (2.0.0)
     octokit (3.8.0)
       sawyer (~> 0.6.0, >= 0.5.3)
@@ -34,4 +35,5 @@ DEPENDENCIES
   byebug
   flash_flow!
   minitest
+  minitest-stub_any_instance
   rake
