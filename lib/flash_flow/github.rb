@@ -3,12 +3,13 @@ require 'octokit'
 module FlashFlow
   class Github
 
-    attr_accessor :repo, :unmergeable_label
+    attr_accessor :repo, :unmergeable_label, :do_not_merge_label
 
     def initialize(repo, opts={})
       initialize_connection!
       @repo = repo
       @unmergeable_label = opts[:unmergeable_label] || 'unmergeable'
+      @do_not_merge_label = opts[:do_not_merge_label] || 'do not merge'
     end
 
     def initialize_connection!
@@ -51,19 +52,19 @@ module FlashFlow
     end
 
     def remove_unmergeable_label(pull_request_number)
-      if has_unmergeable_label?(pull_request_number)
+      if has_label?(pull_request_number, unmergeable_label)
         octokit.remove_label(repo, pull_request_number, unmergeable_label)
       end
     end
 
     def add_unmergeable_label(pull_request_number)
-      unless has_unmergeable_label?(pull_request_number)
+      unless has_label?(pull_request_number, unmergeable_label)
         octokit.add_labels_to_an_issue(repo, pull_request_number, [unmergeable_label])
       end
     end
 
-    def has_unmergeable_label?(pull_request_number)
-      octokit.labels_for_issue(repo, pull_request_number).detect { |label| label.name == unmergeable_label }
+    def has_label?(pull_request_number, label_name)
+      octokit.labels_for_issue(repo, pull_request_number).detect { |label| label.name == label_name }
     end
 
     def octokit

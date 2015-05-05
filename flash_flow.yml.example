@@ -4,3 +4,4 @@ master_branch: master
 repo: 'flashfunders/flashfunders'
 locking_issue_id: 458
 unmergeable_label: unmergeable
+do_not_merge_label: do not merge
