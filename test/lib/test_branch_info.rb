@@ -2,54 +2,93 @@ require 'minitest_helper'
 
 module FlashFlow
   class TestBranchInfo < Minitest::Test
-    def no_failures_output
-      <<-EOS
-      <html>
-        <body>
-          <h1>Merged branches</h1>
-          <ul>
-            <li>origin/branch 1</li>
-            <li>other_origin/branch 2</li>
-          </ul>
-          <h1>No merge failures</h1>
-        </body>
-      </html>
-      EOS
+    def sample_branches
+      {
+          'origin/branch 1' => { 'branch' => 'branch 1', 'remote' => 'origin', 'status' => 'success', 'stories' => ['123'] },
+          'other_origin/branch 2' => { 'branch' => 'branch 2', 'remote' => 'origin', 'status' => 'success', 'stories' => ['456'] }
+      }
     end
 
-    def no_successes_output
-      <<-EOS
-      <html>
-        <body>
-          <h1>No merged branches</h1>
-          <h1>Pull requested branches that didn't merge</h1>
-          <ul>
-            <li>origin/fail 1</li>
-            <li>other_origin/fail 2</li>
-          </ul>
-        </body>
-      </html>
-      EOS
+    def setup
+      @branch_info = BranchInfo.new('testfile')
     end
 
-    def test_write_no_failures
-      io = StringIO.new
+    def test_mark_success_existing_branch
+      @branch_info.mark_failure('origin', 'some_branch')
+      @branch_info.mark_success('origin', 'some_branch')
+      assert_equal(@branch_info.branches['origin/some_branch']['status'], 'success')
+    end
 
-      File.stub(:open, true, io) do
-        BranchInfo.write('fake_name', [['origin', 'branch 1'], ['other_origin', 'branch 2']], [])
+    def test_mark_success_new_branch
+      @branch_info.mark_success('origin', 'some_branch')
+      assert_equal(@branch_info.branches['origin/some_branch']['status'], 'success')
+    end
+
+    def test_mark_failure_existing_branch
+      @branch_info.mark_success('origin', 'some_branch')
+      @branch_info.mark_failure('origin', 'some_branch')
+      assert_equal(@branch_info.branches['origin/some_branch']['status'], 'fail')
+    end
+
+    def test_mark_failure_new_branch
+      @branch_info.mark_failure('origin', 'some_branch')
+      assert_equal(@branch_info.branches['origin/some_branch']['status'], 'fail')
+    end
+
+    def test_add_story
+      @branch_info.add_story('origin', 'some_branch', '999')
+      assert_equal(@branch_info.branches['origin/some_branch']['stories'], ['999'])
+    end
+
+    def test_failures
+      @branch_info.mark_failure('origin', 'some_branch1')
+      @branch_info.mark_success('origin', 'some_branch2')
+      @branch_info.mark_failure('origin', 'some_branch3')
+
+      assert_equal(@branch_info.failures.keys, ['origin/some_branch1', 'origin/some_branch3'])
+    end
+
+    def test_merge_and_save_when_original_is_empty
+      storage = Minitest::Mock.new
+      storage.expect(:write, true, [ { 'origin/some_branch' => { 'branch' => 'some_branch', 'remote' => 'origin', 'status' => 'success', 'stories' => [] }} ])
+      storage.expect(:get, {})
+
+      BranchInfoStore.stub(:new, storage) do
+        branch_info = BranchInfo.new('/dev/null')
+        branch_info.mark_success('origin', 'some_branch')
+        branch_info.merge_and_save
       end
 
-      assert_equal(no_failures_output.gsub(/\s/, ''), io.string.gsub(/\s/, ''))
+      storage.verify
     end
 
-    def test_write_no_successes
-      io = StringIO.new
+    def test_merge_and_save_removes_old_branches
+      storage = Minitest::Mock.new
+      storage.expect(:write, true, [ { 'origin/some_branch' => { 'branch' => 'some_branch', 'remote' => 'origin', 'status' => 'success', 'stories' => [] }} ])
+      storage.expect(:get, { 'origin/some_old_branch' => { 'branch' => 'some_old_branch', 'remote' => 'origin', 'status' => 'success' }})
 
-      File.stub(:open, true, io) do
-        BranchInfo.write('fake_name', [], [['origin', 'fail 1'], ['other_origin', 'fail 2']])
+      BranchInfoStore.stub(:new, storage) do
+        branch_info = BranchInfo.new('/dev/null')
+        branch_info.mark_success('origin', 'some_branch')
+        branch_info.merge_and_save
       end
 
-      assert_equal(no_successes_output.gsub(/\s/, ''), io.string.gsub(/\s/, ''))
+      storage.verify
+    end
+
+    def test_merge_and_save_adds_new_stories
+      storage = Minitest::Mock.new
+      storage.expect(:write, true, [ { 'origin/some_branch' => { 'branch' => 'some_branch', 'remote' => 'origin', 'status' => 'success', 'stories' => ['123', '456'] }} ])
+      storage.expect(:get, { 'origin/some_branch' => { 'branch' => 'some_branch', 'remote' => 'origin', 'status' => 'success', 'stories' => ['123'] }})
+
+      BranchInfoStore.stub(:new, storage) do
+        branch_info = BranchInfo.new('/dev/null')
+        branch_info.mark_success('origin', 'some_branch')
+        branch_info.add_story('origin', 'some_branch', '456')
+        branch_info.merge_and_save
+      end
+
+      storage.verify
     end
 
   end
