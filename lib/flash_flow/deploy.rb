@@ -10,6 +10,8 @@ require 'flash_flow/lock'
 module FlashFlow
   class Deploy
 
+    class OutOfSyncWithRemote < RuntimeError ; end
+
     attr_reader :cmd_runner, :branch, :pull_requests, :merge_successes, :merge_errors, :pr_title, :pr_body, :force
 
     def initialize(opts={})
@@ -53,7 +55,7 @@ module FlashFlow
 
         print_errors
         logger.info "### Finished #{@merge_branch} merge ###"
-      rescue Lock::Error => e
+      rescue Lock::Error, OutOfSyncWithRemote => e
         @cmd_runner.run("git checkout #{@working_branch}")
         puts 'Failure!'
         puts e.message
@@ -94,7 +96,7 @@ module FlashFlow
 
     def open_pull_request
       @git.push(@working_branch, force: @force)
-      raise "Failed to push code: '#{@git.last_command}'" unless @git.last_success?
+      raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @git.last_success?
 
       pr = @github.pull_requests.detect { |p| p.head.ref == @working_branch }
       if pr

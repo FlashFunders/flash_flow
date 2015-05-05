@@ -6,7 +6,7 @@ module FlashFlow
 
     def setup
       reset_config!
-      config!(repo: 'flashfunders/flash_flow', locking_issue_id: 1)
+      config!(repo: 'flashfunders/flash_flow', locking_issue_id: 1, merge_branch: 'test_acceptance')
 
       @deploy = Deploy.new
     end
@@ -34,12 +34,10 @@ module FlashFlow
     end
 
     def test_check_out_to_working_branch
-      @deploy.instance_variable_set('@working_branch'.to_sym, 'pushing_branch')
-
       Github.stub_any_instance(:issue_open?, true) do
         Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
-          assert_raises(FlashFlow::Lock::Error) { @deploy.run }
-          assert_equal(@deploy.instance_variable_get('@git'.to_sym).current_branch, 'pushing_branch')
+          assert_output(/started running flash_flow/) { @deploy.run }
+          refute_equal(@deploy.instance_variable_get('@git'.to_sym).current_branch, 'test_acceptance')
         end
       end
     end
