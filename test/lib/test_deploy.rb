@@ -34,10 +34,12 @@ module FlashFlow
     end
 
     def test_check_out_to_working_branch
-      Github.stub_any_instance(:issue_open?, true) do
-        Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
-          assert_output(/started running flash_flow/) { @deploy.run }
-          refute_equal(@deploy.instance_variable_get('@git'.to_sym).current_branch, 'test_acceptance')
+      @deploy.stub(:check_repo, true) do
+        Github.stub_any_instance(:issue_open?, true) do
+          Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
+            assert_output(/started running flash_flow/) { @deploy.run }
+            @deploy.cmd_runner.expect(:run, true, ['git checkout pushing_branch'])
+          end
         end
       end
     end
