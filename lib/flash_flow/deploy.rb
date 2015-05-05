@@ -27,6 +27,7 @@ module FlashFlow
       @working_branch = @git.current_branch
       @github_lock = GithubLock.new(Config.configuration.repo)
       @branch_info = BranchInfo.new(Config.configuration.branch_info_file, logger: logger)
+      @stories = [opts[:stories]].flatten.compact
     end
 
     def logger
@@ -39,7 +40,11 @@ module FlashFlow
       logger.info "\n\n### Beginning #{@merge_branch} merge ###\n\n"
 
       fetch(@merge_remote)
-      @git.initialize_rerere
+      @git.in_original_merge_branch do
+        @git.initialize_rerere
+        @branch_info.load_original
+      end
+
       begin
         @github_lock.with_lock(Config.configuration.locking_issue_id) do
           open_pull_request
@@ -78,6 +83,9 @@ module FlashFlow
 
     def commit_branch_info
       if Config.configuration.branch_info_file
+        @stories.each do |story_id|
+          @branch_info.add_story(@merge_remote, @working_branch, story_id)
+        end
         @branch_info.merge_and_save
         @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
       end

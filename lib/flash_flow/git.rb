@@ -47,11 +47,21 @@ module FlashFlow
       run("fetch #{remote}")
     end
 
+    def in_original_merge_branch
+      begin
+        starting_branch = current_branch
+        run("checkout #{merge_remote}/#{merge_branch}")
+
+        yield
+      ensure
+        run("checkout #{starting_branch}")
+      end
+    end
+
     def initialize_rerere
       return unless use_rerere
 
       @cmd_runner.run('mkdir .git/rr-cache')
-      run("checkout #{merge_remote}/#{merge_branch}")
       @cmd_runner.run('cp -R rr-cache/* .git/rr-cache/')
     end
 
@@ -101,6 +111,10 @@ module FlashFlow
       last_stdout.strip
     end
 
+    def most_recent_commit
+      run("show -s --format=%cd head")
+    end
+
     def checkout_merge_branch
       run("fetch #{merge_remote}")
       run("branch -D #{merge_branch}")
@@ -112,11 +126,11 @@ module FlashFlow
       run("push -f #{merge_remote} #{merge_branch}")
     end
 
-    def in_merge_branch(&block)
+    def in_merge_branch
       checkout_merge_branch
 
       begin
-        block.call
+        yield
       ensure
         run("checkout #{@working_branch}")
       end

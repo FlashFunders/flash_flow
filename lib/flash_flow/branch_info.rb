@@ -3,19 +3,19 @@ require 'flash_flow/branch_info_store'
 module FlashFlow
   class BranchInfo
 
-    attr_reader :filename, :branches
+    attr_reader :filename, :branches, :original
 
     def initialize(filename, opts={})
       @branches = {}
       @store = BranchInfoStore.new(filename, opts)
     end
 
-    def get_original
-      @store.get
+    def load_original
+      @original = @store.get
     end
 
     def merge_and_save
-      original = get_original
+      raise 'Original branch info not loaded.' if original.nil?
 
       @branches.each do |full_ref, info|
         info['stories'] ||= []
@@ -61,23 +61,4 @@ module FlashFlow
 
   end
 
-  class BranchInfoStore
-    def initialize(filename, opts={})
-      @filename = filename
-      @logger = opts[:logger] || Logger.new('/dev/null')
-    end
-
-    def get(file=File.open(@filename, 'r'))
-      JSON.parse(file.read)
-    rescue JSON::ParserError
-      @logger.info "Unable to read branch info from file: #{@filename}"
-      {}
-    end
-
-    def write(branches, file=File.open(@filename, 'w'))
-      file.puts branches.to_json
-      file.close
-    end
-
-  end
 end
