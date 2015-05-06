@@ -3,13 +3,12 @@ require 'octokit'
 module FlashFlow
   class Github
 
-    attr_accessor :repo, :unmergeable_label, :do_not_merge_label
+    attr_accessor :repo, :unmergeable_label
 
     def initialize(repo, opts={})
       initialize_connection!
       @repo = repo
       @unmergeable_label = opts[:unmergeable_label] || 'unmergeable'
-      @do_not_merge_label = opts[:do_not_merge_label] || 'do not merge'
     end
 
     def initialize_connection!

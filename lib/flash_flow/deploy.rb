@@ -20,7 +20,7 @@ module FlashFlow
       @force = opts[:force]
 
       @cmd_runner = CmdRunner.new(opts.merge(logger: logger))
-      @github = Github.new(Config.configuration.repo, unmergeable_label: Config.configuration.unmergeable_label, do_not_merge_label: Config.configuration.do_not_merge_label)
+      @github = Github.new(Config.configuration.repo, unmergeable_label: Config.configuration.unmergeable_label)
       @merge_remote = FlashFlow::Config.configuration.merge_remote
       @merge_branch = FlashFlow::Config.configuration.merge_branch
       @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
@@ -91,7 +91,7 @@ module FlashFlow
           raise RuntimeError.new("No remote found for #{pull_request.head.repo.ssh_url}. Please run 'git remote add *your_remote_name* #{pull_request.head.repo.ssh_url}' and try again.")
         end
 
-        unless @github.has_label?(pull_request.number, @github.do_not_merge_label)
+        unless @github.has_label?(pull_request.number, Config.configuration.do_not_merge_label)
           merge_or_rollback(remote, pull_request.head.ref, pull_request.number)
         end
       end
