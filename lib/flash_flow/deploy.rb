@@ -12,7 +12,7 @@ module FlashFlow
 
     class OutOfSyncWithRemote < RuntimeError ; end
 
-    attr_reader :cmd_runner, :branch, :pull_requests, :merge_successes, :merge_errors, :pr_title, :pr_body, :force
+    attr_reader :cmd_runner, :branch, :pull_requests, :pr_title, :pr_body, :force
 
     def initialize(opts={})
       @pr_title = opts[:pr_title]
@@ -25,8 +25,9 @@ module FlashFlow
       @merge_branch = FlashFlow::Config.configuration.merge_branch
       @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
       @working_branch = @git.current_branch
-      @merge_successes, @merge_errors = [], []
       @github_lock = GithubLock.new(Config.configuration.repo)
+      @branch_info = BranchInfo.new(Config.configuration.branch_info_file, logger: logger)
+      @stories = [opts[:stories]].flatten.compact
     end
 
     def logger
@@ -39,7 +40,11 @@ module FlashFlow
       logger.info "\n\n### Beginning #{@merge_branch} merge ###\n\n"
 
       fetch(@merge_remote)
-      @git.initialize_rerere
+      @git.in_original_merge_branch do
+        @git.initialize_rerere
+        @branch_info.load_original
+      end
+
       begin
         @github_lock.with_lock(Config.configuration.locking_issue_id) do
           open_pull_request
@@ -78,7 +83,10 @@ module FlashFlow
 
     def commit_branch_info
       if Config.configuration.branch_info_file
-        BranchInfo.write(Config.configuration.branch_info_file, merge_successes, merge_errors)
+        @stories.each do |story_id|
+          @branch_info.add_story(@merge_remote, @working_branch, story_id)
+        end
+        @branch_info.merge_and_save
         @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
       end
     end
@@ -119,11 +127,11 @@ module FlashFlow
     def format_errors
       errors = []
       branch_not_merged = nil
-      merge_errors.each do |r, b|
-        if b == @working_branch
+      @branch_info.failures.each do |full_ref, failure|
+        if failure['branch'] == @working_branch
           branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{@git.merge_branch}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else
-          errors << "WARNING: Unable to merge branch #{r}/#{b} to #{@git.merge_branch} due to conflicts."
+          errors << "WARNING: Unable to merge branch #{full_ref} to #{@git.merge_branch} due to conflicts."
         end
       end
       errors << branch_not_merged if branch_not_merged
@@ -140,16 +148,16 @@ module FlashFlow
       @git.run("merge #{remote}/#{ref}")
 
       if @git.last_success?
-        merge_successes << [remote, ref]
+        @branch_info.mark_success(remote, ref)
         @github.remove_unmergeable_label(pull_request_number)
       elsif @git.rerere_resolve!
-        merge_successes << [remote, ref]
+        @branch_info.mark_success(remote, ref)
         @github.remove_unmergeable_label(pull_request_number)
       elsif fix_conflicts
         fix_translations
         return merge_or_rollback(remote, ref, pull_request_number, false)
       else
-        merge_errors << [remote, ref]
+        @branch_info.mark_failure(remote, ref)
         @git.run("reset --hard HEAD")
         @github.add_unmergeable_label(pull_request_number)
       end

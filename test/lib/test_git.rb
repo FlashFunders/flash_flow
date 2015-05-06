@@ -17,7 +17,6 @@ module FlashFlow
 
     def test_initialize_rerere_runs_commands
       @cmd_runner.expect(:run, true, ['mkdir .git/rr-cache'])
-      @cmd_runner.expect(:run, true, ['git checkout origin/acceptance'])
       @cmd_runner.expect(:run, true, ['cp -R rr-cache/* .git/rr-cache/'])
 
       @instance.initialize_rerere
