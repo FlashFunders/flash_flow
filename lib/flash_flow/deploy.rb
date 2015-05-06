@@ -6,6 +6,7 @@ require 'flash_flow/github_lock'
 require 'flash_flow/git'
 require 'flash_flow/branch_info'
 require 'flash_flow/lock'
+require 'flash_flow/hipchat'
 
 module FlashFlow
   class Deploy
@@ -27,6 +28,7 @@ module FlashFlow
       @working_branch = @git.current_branch
       @merge_successes, @merge_errors = [], []
       @github_lock = GithubLock.new(Config.configuration.repo)
+      @hipchat = Hipchat.new('Thailand')
     end
 
     def logger
@@ -92,16 +94,20 @@ module FlashFlow
         end
 
         unless @github.has_label?(pull_request.number, Config.configuration.do_not_merge_label)
-          merge_or_rollback(remote, pull_request.head.ref, pull_request.number)
+          merge_or_rollback(remote, pull_request)
         end
       end
+    end
+
+    def working_pull_request
+      @github.pull_requests.detect { |p| p.head.ref == @working_branch }
     end
 
     def open_pull_request
       @git.push(@working_branch, force: @force)
       raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @git.last_success?
 
-      pr = @github.pull_requests.detect { |p| p.head.ref == @working_branch }
+      pr = working_pull_request
       if pr
         opts = { title: @pr_title, body: @pr_body }.delete_if { |k,v| v.to_s == '' }
 
@@ -135,8 +141,11 @@ module FlashFlow
       end
     end
 
-    def merge_or_rollback(remote, ref, pull_request_number, fix_conflicts=true)
+    def merge_or_rollback(remote, pull_request, fix_conflicts=true)
       fetch(remote)
+
+      ref = pull_request.head.ref
+      pull_request_number = pull_request.number
       @git.run("merge #{remote}/#{ref}")
 
       if @git.last_success?
@@ -152,6 +161,7 @@ module FlashFlow
         merge_errors << [remote, ref]
         @git.run("reset --hard HEAD")
         @github.add_unmergeable_label(pull_request_number)
+        @hipchat.notify_merge_conflict(pull_request.user.html_url, pull_request.head.repo.html_url, ref) unless working_pull_request
       end
     end
 
