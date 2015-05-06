@@ -15,7 +15,7 @@ module FlashFlow
     end
 
     ATTRIBUTES = [
-        :use_rerere, :merge_remote, :merge_branch, :master_branch, :repo, :branch_info_file, :locking_issue_id, :unmergeable_label, :log_file, :remotes
+        :use_rerere, :merge_remote, :merge_branch, :master_branch, :repo, :branch_info_file, :locking_issue_id, :unmergeable_label, :do_not_merge_label, :log_file, :remotes
     ]
 
     attr_reader *ATTRIBUTES
@@ -54,6 +54,7 @@ module FlashFlow
           branch_info_file: 'README.rdoc',
           locking_issue_id: nil,
           unmergeable_label: 'unmergeable',
+          do_not_merge_label: 'do not merge',
           log_file: 'log/flash_flow.log',
           remotes: ['origin']
       }

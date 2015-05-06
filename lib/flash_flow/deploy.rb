@@ -90,7 +90,10 @@ module FlashFlow
         if remote.nil?
           raise RuntimeError.new("No remote found for #{pull_request.head.repo.ssh_url}. Please run 'git remote add *your_remote_name* #{pull_request.head.repo.ssh_url}' and try again.")
         end
-        merge_or_rollback(remote, pull_request.head.ref, pull_request.number)
+
+        unless @github.has_label?(pull_request.number, Config.configuration.do_not_merge_label)
+          merge_or_rollback(remote, pull_request.head.ref, pull_request.number)
+        end
       end
     end
 
