@@ -41,6 +41,16 @@ module FlashFlow
       @cmd_runner.verify
     end
 
+    def test_read_file_from_merge_branch
+      cmd_runner = setup_cmd_runner
+      cmd_runner.expect(:run, true, ["git show origin/acceptance:SomeFilename.txt"])
+      cmd_runner.expect(:last_stdout, 'some_json', [])
+      instance = Git.new(cmd_runner, 'origin', 'acceptance', 'master', false)
+
+      assert_equal(instance.read_file_from_merge_branch('SomeFilename.txt'), 'some_json')
+      cmd_runner.verify
+    end
+
   private
     def setup_cmd_runner
       cmd_runner = Minitest::Mock.new

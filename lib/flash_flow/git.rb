@@ -58,6 +58,11 @@ module FlashFlow
       end
     end
 
+    def read_file_from_merge_branch(filename)
+      run("show #{merge_remote}/#{merge_branch}:#{filename}")
+      last_stdout
+    end
+
     def initialize_rerere
       return unless use_rerere
 

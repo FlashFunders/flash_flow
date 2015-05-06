@@ -44,8 +44,7 @@ module FlashFlow
       @deploy.stub(:check_repo, true) do
         Github.stub_any_instance(:issue_open?, true) do
           Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
-            assert_output(/started running flash_flow/) { @deploy.run }
-            @deploy.cmd_runner.expect(:run, true, ['git checkout pushing_branch'])
+            assert_output(/Failure!/) { @deploy.run }
           end
         end
       end
