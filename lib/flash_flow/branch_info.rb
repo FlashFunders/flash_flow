@@ -14,16 +14,31 @@ module FlashFlow
       @original = @store.get
     end
 
-    def merge_and_save
+    def merge_original
       raise 'Original branch info not loaded.' if original.nil?
 
-      @branches.each do |full_ref, info|
-        info['stories'] ||= []
-        original_stories = (original[full_ref] && original[full_ref]['stories']).to_a
-        info['stories'] = original_stories | info['stories']
+      merged_branches = @branches.dup
+
+      # iterate over original and add all existing branches
+      original.each do |full_ref, info|
+        if merged_branches.has_key?(full_ref)
+          merged_branches[full_ref]['created_at'] = info['created_at']
+          merged_branches[full_ref]['stories'] = info['stories'].to_a | merged_branches[full_ref]['stories'].to_a
+        else
+          merged_branches[full_ref] = info.dup
+          merged_branches[full_ref]['status'] = 'Unknown'
+        end
       end
 
-      @store.write(@branches)
+      merged_branches.each do |_, info|
+        info['created_at'] ||= Time.now
+      end
+
+      merged_branches
+    end
+
+    def merge_and_save
+      @store.write(merge_original)
     end
 
     def failures

@@ -14,7 +14,7 @@ module FlashFlow
     end
 
     def test_get
-      str = StringIO.new(sample_branches.to_json)
+      str = StringIO.new(JSON.pretty_generate(sample_branches))
       assert_equal(@storage.get(str), sample_branches)
     end
 
@@ -22,7 +22,7 @@ module FlashFlow
       str = StringIO.new
       @storage.write(sample_branches, str)
 
-      assert_equal(str.string.strip, sample_branches.to_json.strip)
+      assert_equal(str.string.strip, JSON.pretty_generate(sample_branches).strip)
     end
 
 
