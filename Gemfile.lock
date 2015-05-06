@@ -2,12 +2,13 @@ PATH
   remote: .
   specs:
     flash_flow (0.0.1)
+      hipchat
       octokit
 
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.3.7)
+    addressable (2.3.8)
     byebug (3.5.1)
       columnize (~> 0.8)
       debugger-linecache (~> 1.2)
@@ -16,8 +17,17 @@ GEM
     debugger-linecache (1.2.0)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
+    hipchat (1.5.1)
+      httparty
+      mimemagic
+    httparty (0.13.3)
+      json (~> 1.8)
+      multi_xml (>= 0.5.2)
+    json (1.8.2)
+    mimemagic (0.3.0)
     minitest (5.3.5)
     minitest-stub_any_instance (1.0.1)
+    multi_xml (0.5.5)
     multipart-post (2.0.0)
     octokit (3.8.0)
       sawyer (~> 0.6.0, >= 0.5.3)
