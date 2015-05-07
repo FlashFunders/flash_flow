@@ -5,3 +5,4 @@ repo: 'flashfunders/flashfunders'
 locking_issue_id: 458
 unmergeable_label: unmergeable
 do_not_merge_label: do not merge
+hipchat_token: ENV['HIPCHAT_TOKEN']

@@ -11,8 +11,8 @@ module FlashFlow
           'locking_issue_id' => 1,
           'unmergeable_label' => 'some_label',
           'do_not_merge_label' => 'dont merge',
-          'branch_info_file' => 'some_file.txt'
-
+          'branch_info_file' => 'some_file.txt',
+          'hipchat_token' => ENV['HIPCHAT_TOKEN']
       }
 
       reset_config!
@@ -29,6 +29,7 @@ module FlashFlow
         assert('some_label' == Config.configuration.unmergeable_label)
         assert('dont merge' == Config.configuration.do_not_merge_label)
         assert('some_file.txt' == Config.configuration.branch_info_file)
+        assert('hip_token' == Config.configuration.hipchat_token)
       end
     end
 
@@ -54,6 +55,7 @@ module FlashFlow
         assert('do not merge' == Config.configuration.do_not_merge_label)
         assert('README.rdoc' == Config.configuration.branch_info_file)
         assert(['origin'] == Config.configuration.remotes)
+        assert(Config.configuration.hipchat_token.nil?)
       end
     end
   end
