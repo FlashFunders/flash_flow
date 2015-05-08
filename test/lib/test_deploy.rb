@@ -51,5 +51,32 @@ module FlashFlow
       end
     end
 
+    def test_merge_conflict_notification
+      pull_request = {
+        ref: 'feature/test',
+        number: 1,
+        user_url: 'https://github.com/_someone',
+        repo_url: 'https://github.com/org/fake_repo'
+      }
+
+      branch_info = Minitest::Mock.new
+      branch_info.expect(:mark_failure, true, ['origin', pull_request[:ref]])
+      @deploy.instance_variable_set('@branch_info'.to_sym, branch_info)
+
+      hipchat = Minitest::Mock.new
+      hipchat.expect(:notify_merge_conflict, true, [pull_request[:user_url], pull_request[:repo_url], pull_request[:ref]])
+      @deploy.instance_variable_set('@hipchat'.to_sym, hipchat)
+
+      @deploy.stub(:merge_success?, false) do
+        @deploy.stub(:working_pull_request, false) do
+          Github.stub_any_instance(:add_unmergeable_label, true) do
+            @deploy.git_merge('origin', pull_request)
+          end
+        end
+
+        assert(branch_info.verify)
+        assert(hipchat.verify)
+      end
+    end
   end
 end

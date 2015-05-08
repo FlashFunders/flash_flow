@@ -6,6 +6,7 @@ require 'flash_flow/github_lock'
 require 'flash_flow/git'
 require 'flash_flow/branch_info'
 require 'flash_flow/lock'
+require 'flash_flow/hipchat'
 
 module FlashFlow
   class Deploy
@@ -26,6 +27,7 @@ module FlashFlow
       @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
       @working_branch = @git.current_branch
       @github_lock = GithubLock.new(Config.configuration.repo)
+      @hipchat = Hipchat.new('Engineering')
       @branch_info = BranchInfo.new(Config.configuration.branch_info_file, logger: logger)
       @stories = [opts[:stories]].flatten.compact
     end
@@ -100,16 +102,35 @@ module FlashFlow
         end
 
         unless @github.has_label?(pull_request.number, Config.configuration.do_not_merge_label)
-          merge_or_rollback(remote, pull_request.head.ref, pull_request.number)
+          pull_request_info = {ref: pull_request.head.ref, number: pull_request.number, user_url: pull_request.user.html_url, repo_url: pull_request.head.repo.html_url}
+          git_merge(remote, pull_request_info)
         end
       end
+    end
+
+    def git_merge(remote, pull_request_info)
+      ref = pull_request_info[:ref]
+      pull_request_number = pull_request_info[:number]
+
+      if merge_success?(remote, ref)
+        @branch_info.mark_success(remote, ref)
+        @github.remove_unmergeable_label(pull_request_number)
+      else
+        @branch_info.mark_failure(remote, ref)
+        @github.add_unmergeable_label(pull_request_number)
+        @hipchat.notify_merge_conflict(pull_request_info[:user_url], pull_request_info[:repo_url], ref) unless working_pull_request
+      end
+    end
+
+    def working_pull_request
+      @github.pull_requests.detect { |p| p.head.ref == @working_branch }
     end
 
     def open_pull_request
       @git.push(@working_branch, force: @force)
       raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @git.last_success?
 
-      pr = @github.pull_requests.detect { |p| p.head.ref == @working_branch }
+      pr = working_pull_request
       if pr
         opts = { title: @pr_title, body: @pr_body }.delete_if { |k,v| v.to_s == '' }
 
@@ -143,23 +164,19 @@ module FlashFlow
       end
     end
 
-    def merge_or_rollback(remote, ref, pull_request_number, fix_conflicts=true)
+    def merge_success?(remote, ref, fix_conflicts=true)
       fetch(remote)
+
       @git.run("merge #{remote}/#{ref}")
 
-      if @git.last_success?
-        @branch_info.mark_success(remote, ref)
-        @github.remove_unmergeable_label(pull_request_number)
-      elsif @git.rerere_resolve!
-        @branch_info.mark_success(remote, ref)
-        @github.remove_unmergeable_label(pull_request_number)
+      if @git.last_success? || @git.rerere_resolve!
+        return true
       elsif fix_conflicts
         fix_translations
-        return merge_or_rollback(remote, ref, pull_request_number, false)
+        return merge_sucess?(remote, ref, false)
       else
-        @branch_info.mark_failure(remote, ref)
         @git.run("reset --hard HEAD")
-        @github.add_unmergeable_label(pull_request_number)
+        return false
       end
     end
 
