@@ -175,7 +175,7 @@ module FlashFlow
         return true
       elsif fix_conflicts
         fix_translations
-        return merge_sucess?(remote, ref, false)
+        return merge_success?(remote, ref, false)
       else
         @git.run("reset --hard HEAD")
         return false
