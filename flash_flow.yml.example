@@ -6,3 +6,8 @@ locking_issue_id: 458
 unmergeable_label: unmergeable
 do_not_merge_label: do not merge
 hipchat_token: ENV['HIPCHAT_TOKEN']
+issue_tracker:
+  class: 'FlashFlow::IssueTracker::Pivotal'
+  token: <%= ENV['TRACKER_TOKEN'] %>
+  project_id: 913432
+
