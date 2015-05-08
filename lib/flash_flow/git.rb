@@ -132,12 +132,13 @@ module FlashFlow
     end
 
     def in_merge_branch
-      checkout_merge_branch
-
       begin
+        starting_branch = current_branch
+        run("checkout #{merge_branch}")
+
         yield
       ensure
-        run("checkout #{@working_branch}")
+        run("checkout #{starting_branch}")
       end
     end
   end

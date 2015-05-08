@@ -87,7 +87,7 @@ module FlashFlow
         @stories.each do |story_id|
           @branch_info.add_story(@merge_remote, @working_branch, story_id)
         end
-        BranchInfoStore.new(Config.configuration.branch_info_file, logger: logger).merge_and_save(@branch_info.branches)
+        BranchInfoStore.new(Config.configuration.branch_info_file, @git, logger: logger).merge_and_save(@branch_info.branches)
         @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
       end
     end
