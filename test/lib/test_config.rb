@@ -55,7 +55,7 @@ module FlashFlow
         assert('do not merge' == Config.configuration.do_not_merge_label)
         assert('README.rdoc' == Config.configuration.branch_info_file)
         assert(['origin'] == Config.configuration.remotes)
-        assert(Config.configuration.hipchat_token.nil?)
+        assert('hip_token' == Config.configuration.hipchat_token)
       end
     end
   end
