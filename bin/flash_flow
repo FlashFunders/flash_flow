@@ -5,3 +5,4 @@ require 'flash_flow'
 options = FlashFlow::Options.parse
 FlashFlow::Config.configure!(options[:config_file])
 FlashFlow::Deploy.new(options).run
+FlashFlow::IssueTracker::Base.new.stories_pushed

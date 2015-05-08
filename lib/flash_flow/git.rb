@@ -58,6 +58,11 @@ module FlashFlow
       end
     end
 
+    def read_file_from_merge_branch(filename)
+      run("show #{merge_remote}/#{merge_branch}:#{filename}")
+      last_stdout
+    end
+
     def initialize_rerere
       return unless use_rerere
 
@@ -115,24 +120,33 @@ module FlashFlow
       run("show -s --format=%cd head")
     end
 
-    def checkout_merge_branch
-      run("fetch #{merge_remote}")
-      run("branch -D #{merge_branch}")
-      run("checkout -b #{merge_branch}")
-      run("reset --hard #{merge_remote}/#{master_branch}")
+    def reset_merge_branch
+      in_branch(master_branch) do
+        run("fetch #{merge_remote}")
+        run("branch -D #{merge_branch}")
+        run("checkout -b #{merge_branch}")
+        run("reset --hard #{merge_remote}/#{master_branch}")
+      end
     end
 
     def push_merge_branch
       run("push -f #{merge_remote} #{merge_branch}")
     end
 
-    def in_merge_branch
-      checkout_merge_branch
+    def in_merge_branch(&block)
+      in_branch(merge_branch, &block)
+    end
 
+    private
+
+    def in_branch(branch)
       begin
+        starting_branch = current_branch
+        run("checkout #{branch}")
+
         yield
       ensure
-        run("checkout #{@working_branch}")
+        run("checkout #{starting_branch}")
       end
     end
   end

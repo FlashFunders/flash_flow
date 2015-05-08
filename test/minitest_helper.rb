@@ -31,7 +31,7 @@ class Minitest::Test
   def config!(config_hash)
     reset_config!
 
-    YAML.stub(:load_file, config_hash) do
+    File.stub(:read, config_hash.to_yaml) do
       FlashFlow::Config.configure!('fake_file.txt')
     end
   end

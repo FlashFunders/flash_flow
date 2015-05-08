@@ -1,6 +1,7 @@
 require 'logger'
 require 'singleton'
 require 'yaml'
+require 'erb'
 
 module FlashFlow
   class Config
@@ -17,7 +18,7 @@ module FlashFlow
     ATTRIBUTES = [
         :use_rerere, :merge_remote, :merge_branch, :master_branch, :repo,
         :branch_info_file, :locking_issue_id, :unmergeable_label,
-        :do_not_merge_label, :log_file, :remotes, :hipchat_token
+        :do_not_merge_label, :log_file, :remotes, :hipchat_token, :issue_tracker
     ]
 
     attr_reader *ATTRIBUTES
@@ -31,7 +32,8 @@ module FlashFlow
     def self.configure!(config_file)
       raise AlreadyConfigured if instance.instance_variable_get(:@configured)
 
-      yaml = YAML.load_file(config_file)
+      template = ERB.new File.read(config_file)
+      yaml = YAML.load template.result(binding)
       config = defaults.merge(symbolize_keys!(yaml))
 
       missing_attrs = []
@@ -59,7 +61,8 @@ module FlashFlow
           do_not_merge_label: 'do not merge',
           log_file: 'log/flash_flow.log',
           remotes: ['origin'],
-          hipchat_token: ENV['HIPCHAT_TOKEN']
+          hipchat_token: ENV['HIPCHAT_TOKEN'],
+          issue_tracker: nil
       }
     end
 
