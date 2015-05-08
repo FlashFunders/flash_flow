@@ -127,6 +127,8 @@ module FlashFlow
     end
 
     def open_pull_request
+      return false if [Config.configuration.master_branch, @merge_branch].include?(@working_branch)
+
       @git.push(@working_branch, force: @force)
       raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @git.last_success?
 

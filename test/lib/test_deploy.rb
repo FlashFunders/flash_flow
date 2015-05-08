@@ -78,5 +78,12 @@ module FlashFlow
         assert(hipchat.verify)
       end
     end
+
+    def test_ignore_pushing_master_or_acceptance
+      ['master', 'test_acceptance'].each do |branch|
+        @deploy.instance_variable_set('@working_branch'.to_sym, branch)
+        refute(@deploy.open_pull_request)
+      end
+    end
   end
 end
