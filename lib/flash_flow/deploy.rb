@@ -50,6 +50,7 @@ module FlashFlow
         @github_lock.with_lock(Config.configuration.locking_issue_id) do
           open_pull_request
 
+          @git.reset_merge_branch
           @git.in_merge_branch do
             merge_pull_requests
             commit_branch_info
@@ -174,7 +175,7 @@ module FlashFlow
         return true
       elsif fix_conflicts
         fix_translations
-        return merge_sucess?(remote, ref, false)
+        return merge_success?(remote, ref, false)
       else
         @git.run("reset --hard HEAD")
         return false
