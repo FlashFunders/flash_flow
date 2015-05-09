@@ -20,24 +20,6 @@ module FlashFlow
       end
     end
 
-    def get_last_event(issue_id)
-      octokit.issue_events(repo, issue_id)
-      last_issue_events_page = octokit.last_response.rels[:last].get
-      last_issue_events_page.data.last
-    end
-
-    def issue_open?(issue_id)
-      get_last_event(issue_id).event == 'reopened'
-    end
-
-    def open_issue(issue_id)
-      octokit.reopen_issue(repo, issue_id)
-    end
-
-    def close_issue(issue_id)
-      octokit.close_issue(repo, issue_id)
-    end
-
     def update_pr(repo, pr_number, opts)
       octokit.update_pull_request(repo, pr_number, opts)
     end

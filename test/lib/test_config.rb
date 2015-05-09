@@ -8,13 +8,15 @@ module FlashFlow
           'merge_branch' => 'acceptance',
           'master_branch' => 'master',
           'repo' => 'flashfunders/flash_flow',
-          'locking_issue_id' => 1,
           'unmergeable_label' => 'some_label',
           'do_not_merge_label' => 'dont merge',
           'branch_info_file' => 'some_file.txt',
           'hipchat_token' => ENV['HIPCHAT_TOKEN'],
           'issue_tracker' => {
-              'class' => 'SomeClass'
+              'class' => 'IssueTrackerClass'
+          },
+          'lock' => {
+              'class' => 'LockClass'
           }
       }
 
@@ -24,16 +26,16 @@ module FlashFlow
     def test_that_it_sets_all_attrs
       File.stub(:read, @config_hash.to_yaml) do
         Config.configure!('unused_file_name.yml')
-        assert(true == Config.configuration.use_rerere)
-        assert('acceptance' == Config.configuration.merge_branch)
-        assert('master' == Config.configuration.master_branch)
-        assert('flashfunders/flash_flow' == Config.configuration.repo)
-        assert(1 == Config.configuration.locking_issue_id)
-        assert('some_label' == Config.configuration.unmergeable_label)
-        assert('dont merge' == Config.configuration.do_not_merge_label)
-        assert('some_file.txt' == Config.configuration.branch_info_file)
-        assert('hip_token' == Config.configuration.hipchat_token)
-        assert({ 'class' => 'SomeClass' } == Config.configuration.issue_tracker)
+        assert(true == config.use_rerere)
+        assert('acceptance' == config.merge_branch)
+        assert('master' == config.master_branch)
+        assert('flashfunders/flash_flow' == config.repo)
+        assert('some_label' == config.unmergeable_label)
+        assert('dont merge' == config.do_not_merge_label)
+        assert('some_file.txt' == config.branch_info_file)
+        assert('hip_token' == config.hipchat_token)
+        assert({ 'class' => 'IssueTrackerClass' } == config.issue_tracker)
+        assert({ 'class' => 'LockClass' } == config.lock)
       end
     end
 
@@ -50,17 +52,24 @@ module FlashFlow
     def test_that_it_sets_defaults
       File.stub(:read, { 'repo' => 'some_repo' }.to_yaml) do
         Config.configure!('unused_file_name.yml')
-        assert(true == Config.configuration.use_rerere)
-        assert('origin' == Config.configuration.merge_remote)
-        assert('acceptance' == Config.configuration.merge_branch)
-        assert('master' == Config.configuration.master_branch)
-        assert(Config.configuration.locking_issue_id.nil?)
-        assert('unmergeable' == Config.configuration.unmergeable_label)
-        assert('do not merge' == Config.configuration.do_not_merge_label)
-        assert('README.rdoc' == Config.configuration.branch_info_file)
-        assert(['origin'] == Config.configuration.remotes)
-        assert('hip_token' == Config.configuration.hipchat_token)
+        assert(true == config.use_rerere)
+        assert('origin' == config.merge_remote)
+        assert('acceptance' == config.merge_branch)
+        assert('master' == config.master_branch)
+        assert('unmergeable' == config.unmergeable_label)
+        assert('do not merge' == config.do_not_merge_label)
+        assert('README.rdoc' == config.branch_info_file)
+        assert(['origin'] == config.remotes)
+        assert('hip_token' == config.hipchat_token)
+        assert_nil(config.issue_tracker)
+        assert_nil(config.lock)
       end
+    end
+    
+    private
+    
+    def config
+      Config.configuration
     end
   end
 end
