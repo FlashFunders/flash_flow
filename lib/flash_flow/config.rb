@@ -17,8 +17,8 @@ module FlashFlow
 
     ATTRIBUTES = [
         :use_rerere, :merge_remote, :merge_branch, :master_branch, :repo,
-        :branch_info_file, :locking_issue_id, :unmergeable_label,
-        :do_not_merge_label, :log_file, :remotes, :hipchat_token, :issue_tracker
+        :branch_info_file, :unmergeable_label, :do_not_merge_label, :log_file,
+        :remotes, :hipchat_token, :issue_tracker, :lock
     ]
 
     attr_reader *ATTRIBUTES
@@ -56,13 +56,13 @@ module FlashFlow
           merge_branch: 'acceptance',
           master_branch: 'master',
           branch_info_file: 'README.rdoc',
-          locking_issue_id: nil,
           unmergeable_label: 'unmergeable',
           do_not_merge_label: 'do not merge',
           log_file: 'log/flash_flow.log',
           remotes: ['origin'],
           hipchat_token: ENV['HIPCHAT_TOKEN'],
-          issue_tracker: nil
+          issue_tracker: nil,
+          lock: nil
       }
     end
 

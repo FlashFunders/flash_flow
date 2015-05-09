@@ -2,7 +2,6 @@ require 'logger'
 
 require 'flash_flow/cmd_runner'
 require 'flash_flow/github'
-require 'flash_flow/github_lock'
 require 'flash_flow/git'
 require 'flash_flow/branch_info'
 require 'flash_flow/lock'
@@ -26,7 +25,7 @@ module FlashFlow
       @merge_branch = FlashFlow::Config.configuration.merge_branch
       @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
       @working_branch = @git.current_branch
-      @github_lock = GithubLock.new(Config.configuration.repo)
+      @lock = Lock::Base.new(Config.configuration.lock)
       @hipchat = Hipchat.new('Engineering')
       @branch_info = BranchInfo.new
       @stories = [opts[:stories]].flatten.compact
@@ -47,7 +46,7 @@ module FlashFlow
       end
 
       begin
-        @github_lock.with_lock(Config.configuration.locking_issue_id) do
+        @lock.with_lock do
           open_pull_request
 
           @git.reset_merge_branch

@@ -2,7 +2,6 @@ use_rerere: true
 merge_branch: acceptance
 master_branch: master
 repo: 'flashfunders/flashfunders'
-locking_issue_id: 458
 unmergeable_label: unmergeable
 do_not_merge_label: do not merge
 hipchat_token: ENV['HIPCHAT_TOKEN']
@@ -10,4 +9,10 @@ issue_tracker:
   class: 'FlashFlow::IssueTracker::Pivotal'
   token: <%= ENV['TRACKER_TOKEN'] %>
   project_id: 913432
+lock:
+  class:
+    name: 'FlashFlow::Lock::Github'
+    token: # Your github token here. Not recommended to commit the actual token to your repository
+    repo: 'flashfunders/flashfunders'
+    issue_id: # The issue that will be open/closed to only allow one at a time to run flash_flow
 

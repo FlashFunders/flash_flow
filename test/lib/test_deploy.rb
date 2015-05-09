@@ -6,7 +6,7 @@ module FlashFlow
 
     def setup
       reset_config!
-      config!(repo: 'flashfunders/flash_flow', locking_issue_id: 1, merge_branch: 'test_acceptance')
+      config!(repo: 'flashfunders/flash_flow', merge_branch: 'test_acceptance')
 
       @deploy = Deploy.new
     end
@@ -42,20 +42,18 @@ module FlashFlow
 
     def test_check_out_to_working_branch
       @deploy.stub(:check_repo, true) do
-        Github.stub_any_instance(:issue_open?, true) do
-          Github.stub_any_instance(:get_last_event, {actor: {login: 'anonymous'}, created_at: Time.now }) do
-            assert_output(/Failure!/) { @deploy.run }
-          end
+        Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
+          assert_output(/Failure!/) { @deploy.run }
         end
       end
     end
 
     def test_merge_conflict_notification
       pull_request = {
-        ref: 'feature/test',
-        number: 1,
-        user_url: 'https://github.com/_someone',
-        repo_url: 'https://github.com/org/fake_repo'
+          ref: 'feature/test',
+          number: 1,
+          user_url: 'https://github.com/_someone',
+          repo_url: 'https://github.com/org/fake_repo'
       }
 
       branch_info = Minitest::Mock.new
