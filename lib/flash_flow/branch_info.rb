@@ -11,8 +11,8 @@ module FlashFlow
       @branches.select { |k, v| v['status'] == 'fail' }
     end
 
-    def mark_failure(remote, ref)
-      mark_status(remote, ref, 'fail')
+    def mark_failure(remote, ref, conflict_sha)
+      mark_status(remote, ref, 'fail', conflict_sha)
     end
 
     def mark_success(remote, ref)
@@ -27,9 +27,10 @@ module FlashFlow
 
     private
 
-    def mark_status(remote, ref, status)
+    def mark_status(remote, ref, status, conflict_sha)
       init_info(remote, ref)
       @branches[key(remote, ref)]['status'] = status
+      @branches[key(remote, ref)]['conflict_sha'] = conflict_sha
     end
 
     def key(remote, ref)

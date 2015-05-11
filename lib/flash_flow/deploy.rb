@@ -115,7 +115,7 @@ module FlashFlow
         @branch_info.mark_success(remote, ref)
         @github.remove_unmergeable_label(pull_request_number)
       else
-        @branch_info.mark_failure(remote, ref)
+        @branch_info.mark_failure(remote, ref, merge_rollback)
         @github.add_unmergeable_label(pull_request_number)
         @hipchat.notify_merge_conflict(pull_request_info[:user_url], pull_request_info[:repo_url], ref) unless working_pull_request
       end
@@ -151,7 +151,7 @@ module FlashFlow
       branch_not_merged = nil
       @branch_info.failures.each do |full_ref, failure|
         if failure['branch'] == @working_branch
-          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{@git.merge_branch}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{failure['conflict_sha']}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else
           errors << "WARNING: Unable to merge branch #{full_ref} to #{@git.merge_branch} due to conflicts."
         end
@@ -176,7 +176,6 @@ module FlashFlow
         fix_translations
         return merge_success?(remote, ref, false)
       else
-        @git.run("reset --hard HEAD")
         return false
       end
     end
@@ -185,6 +184,13 @@ module FlashFlow
       @cmd_runner.run('bundle exec rake i18n:js:export')
       @git.run('add app/assets/javascripts/i18n/translations.js')
       @git.run('commit --no-edit')
+    end
+
+    private
+
+    def merge_rollback
+      @git.run("reset --hard HEAD")
+      return @git.run("rev-parse HEAD")
     end
   end
 end
