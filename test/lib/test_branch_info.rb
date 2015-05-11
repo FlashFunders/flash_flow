@@ -29,6 +29,11 @@ module FlashFlow
       assert_equal(@branch_info.branches['origin/some_branch']['status'], 'fail')
     end
 
+    def test_mark_failure_conflict_sha
+      @branch_info.mark_failure('origin', 'some_branch', 'conflict_sha')
+      assert_equal(@branch_info.branches['origin/some_branch']['conflict_sha'], 'conflict_sha')
+    end
+
     def test_add_story
       @branch_info.add_story('origin', 'some_branch', '999')
       assert_equal(@branch_info.branches['origin/some_branch']['stories'], ['999'])

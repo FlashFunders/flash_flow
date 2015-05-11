@@ -82,5 +82,15 @@ module FlashFlow
         refute(@deploy.open_pull_request)
       end
     end
+
+    def test_merge_rollback
+      git = Minitest::Mock.new
+      git.expect(:run, nil, ["reset --hard HEAD"])
+      git.expect(:run, nil, ["rev-parse HEAD"])
+      @deploy.instance_variable_set('@git'.to_sym, git)
+
+      @deploy.send(:merge_rollback)
+      assert(git.verify)
+    end
   end
 end
