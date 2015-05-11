@@ -8,7 +8,7 @@ module FlashFlow
     end
 
     def test_mark_success_existing_branch
-      @branch_info.mark_failure('origin', 'some_branch')
+      @branch_info.mark_failure('origin', 'some_branch', 'conflict_sha')
       @branch_info.mark_success('origin', 'some_branch')
       assert_equal(@branch_info.branches['origin/some_branch']['status'], 'success')
     end
@@ -20,12 +20,12 @@ module FlashFlow
 
     def test_mark_failure_existing_branch
       @branch_info.mark_success('origin', 'some_branch')
-      @branch_info.mark_failure('origin', 'some_branch')
+      @branch_info.mark_failure('origin', 'some_branch', 'conflict_sha')
       assert_equal(@branch_info.branches['origin/some_branch']['status'], 'fail')
     end
 
     def test_mark_failure_new_branch
-      @branch_info.mark_failure('origin', 'some_branch')
+      @branch_info.mark_failure('origin', 'some_branch', 'conflict_sha')
       assert_equal(@branch_info.branches['origin/some_branch']['status'], 'fail')
     end
 
@@ -35,9 +35,9 @@ module FlashFlow
     end
 
     def test_failures
-      @branch_info.mark_failure('origin', 'some_branch1')
+      @branch_info.mark_failure('origin', 'some_branch1', 'conflict_sha')
       @branch_info.mark_success('origin', 'some_branch2')
-      @branch_info.mark_failure('origin', 'some_branch3')
+      @branch_info.mark_failure('origin', 'some_branch3', 'conflict_sha')
 
       assert_equal(@branch_info.failures.keys, ['origin/some_branch1', 'origin/some_branch3'])
     end

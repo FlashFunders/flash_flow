@@ -27,7 +27,7 @@ module FlashFlow
 
     private
 
-    def mark_status(remote, ref, status, conflict_sha)
+    def mark_status(remote, ref, status, conflict_sha = nil)
       init_info(remote, ref)
       @branches[key(remote, ref)]['status'] = status
       @branches[key(remote, ref)]['conflict_sha'] = conflict_sha

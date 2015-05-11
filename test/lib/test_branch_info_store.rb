@@ -54,7 +54,7 @@ module FlashFlow
 
     def test_merge_old_uses_new_status
       branch_info = BranchInfo.new
-      branch_info.mark_failure('origin', 'some_branch')
+      branch_info.mark_failure('origin', 'some_branch', 'conflict_sha')
       merged = @storage.merge(old_branches, branch_info.branches)
 
       assert_equal('fail', merged['origin/some_branch']['status'])

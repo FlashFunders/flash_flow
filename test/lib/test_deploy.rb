@@ -19,12 +19,12 @@ module FlashFlow
 
     def test_print_errors_when_current_branch_cant_merge
       branch_info = Minitest::Mock.new
-      branch_info.expect(:failures, { 'origin/pushing_branch' => { 'branch' => 'pushing_branch', 'remote' => 'origin', 'status' => 'failures', 'stories' => [] }} )
+      branch_info.expect(:failures, { 'origin/pushing_branch' => { 'branch' => 'pushing_branch', 'remote' => 'origin', 'status' => 'failures', 'conflict_sha' => 'sha', 'stories' => [] }} )
 
       @deploy.instance_variable_set('@branch_info'.to_sym, branch_info)
       @deploy.instance_variable_set('@working_branch'.to_sym, 'pushing_branch')
 
-      current_branch_error = "\nERROR: Your branch did not merge to #{Config.configuration.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{Config.configuration.merge_branch}\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+      current_branch_error = "\nERROR: Your branch did not merge to #{Config.configuration.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
 
       assert_equal(@deploy.format_errors, current_branch_error)
     end
@@ -57,7 +57,7 @@ module FlashFlow
       }
 
       branch_info = Minitest::Mock.new
-      branch_info.expect(:mark_failure, true, ['origin', pull_request[:ref]])
+      branch_info.expect(:mark_failure, true, ['origin', pull_request[:ref], nil])
       @deploy.instance_variable_set('@branch_info'.to_sym, branch_info)
 
       hipchat = Minitest::Mock.new
