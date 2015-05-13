@@ -101,6 +101,18 @@ module FlashFlow
       last_stdout.split("\n")
     end
 
+    def remotes_hash
+      return @remotes_hash if @remotes_hash
+
+      @remotes_hash = {}
+      remotes.each do |r|
+        name = r.split[0]
+        url = r.split[1]
+        @remotes_hash[name] ||= url
+      end
+      @remotes_hash
+    end
+
     def fetch_remotes_for_url(url)
       fetch_remotes = remotes.grep(Regexp.new(url)).grep(/ \(fetch\)/)
       fetch_remotes.map { |remote| remote.to_s.split("\t").first }

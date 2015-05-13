@@ -9,8 +9,7 @@ module FlashFlow
       opt_parser = OptionParser.new do |opts|
         opts.banner = "Usage: #{__FILE__} [options]"
 
-        opts.on('-t', '--title PULL_REQUEST_TITLE', 'Title for the pull request') { |v| options[:pr_title] = v }
-        opts.on('-b', '--body PULL_REQUEST_BODY', 'Body text for the pull request') { |v| options[:pr_body] = v }
+        opts.on('-n', '--no-merge', 'Run flash flow, but do not merge this branch') { |v| options[:do_not_merge] = true }
         opts.on('', '--story id1', 'story id for this branch') { |v| options[:stories] = [v] }
         opts.on('', '--stories id1,id2', 'comma-delimited list of story ids for this branch') { |v| options[:stories] = v.split(',') }
         opts.on('-f', '--force-push', 'Force push your branch') { |v| options[:force] = v }

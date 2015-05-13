@@ -57,10 +57,10 @@ module FlashFlow
 
       def sample_branches
         @sample_branches ||= {
-            'origin/branch1' => {'branch' => 'branch1', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']},
-            'origin/branch2' => {'branch' => 'branch2', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']},
-            'origin/branch3' => {'branch' => 'branch3', 'remote' => 'origin', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']},
-            'origin/branch4' => {'branch' => 'branch4', 'remote' => 'origin', 'status' => 'unknown', 'created_at' => (Time.now - 1800), 'stories' => ['444']}
+            'origin/branch1' => Branch::Base.from_hash({'branch' => 'branch1', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            'origin/branch2' => Branch::Base.from_hash({'branch' => 'branch2', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
+            'origin/branch3' => Branch::Base.from_hash({'branch' => 'branch3', 'remote' => 'origin', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
+            'origin/branch4' => Branch::Base.from_hash({'branch' => 'branch4', 'remote' => 'origin', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']})
 
         }
       end
