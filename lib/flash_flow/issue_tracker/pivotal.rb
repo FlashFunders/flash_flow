@@ -13,8 +13,8 @@ module FlashFlow
       end
 
       def stories_pushed
-        merged_branches.each do |_, info|
-          info['stories'].to_a.each do |story_id|
+        merged_branches.each do |_, branch|
+          branch.stories.to_a.each do |story_id|
             finish(story_id)
           end
         end
@@ -31,7 +31,7 @@ module FlashFlow
       end
 
       def merged_branches
-        @branches.select { |_, v| v['status'] == 'success' }
+        @branches.select { |_, v| v.success? }
       end
     end
   end

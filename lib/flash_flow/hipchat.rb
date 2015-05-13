@@ -20,12 +20,13 @@ module FlashFlow
       HipChat::Client
     end
 
-    def notify_merge_conflict(pull_request_creator, repo_url, ref)
-      pull_request_creator_link = %{<a href="#{pull_request_creator}">#{pull_request_creator.split('/').last}</a>}
-      ref_link = %{<a href="#{repo_url}/tree/#{ref}">#{ref}</a>}
+    def notify_merge_conflict(branch)
+      user_name = branch.metadata['user_url'].split('/').last
+      user_url_link = %{<a href="#{branch.metadata['user_url']}">#{user_name}</a>}
+      ref_link = %{<a href="#{branch.metadata['repo_url']}/tree/#{branch.ref}">#{branch.ref}</a>}
 
-      message = %{#{pull_request_creator_link}'s branch (#{ref_link}) did not merge to acceptance successfully}
-      @client[@room].send("FlashFlow", message)
+      message = %{#{user_url_link}'s branch (#{ref_link}) did not merge to acceptance successfully}
+      # @client[@room].send("FlashFlow", message)
     end
   end
 end

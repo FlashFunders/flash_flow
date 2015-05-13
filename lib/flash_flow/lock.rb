@@ -5,7 +5,7 @@ module FlashFlow
     class Error < RuntimeError; end
 
     class Base
-      def initialize(config)
+      def initialize(config=nil)
         lock_class_name = config && config['class'] && config['class']['name']
         return unless lock_class_name
 

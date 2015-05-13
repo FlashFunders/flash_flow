@@ -2,7 +2,8 @@ require 'logger'
 
 require 'flash_flow/cmd_runner'
 require 'flash_flow/git'
-require 'flash_flow/branch_info_store'
+require 'flash_flow/branch'
+require 'flash_flow/branch/store'
 require 'flash_flow/issue_tracker/pivotal'
 
 module FlashFlow
@@ -28,7 +29,7 @@ module FlashFlow
                       Config.configuration.merge_branch,
                       Config.configuration.master_branch,
                       Config.configuration.use_rerere)
-        branch_info_store = BranchInfoStore.new(Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
+        branch_info_store = Branch::Store.new(Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
 
         branch_info_store.get
       end

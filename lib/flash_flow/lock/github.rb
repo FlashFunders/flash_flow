@@ -1,3 +1,5 @@
+require 'octokit'
+
 module FlashFlow
   module Lock
     class Github
