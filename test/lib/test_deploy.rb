@@ -13,28 +13,29 @@ module FlashFlow
     end
 
     def test_print_errors_with_no_errors
-      branch_info = Minitest::Mock.new
-      branch_info.expect(:failures, {})
+      collection = Minitest::Mock.new
+      collection.expect(:failures, {})
       assert_equal(@deploy.format_errors, 'Success!')
     end
 
     def test_print_errors_when_current_branch_cant_merge
-      branch_info = Minitest::Mock.new
-      branch_info.expect(:failures, {'origin/pushing_branch' => @branch})
+      collection = Minitest::Mock.new
+      collection.expect(:failures, {'origin/pushing_branch' => @branch})
+      @branch.fail!('some_random_sha')
 
-      @deploy.instance_variable_set('@branches'.to_sym, branch_info)
+      @deploy.instance_variable_set('@branches'.to_sym, collection)
       @deploy.instance_variable_set('@working_branch'.to_sym, 'pushing_branch')
 
-      current_branch_error = "\nERROR: Your branch did not merge to #{Config.configuration.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{Config.configuration.merge_branch}\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+      current_branch_error = "\nERROR: Your branch did not merge to #{Config.configuration.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
 
       assert_equal(@deploy.format_errors, current_branch_error)
     end
 
     def test_print_errors_when_another_branch_cant_merge
-      branch_info = Minitest::Mock.new
-      branch_info.expect(:failures, {'origin/pushing_branch' => @branch})
+      collection = Minitest::Mock.new
+      collection.expect(:failures, {'origin/pushing_branch' => @branch})
 
-      @deploy.instance_variable_set('@branches'.to_sym, branch_info)
+      @deploy.instance_variable_set('@branches'.to_sym, collection)
 
       other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to #{Config.configuration.merge_branch} due to conflicts."
 
@@ -51,7 +52,7 @@ module FlashFlow
 
     def test_merge_conflict_notification
       collection = Minitest::Mock.new
-      collection.expect(:mark_failure, true, [@branch])
+      collection.expect(:mark_failure, true, [@branch, true])
       @deploy.instance_variable_set('@branches'.to_sym, collection)
 
       hipchat = Minitest::Mock.new
@@ -59,9 +60,10 @@ module FlashFlow
       @deploy.instance_variable_set('@hipchat'.to_sym, hipchat)
 
       @deploy.stub(:merge_success?, false) do
-        @deploy.git_merge(@branch)
+        @deploy.stub(:merge_rollback, true) do
+          @deploy.git_merge(@branch)
+        end
       end
-
       hipchat.verify
     end
 
@@ -70,6 +72,17 @@ module FlashFlow
         @deploy.instance_variable_set('@working_branch'.to_sym, branch)
         refute(@deploy.open_pull_request)
       end
+    end
+
+    def test_merge_rollback
+      git = Minitest::Mock.new
+      git.expect(:run, nil, ["reset --hard HEAD"])
+      git.expect(:run, nil, ["rev-parse HEAD"])
+      git.expect(:last_stdout, "hello\n", [])
+      @deploy.instance_variable_set('@git'.to_sym, git)
+
+      assert_equal(@deploy.send(:merge_rollback), 'hello')
+      assert(git.verify)
     end
   end
 end

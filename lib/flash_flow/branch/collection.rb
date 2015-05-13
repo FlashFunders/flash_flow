@@ -81,9 +81,9 @@ module FlashFlow
         branch
       end
 
-      def mark_failure(branch)
+      def mark_failure(branch, conflict_sha=nil)
         update_or_add(branch)
-        branch.fail!
+        branch.fail!(conflict_sha)
         @collection_instance.mark_failure(branch) if @collection_instance.respond_to?(:mark_failure)
         branch
       end

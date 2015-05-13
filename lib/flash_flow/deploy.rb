@@ -105,7 +105,7 @@ module FlashFlow
       if merge_success?(branch)
         @branches.mark_success(branch)
       else
-        @branches.mark_failure(branch)
+        @branches.mark_failure(branch, merge_rollback)
         @hipchat.notify_merge_conflict(branch) unless branch.ref == @working_branch
       end
     end
@@ -134,7 +134,7 @@ module FlashFlow
       branch_not_merged = nil
       @branches.failures.each do |full_ref, failure|
         if failure.ref == @working_branch
-          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{@git.merge_branch}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{failure.metadata['conflict_sha']}\n  git merge #{@working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else
           errors << "WARNING: Unable to merge branch #{failure.remote}/#{failure.ref} to #{@git.merge_branch} due to conflicts."
         end
@@ -159,7 +159,6 @@ module FlashFlow
         fix_translations
         return merge_success?(branch, false)
       else
-        @git.run("reset --hard HEAD")
         return false
       end
     end
@@ -168,6 +167,14 @@ module FlashFlow
       @cmd_runner.run('bundle exec rake i18n:js:export')
       @git.run('add app/assets/javascripts/i18n/translations.js')
       @git.run('commit --no-edit')
+    end
+
+    private
+
+    def merge_rollback
+      @git.run("reset --hard HEAD")
+      @git.run("rev-parse HEAD")
+      @git.last_stdout.strip
     end
   end
 end

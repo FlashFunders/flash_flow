@@ -65,7 +65,9 @@ module FlashFlow
         self.status == 'success'
       end
 
-      def fail!
+      def fail!(conflict_sha=nil)
+        self.metadata ||= {}
+        self.metadata['conflict_sha'] = conflict_sha
         self.status = 'fail'
       end
 
