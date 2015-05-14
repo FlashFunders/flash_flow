@@ -102,6 +102,9 @@ module FlashFlow
     end
 
     def git_merge(branch)
+      @git.run("rev-parse #{branch.remote}/#{branch.ref}")
+      branch.sha = @git.last_stdout.strip
+
       if merge_success?(branch)
         @branches.mark_success(branch)
       else

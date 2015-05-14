@@ -149,6 +149,7 @@ module FlashFlow
             'ref' => 'branch 1',
             'remote_url' => 'the_origin_url',
             'remote' => 'origin',
+            'sha' => 'random_sha',
             'status' => 'success',
             'stories' => ['123'],
             'metadata' => {

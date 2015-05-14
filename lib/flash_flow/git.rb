@@ -47,6 +47,11 @@ module FlashFlow
       run("fetch #{remote}")
     end
 
+    def master_branch_contains?(ref)
+      run("branch --contains #{ref}")
+      last_stdout.split("\n").map(&:strip).detect { |str| str == master_branch }
+    end
+
     def in_original_merge_branch
       begin
         starting_branch = current_branch
