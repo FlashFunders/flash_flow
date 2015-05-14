@@ -151,25 +151,12 @@ module FlashFlow
       end
     end
 
-    def merge_success?(branch, fix_conflicts=true)
+    def merge_success?(branch)
       fetch(branch.remote)
 
       @git.run("merge #{branch.remote}/#{branch.ref}")
 
-      if @git.last_success? || @git.rerere_resolve!
-        return true
-      elsif fix_conflicts
-        fix_translations
-        return merge_success?(branch, false)
-      else
-        return false
-      end
-    end
-
-    def fix_translations
-      @cmd_runner.run('bundle exec rake i18n:js:export')
-      @git.run('add app/assets/javascripts/i18n/translations.js')
-      @git.run('commit --no-edit')
+      @git.last_success? || @git.rerere_resolve!
     end
 
     private
