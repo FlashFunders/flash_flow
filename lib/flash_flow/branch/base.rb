@@ -4,7 +4,7 @@ module FlashFlow
   module Branch
 
     class Base
-      attr_accessor :remote, :remote_url, :ref, :status, :stories, :metadata, :updated_at, :created_at
+      attr_accessor :remote, :remote_url, :ref, :sha, :status, :stories, :metadata, :updated_at, :created_at
 
       def initialize(_remote, _remote_url, _ref)
         @remote = _remote
@@ -17,6 +17,7 @@ module FlashFlow
 
       def self.from_hash(hash)
         base = new(hash['remote'], hash['remote_url'], hash['ref'])
+        base.sha = hash['sha']
         base.status = hash['status']
         base.stories = hash['stories']
         base.metadata = hash['metadata']
@@ -34,6 +35,7 @@ module FlashFlow
             'remote' => remote,
             'remote_url' => remote_url,
             'ref' => ref,
+            'sha' => sha,
             'status' => status,
             'stories' => stories,
             'metadata' => metadata,
@@ -48,6 +50,7 @@ module FlashFlow
 
       def merge(other)
         unless other.nil?
+          self.sha = other.sha
           self.status = other.status
           self.stories = self.stories.to_a | other.stories.to_a
           self.updated_at = Time.now

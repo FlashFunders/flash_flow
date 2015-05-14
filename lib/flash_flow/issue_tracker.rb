@@ -14,21 +14,28 @@ module FlashFlow
         return unless issue_tracker_class_name
 
         @issue_tracker_class = Object.const_get(issue_tracker_class_name)
-        @issue_tracker = @issue_tracker_class.new(get_branches, Config.configuration.issue_tracker)
+        @issue_tracker = @issue_tracker_class.new(get_branches, git, Config.configuration.issue_tracker)
       end
 
       def stories_pushed
-        @issue_tracker.stories_pushed unless @issue_tracker.nil?
+        @issue_tracker.stories_pushed if @issue_tracker.respond_to?(:stories_pushed)
+      end
+
+      def production_deploy
+        @issue_tracker.production_deploy if @issue_tracker.respond_to?(:production_deploy)
       end
 
       private
 
+      def git
+        @git ||= Git.new(CmdRunner.new(logger: Config.configuration.logger),
+                         Config.configuration.merge_remote,
+                         Config.configuration.merge_branch,
+                         Config.configuration.master_branch,
+                         Config.configuration.use_rerere)
+      end
+
       def get_branches
-        git = Git.new(CmdRunner.new(logger: Config.configuration.logger),
-                      Config.configuration.merge_remote,
-                      Config.configuration.merge_branch,
-                      Config.configuration.master_branch,
-                      Config.configuration.use_rerere)
         branch_info_store = Branch::Store.new(Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
 
         branch_info_store.get

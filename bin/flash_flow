@@ -4,5 +4,10 @@ require 'flash_flow'
 
 options = FlashFlow::Options.parse
 FlashFlow::Config.configure!(options[:config_file])
-FlashFlow::Deploy.new(options).run
-FlashFlow::IssueTracker::Base.new.stories_pushed
+case
+  when options[:prod_deploy]
+    FlashFlow::IssueTracker::Base.new.production_deploy
+  else
+    FlashFlow::Deploy.new(options).run
+    FlashFlow::IssueTracker::Base.new.stories_pushed
+end
