@@ -49,7 +49,7 @@ module FlashFlow
 
     def master_branch_contains?(ref)
       run("branch --contains #{ref}")
-      last_stdout.split("\n").map(&:strip).detect { |str| str == master_branch }
+      last_stdout.split("\n").detect { |str| str[2..-1] == master_branch }
     end
 
     def in_original_merge_branch
