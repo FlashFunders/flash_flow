@@ -1,18 +1,31 @@
+config_file: 'path/to/this/file'
 use_rerere: true
 merge_branch: acceptance
 master_branch: master
-repo: 'flashfunders/flashfunders'
-unmergeable_label: unmergeable
-do_not_merge_label: do not merge
+branch_info_file: 'public/deployed'
+repo: 'remove me'
+remotes:
+  - origin
+
+# Everything below here is optional and should be deleted if you don't need it
 hipchat_token: ENV['HIPCHAT_TOKEN']
 issue_tracker:
   class: 'FlashFlow::IssueTracker::Pivotal'
   token: <%= ENV['TRACKER_TOKEN'] %>
-  project_id: 913432
+  project_id: # Your Pivotal project id goes here
 lock:
   class:
     name: 'FlashFlow::Lock::Github'
-    token: # Your github token here. Not recommended to commit the actual token to your repository
+    token: <%= ENV['GH_TOKEN'] %>
     repo: 'flashfunders/flashfunders'
-    issue_id: # The issue that will be open/closed to only allow one at a time to run flash_flow
+    issue_id: # Your github issue id goes here
+branches:
+  class:
+    name: 'FlashFlow::Branch::Github'
+    token: <%= ENV['GH_TOKEN'] %>
+    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
+    master_branch: master
+    unmergeable_label: unmergeable
+    do_not_merge_label: 'do not merge'
+
 
