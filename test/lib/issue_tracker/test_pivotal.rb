@@ -19,7 +19,17 @@ module FlashFlow
         end
       end
 
-      def test_stories_delivered_only_marks_success_branches
+      def test_stories_delivered_unmarks_removed_branches
+        stub_tracker_gem(@project_mock) do
+          mock_find(nil, '111')
+          mock_find(nil, '222')
+
+          Pivotal.new(removed_branches, nil).stories_delivered
+          @stories.verify
+        end
+      end
+
+      def test_stories_delivered_marks_success_branches
         stub_tracker_gem(@project_mock) do
           mock_find(nil, '111')
           mock_find(nil, '222')
@@ -139,6 +149,16 @@ module FlashFlow
       def mock_find(story, story_id=nil)
         story_id ||= story.id
         @project_mock.expect(:stories, @stories.expect(:find, story, [story_id]))
+      end
+
+      def removed_branches
+        @removed_branches ||= {
+            'origin/branch1' => Branch::Base.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            'origin/branch2' => Branch::Base.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
+            'origin/branch3' => Branch::Base.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
+            'origin/branch4' => Branch::Base.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']})
+
+        }
       end
 
       def sample_branches

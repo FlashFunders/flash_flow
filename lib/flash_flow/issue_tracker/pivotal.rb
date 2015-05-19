@@ -27,6 +27,11 @@ module FlashFlow
             deliver(story_id)
           end
         end
+        removed_branches.each do |_, branch|
+          branch.stories.to_a.each do |story_id|
+            undeliver(story_id)
+          end
+        end
       end
 
       def production_deploy
@@ -38,6 +43,15 @@ module FlashFlow
       end
 
       private
+
+      def undeliver(story_id)
+        story = get_story(story_id)
+
+        if story && story.current_state == 'delivered'
+          story.current_state = 'finished'
+          story.update
+        end
+      end
 
       def deliver(story_id)
         story = get_story(story_id)
@@ -85,6 +99,10 @@ module FlashFlow
 
       def merged_branches
         @branches.select { |_, v| v.success? }
+      end
+
+      def removed_branches
+        @branches.select { |_, v| v.removed? }
       end
     end
   end
