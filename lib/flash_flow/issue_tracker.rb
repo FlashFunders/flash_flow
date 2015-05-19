@@ -21,6 +21,10 @@ module FlashFlow
         @issue_tracker.stories_pushed if @issue_tracker.respond_to?(:stories_pushed)
       end
 
+      def stories_delivered
+        @issue_tracker.stories_delivered if @issue_tracker.respond_to?(:stories_delivered)
+      end
+
       def production_deploy
         @issue_tracker.production_deploy if @issue_tracker.respond_to?(:production_deploy)
       end

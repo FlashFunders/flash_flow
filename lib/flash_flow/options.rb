@@ -8,6 +8,7 @@ module FlashFlow
         opts.banner = "Usage: #{__FILE__} [options]"
 
         opts.on('', '--prod-deploy', 'Run IssueTracker#deploy_production and exit') { |v| options[:prod_deploy] = true }
+        opts.on('', '--review-deploy', 'Run IssueTracker#deploy_review and exit') { |v| options[:review_deploy] = true }
         opts.on('-n', '--no-merge', 'Run flash flow, but do not merge this branch') { |v| options[:do_not_merge] = true }
         opts.on('', '--story id1', 'story id for this branch') { |v| options[:stories] = [v] }
         opts.on('', '--stories id1,id2', 'comma-delimited list of story ids for this branch') { |v| options[:stories] = v.split(',') }

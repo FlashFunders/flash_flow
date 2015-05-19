@@ -21,6 +21,14 @@ module FlashFlow
         end
       end
 
+      def stories_delivered
+        merged_branches.each do |_, branch|
+          branch.stories.to_a.each do |story_id|
+            deliver(story_id)
+          end
+        end
+      end
+
       def production_deploy
         shipped_branches.each do |_, branch|
           branch.stories.to_a.each do |story_id|
@@ -30,6 +38,15 @@ module FlashFlow
       end
 
       private
+
+      def deliver(story_id)
+        story = get_story(story_id)
+
+        if story && story.current_state == 'finished'
+          story.current_state = 'delivered'
+          story.update
+        end
+      end
 
       def finish(story_id)
         story = get_story(story_id)

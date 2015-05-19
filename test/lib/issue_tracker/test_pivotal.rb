@@ -19,6 +19,35 @@ module FlashFlow
         end
       end
 
+      def test_stories_delivered_only_marks_success_branches
+        stub_tracker_gem(@project_mock) do
+          mock_find(nil, '111')
+          mock_find(nil, '222')
+
+          Pivotal.new(sample_branches, nil).stories_delivered
+          @stories.verify
+        end
+      end
+
+      def test_stories_delivered_only_delivers_finished_stories
+        stub_tracker_gem(@project_mock) do
+          story1_mock = MiniTest::Mock.new
+                            .expect(:id, '111')
+                            .expect(:current_state, 'finished')
+                            .expect(:current_state=, true, ['delivered'])
+                            .expect(:update, true)
+          story2_mock = MiniTest::Mock.new
+                            .expect(:id, '222')
+                            .expect(:current_state, 'delivered')
+          mock_find(story1_mock)
+          mock_find(story2_mock)
+
+          Pivotal.new(sample_branches, nil).stories_delivered
+          story1_mock.verify
+          story2_mock.verify
+        end
+      end
+
       def test_stories_pushed_only_finishes_started_stories
         stub_tracker_gem(@project_mock) do
           story1_mock = MiniTest::Mock.new
