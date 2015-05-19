@@ -1,4 +1,5 @@
 require 'octokit'
+require 'flash_flow/branch/base'
 
 module FlashFlow
   module Branch
@@ -32,16 +33,12 @@ module FlashFlow
 
       def fetch
         pull_requests.map do |pr|
-          {
+          Base.from_hash(
               'remote_url' => pr.head.repo.ssh_url,
               'ref' => pr.head.ref,
               'status' => status_from_labels(pr),
-              'metadata' => {
-                  'pr_number' => pr.number,
-                  'user_url' => pr.user.html_url,
-                  'repo_url' => pr.head.repo.html_url
-              }
-          }
+              'metadata' => metadata(pr)
+          )
         end
       end
 
@@ -49,6 +46,7 @@ module FlashFlow
         pr = pr_for(branch)
 
         pr ||= create_pr(branch.ref, branch.ref, branch.ref)
+        branch.add_metadata(metadata(pr))
 
         if pr && @do_not_merge_label
           remove_label(pr.number, @do_not_merge_label)
@@ -113,6 +111,14 @@ module FlashFlow
       def labels(pull_request_number)
         @labels ||= {}
         @labels[pull_request_number] ||= octokit.labels_for_issue(repo, pull_request_number)
+      end
+
+      def metadata(pr)
+        {
+            'pr_number' => pr.number,
+            'user_url' => pr.user.html_url,
+            'repo_url' => pr.head.repo.html_url
+        }
       end
 
       def octokit

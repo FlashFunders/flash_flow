@@ -41,7 +41,7 @@ module FlashFlow
 
       def test_fetch_maps_collection_class_to_branches
         branch = Base.new('origin', 'the_origin_url', 'some_branch')
-        @fake_branches.expect(:fetch, [{'remote' => branch.remote, 'remote_url' => branch.remote_url, 'ref' => branch.ref }], [])
+        @fake_branches.expect(:fetch, [Base.from_hash({'remote' => branch.remote, 'remote_url' => branch.remote_url, 'ref' => branch.ref })], [])
         @collection.fetch
 
         assert_equal(@collection.branches.values, [branch])
@@ -50,7 +50,7 @@ module FlashFlow
 
       def test_fetch_finds_the_remote
         branch = Base.new('origin', 'the_origin_url', 'some_branch')
-        @fake_branches.expect(:fetch, [{'remote_url' => branch.remote_url, 'ref' => branch.ref }], [])
+        @fake_branches.expect(:fetch, [Base.from_hash({'remote_url' => branch.remote_url, 'ref' => branch.ref })], [])
         @collection.fetch
 
         assert_equal(@collection.branches.values, [branch])

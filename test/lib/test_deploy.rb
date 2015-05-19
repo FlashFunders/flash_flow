@@ -28,7 +28,7 @@ module FlashFlow
 
       current_branch_error = "\nERROR: Your branch did not merge to #{Config.configuration.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
 
-      assert_equal(@deploy.format_errors, current_branch_error)
+      assert_equal(current_branch_error, @deploy.format_errors)
     end
 
     def test_print_errors_when_another_branch_cant_merge

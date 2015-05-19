@@ -60,6 +60,11 @@ module FlashFlow
         self
       end
 
+      def add_metadata(data)
+        self.metadata ||= {}
+        self.metadata.merge!(data)
+      end
+
       def success!
         self.status = 'success'
       end
@@ -69,8 +74,7 @@ module FlashFlow
       end
 
       def fail!(conflict_sha=nil)
-        self.metadata ||= {}
-        self.metadata['conflict_sha'] = conflict_sha
+        add_metadata('conflict_sha' => conflict_sha) if conflict_sha
         self.status = 'fail'
       end
 
