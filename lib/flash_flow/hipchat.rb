@@ -26,7 +26,7 @@ module FlashFlow
       ref_link = %{<a href="#{branch.metadata['repo_url']}/tree/#{branch.ref}">#{branch.ref}</a>}
 
       message = %{#{user_url_link}'s branch (#{ref_link}) did not merge to acceptance successfully}
-      # @client[@room].send("FlashFlow", message)
+      @client[@room].send("FlashFlow", message)
     end
   end
 end
