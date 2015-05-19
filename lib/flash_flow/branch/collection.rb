@@ -63,7 +63,7 @@ module FlashFlow
       def fetch
         if @collection_instance.respond_to?(:fetch)
           @collection_instance.fetch.each do |b|
-            update_or_add(Base.from_hash(b))
+            update_or_add(b)
           end
         end
       end
