@@ -3,7 +3,6 @@ use_rerere: true
 merge_branch: acceptance
 master_branch: master
 branch_info_file: 'public/deployed'
-repo: 'remove me'
 remotes:
   - origin
 
@@ -17,7 +16,7 @@ lock:
   class:
     name: 'FlashFlow::Lock::Github'
     token: <%= ENV['GH_TOKEN'] %>
-    repo: 'flashfunders/flashfunders'
+    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
     issue_id: # Your github issue id goes here
 branches:
   class:

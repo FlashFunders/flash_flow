@@ -16,7 +16,7 @@ module FlashFlow
     end
 
     ATTRIBUTES = [
-        :use_rerere, :merge_remote, :merge_branch, :master_branch, :repo,
+        :use_rerere, :merge_remote, :merge_branch, :master_branch,
         :branch_info_file, :unmergeable_label, :do_not_merge_label, :log_file,
         :remotes, :hipchat_token, :issue_tracker, :lock, :branches
     ]
