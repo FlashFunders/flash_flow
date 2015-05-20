@@ -7,7 +7,11 @@ remotes:
   - origin
 
 # Everything below here is optional and should be deleted if you don't need it
-hipchat_token: ENV['HIPCHAT_TOKEN']
+notifier:
+  class:
+    name: 'FlashFlow::Notifier::Hipchat'
+    token: <%= ENV['HIPCHAT_TOKEN'] %>
+    room: 'Flash Flow Notifications'
 issue_tracker:
   class: 'FlashFlow::IssueTracker::Pivotal'
   token: <%= ENV['TRACKER_TOKEN'] %>

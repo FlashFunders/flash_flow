@@ -4,7 +4,7 @@ require 'flash_flow/cmd_runner'
 require 'flash_flow/git'
 require 'flash_flow/branch'
 require 'flash_flow/lock'
-require 'flash_flow/hipchat'
+require 'flash_flow/notifier'
 
 module FlashFlow
   class Deploy
@@ -23,7 +23,7 @@ module FlashFlow
       @git = Git.new(@cmd_runner, @merge_remote, @merge_branch, Config.configuration.master_branch, Config.configuration.use_rerere)
       @working_branch = @git.current_branch
       @lock = Lock::Base.new(Config.configuration.lock)
-      @hipchat = Hipchat.new('Engineering')
+      @notifier = Notifier::Base.new(Config.configuration.notifier)
       @branches = Branch::Collection.new(@git.remotes_hash, Config.configuration.branches)
       @stories = [opts[:stories]].flatten.compact
     end
@@ -109,7 +109,7 @@ module FlashFlow
         @branches.mark_success(branch)
       else
         @branches.mark_failure(branch, merge_rollback)
-        @hipchat.notify_merge_conflict(branch) unless branch.ref == @working_branch
+        @notifier.merge_conflict(branch) unless branch.ref == @working_branch
       end
     end
 

@@ -3,7 +3,6 @@ require 'minitest/autorun'
 require 'flash_flow'
 
 ENV['GH_TOKEN'] = 'fake_token'
-ENV['HIPCHAT_TOKEN'] = 'hip_token'
 
 class Minitest::Test
 

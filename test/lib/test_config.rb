@@ -10,12 +10,20 @@ module FlashFlow
           'unmergeable_label' => 'some_label',
           'do_not_merge_label' => 'dont merge',
           'branch_info_file' => 'some_file.txt',
-          'hipchat_token' => ENV['HIPCHAT_TOKEN'],
+          'notifier' => {
+              'class' => {
+                  'name' => 'NotifierClass'
+              }
+          },
           'issue_tracker' => {
-              'class' => 'IssueTrackerClass'
+              'class' => {
+                  'name' => 'IssueTrackerClass'
+              }
           },
           'lock' => {
-              'class' => 'LockClass'
+              'class' => {
+                  'name' => 'LockClass'
+              }
           }
       }
 
@@ -31,9 +39,9 @@ module FlashFlow
         assert('some_label' == config.unmergeable_label)
         assert('dont merge' == config.do_not_merge_label)
         assert('some_file.txt' == config.branch_info_file)
-        assert('hip_token' == config.hipchat_token)
-        assert({ 'class' => 'IssueTrackerClass' } == config.issue_tracker)
-        assert({ 'class' => 'LockClass' } == config.lock)
+        assert({ 'class' => { 'name' => 'NotifierClass' }} == config.notifier)
+        assert({ 'class' => { 'name' => 'IssueTrackerClass' }} == config.issue_tracker)
+        assert({ 'class' => { 'name' => 'LockClass' }} == config.lock)
       end
     end
 
@@ -48,7 +56,7 @@ module FlashFlow
         assert('do not merge' == config.do_not_merge_label)
         assert('README.rdoc' == config.branch_info_file)
         assert(['origin'] == config.remotes)
-        assert('hip_token' == config.hipchat_token)
+        assert_nil(config.notifier)
         assert_nil(config.issue_tracker)
         assert_nil(config.lock)
       end
