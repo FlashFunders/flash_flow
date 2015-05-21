@@ -6,7 +6,13 @@ module FlashFlow
 
     def setup
       reset_config!
-      config!(repo: 'flashfunders/flash_flow', merge_branch: 'test_acceptance')
+      config!(git: {
+                  'merge_branch' => 'test_acceptance',
+                  'merge_remote' => 'test_remote',
+                  'master_branch' => 'test_master',
+                  'remotes' => ['fake_origin'],
+                  'use_rerere' => true
+              })
 
       @branch = Branch::Base.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
       @deploy = Deploy.new
@@ -24,11 +30,12 @@ module FlashFlow
       @branch.fail!('some_random_sha')
 
       @deploy.instance_variable_set('@branches'.to_sym, collection)
-      @deploy.instance_variable_set('@working_branch'.to_sym, 'pushing_branch')
 
-      current_branch_error = "\nERROR: Your branch did not merge to #{Config.configuration.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+      current_branch_error = "\nERROR: Your branch did not merge to test_acceptance. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
 
-      assert_equal(current_branch_error, @deploy.format_errors)
+      @deploy.instance_variable_get('@git'.to_sym).stub(:working_branch, 'pushing_branch') do
+        assert_equal(current_branch_error, @deploy.format_errors)
+      end
     end
 
     def test_print_errors_when_another_branch_cant_merge
@@ -37,7 +44,7 @@ module FlashFlow
 
       @deploy.instance_variable_set('@branches'.to_sym, collection)
 
-      other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to #{Config.configuration.merge_branch} due to conflicts."
+      other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to test_acceptance due to conflicts."
 
       assert_equal(@deploy.format_errors, other_branch_error)
     end
@@ -68,9 +75,10 @@ module FlashFlow
     end
 
     def test_ignore_pushing_master_or_acceptance
-      ['master', 'test_acceptance'].each do |branch|
-        @deploy.instance_variable_set('@working_branch'.to_sym, branch)
-        refute(@deploy.open_pull_request)
+      ['test_master', 'test_acceptance'].each do |branch|
+        @deploy.instance_variable_get('@git'.to_sym).stub(:working_branch, branch) do
+          refute(@deploy.open_pull_request)
+        end
       end
     end
 

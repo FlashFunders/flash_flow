@@ -16,9 +16,7 @@ module FlashFlow
     end
 
     ATTRIBUTES = [
-        :use_rerere, :merge_remote, :merge_branch, :master_branch,
-        :branch_info_file, :unmergeable_label, :do_not_merge_label, :log_file,
-        :remotes, :notifier, :issue_tracker, :lock, :branches
+        :git, :branch_info_file, :log_file, :notifier, :issue_tracker, :lock, :branches
     ]
 
     attr_reader *ATTRIBUTES
@@ -51,15 +49,8 @@ module FlashFlow
 
     def self.defaults
       {
-          use_rerere: true,
-          merge_remote: 'origin',
-          merge_branch: 'acceptance',
-          master_branch: 'master',
           branch_info_file: 'README.rdoc',
-          unmergeable_label: 'unmergeable',
-          do_not_merge_label: 'do not merge',
           log_file: 'log/flash_flow.log',
-          remotes: ['origin'],
           notifier: nil,
           issue_tracker: nil,
           lock: nil,
