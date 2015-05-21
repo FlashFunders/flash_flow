@@ -2,32 +2,42 @@ require 'minitest_helper'
 require 'flash_flow/issue_tracker'
 
 module FlashFlow
-  class TestIssueTracker < Minitest::Test
+  module IssueTracker
+    class TestBase < Minitest::Test
 
-    class FakeIssueTracker
-      def initialize(*args); end
-      def stories_pushed; 'pushed!'; end
-      def production_deploy; 'deployed!'; end
-      def stories_delivered; 'delivered!'; end
-    end
+      class FakeIssueTracker
+        def initialize(*args); end
+        def stories_pushed; 'pushed!'; end
+        def production_deploy; 'deployed!'; end
+        def stories_delivered; 'delivered!'; end
+      end
 
-    def setup
-      reset_config!
-    end
+      def test_issue_tracker_class_not_set
+        empty_issue_tracker = IssueTracker::Base.new
+        issue_tracker.stub(:git, true) do
+          issue_tracker.stub(:get_branches, true) do
+            assert_nil(empty_issue_tracker.stories_pushed)
+            assert_nil(empty_issue_tracker.stories_delivered)
+            assert_nil(empty_issue_tracker.production_deploy)
+          end
+        end
+      end
 
-    def test_issue_tracker_class_not_set
-      config!(repo: 'does not matter', issue_tracker: nil)
-      assert_nil(IssueTracker::Base.new.stories_pushed)
-      assert_nil(IssueTracker::Base.new.stories_delivered)
-      assert_nil(IssueTracker::Base.new.production_deploy)
-    end
+      def test_issue_tracker_class_set
+        issue_tracker.stub(:git, true) do
+          issue_tracker.stub(:get_branches, true) do
+            assert_equal(FakeIssueTracker.new.stories_pushed, issue_tracker.stories_pushed)
+            assert_equal(FakeIssueTracker.new.stories_delivered, issue_tracker.stories_delivered)
+            assert_equal(FakeIssueTracker.new.production_deploy, issue_tracker.production_deploy)
+          end
+        end
+      end
 
-    def test_issue_tracker_class_set
-      config!(repo: 'does not matter', issue_tracker: { 'class' => 'FlashFlow::TestIssueTracker::FakeIssueTracker' })
+      private
 
-      assert_equal(FakeIssueTracker.new.stories_pushed, IssueTracker::Base.new.stories_pushed)
-      assert_equal(FakeIssueTracker.new.stories_delivered, IssueTracker::Base.new.stories_delivered)
-      assert_equal(FakeIssueTracker.new.production_deploy, IssueTracker::Base.new.production_deploy)
+      def issue_tracker
+        @issue_tracker ||= IssueTracker::Base.new({ 'class' => { 'name' => 'FlashFlow::IssueTracker::TestBase::FakeIssueTracker' }})
+      end
     end
   end
 end

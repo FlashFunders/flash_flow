@@ -13,9 +13,10 @@ notifier:
     token: <%= ENV['HIPCHAT_TOKEN'] %>
     room: 'Flash Flow Notifications'
 issue_tracker:
-  class: 'FlashFlow::IssueTracker::Pivotal'
-  token: <%= ENV['TRACKER_TOKEN'] %>
-  project_id: # Your Pivotal project id goes here
+  class:
+    name: 'FlashFlow::IssueTracker::Pivotal'
+    token: <%= ENV['TRACKER_TOKEN'] %>
+    project_id: # Your Pivotal project id goes here
 lock:
   class:
     name: 'FlashFlow::Lock::Github'
