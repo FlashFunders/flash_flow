@@ -16,9 +16,9 @@ module FlashFlow
     end
 
     ATTRIBUTES = [
-        :use_rerere, :merge_remote, :merge_branch, :master_branch, :repo,
+        :use_rerere, :merge_remote, :merge_branch, :master_branch,
         :branch_info_file, :unmergeable_label, :do_not_merge_label, :log_file,
-        :remotes, :hipchat_token, :issue_tracker, :lock, :branches
+        :remotes, :notifier, :issue_tracker, :lock, :branches
     ]
 
     attr_reader *ATTRIBUTES
@@ -60,7 +60,7 @@ module FlashFlow
           do_not_merge_label: 'do not merge',
           log_file: 'log/flash_flow.log',
           remotes: ['origin'],
-          hipchat_token: ENV['HIPCHAT_TOKEN'],
+          notifier: nil,
           issue_tracker: nil,
           lock: nil,
           branches: nil,

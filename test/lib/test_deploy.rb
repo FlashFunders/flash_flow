@@ -55,16 +55,16 @@ module FlashFlow
       collection.expect(:mark_failure, true, [@branch, true])
       @deploy.instance_variable_set('@branches'.to_sym, collection)
 
-      hipchat = Minitest::Mock.new
-      hipchat.expect(:notify_merge_conflict, true, [@branch])
-      @deploy.instance_variable_set('@hipchat'.to_sym, hipchat)
+      notifier = Minitest::Mock.new
+      notifier.expect(:merge_conflict, true, [@branch])
+      @deploy.instance_variable_set('@notifier'.to_sym, notifier)
 
       @deploy.stub(:merge_success?, false) do
         @deploy.stub(:merge_rollback, true) do
           @deploy.git_merge(@branch)
         end
       end
-      hipchat.verify
+      notifier.verify
     end
 
     def test_ignore_pushing_master_or_acceptance

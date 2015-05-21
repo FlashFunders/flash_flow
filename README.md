@@ -58,15 +58,17 @@ excluded from the merge branch.
 ### Configuring an issue tracker
 We use Pivotal Tracker. Anytime flash_flow is run, all the branches that get merged, if they have any stories
 associated with them (added via the `--stories` option), those stories will transition to "finished" if they
-were previously "started". Someday soon they will also transition from "finished" to "delivered" upon deployment
-to our review environment, but that feature isn't build yet. In addition, as part of our production deploy
+were previously "started". When code deploys to our review environment, our deploy script runs
+`flash_flow --review-deploy`, which transitions stories associated with merged branches from "finished" to
+"delivered". At the same time, for a branch that has been removed ("--no-merge"), if the story is "delivered"
+it will transition back to "finished". In addition, as part of our production deploy
 script, we run `flash_flow --prod-deploy`, which takes all the stories that are newly in the `master_branch`
 and adds a comment "Deployed to production on 12/25/2015 at 11:11pm". So using the story option can be handy.
 
 ### Configuring hipchat
 When a branch other than the one you're on doesn't merge cleanly and can't be fixed by rerere (more on that later
-too), a notification will go out to hipchat. This is not configurable right now, you just have to pass it your
-hipchat token, but this will be optional someday soon.
+too), a notification can go out to Hipchat. The Hipchat notifier needs your token (api v2 token) and the room
+to which the message will be sent.
 
 ### Runtime options
 
