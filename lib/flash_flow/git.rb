@@ -1,16 +1,25 @@
+require 'flash_flow/cmd_runner'
+
 module FlashFlow
   class Git
-    attr_reader :merge_remote, :merge_branch, :master_branch, :use_rerere
+    ATTRIBUTES = [:merge_remote, :merge_branch, :master_branch, :use_rerere]
+    attr_reader *ATTRIBUTES
+    attr_reader :working_branch
 
     UNMERGED_STATUSES = %w{DD AU UD UA DU AA UU}
 
-    def initialize(cmd_runner, merge_remote, merge_branch, master_branch, use_rerere)
-      @cmd_runner = cmd_runner
-      @merge_remote = merge_remote
-      @merge_branch = merge_branch
-      @master_branch = master_branch
+    def initialize(config, logger=nil)
+      @cmd_runner = CmdRunner.new(logger: logger)
+
+      ATTRIBUTES.each do |attr|
+        unless config.has_key?(attr.to_s)
+          raise RuntimeError.new("git configuration missing. Required config parameters: #{ATTRIBUTES}")
+        end
+
+        instance_variable_set("@#{attr}", config[attr.to_s])
+      end
+
       @working_branch = current_branch
-      @use_rerere = use_rerere
     end
 
     def last_stdout
@@ -118,9 +127,9 @@ module FlashFlow
       @remotes_hash
     end
 
-    def fetch_remotes_for_url(url)
+    def fetch_remote_for_url(url)
       fetch_remotes = remotes.grep(Regexp.new(url)).grep(/ \(fetch\)/)
-      fetch_remotes.map { |remote| remote.to_s.split("\t").first }
+      fetch_remotes.map { |remote| remote.to_s.split("\t").first }.first
     end
 
     def staged_and_working_dir_files

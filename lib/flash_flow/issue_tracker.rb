@@ -1,6 +1,5 @@
 require 'logger'
 
-require 'flash_flow/cmd_runner'
 require 'flash_flow/git'
 require 'flash_flow/branch'
 require 'flash_flow/branch/store'
@@ -32,11 +31,7 @@ module FlashFlow
       private
 
       def git
-        @git ||= Git.new(CmdRunner.new(logger: Config.configuration.logger),
-                         Config.configuration.merge_remote,
-                         Config.configuration.merge_branch,
-                         Config.configuration.master_branch,
-                         Config.configuration.use_rerere)
+        @git ||= Git.new(Config.configuration.git, Config.configuration.logger)
       end
 
       def get_branches
