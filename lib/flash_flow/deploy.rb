@@ -18,7 +18,8 @@ module FlashFlow
       @git = Git.new(Config.configuration.git, logger)
       @lock = Lock::Base.new(Config.configuration.lock)
       @notifier = Notifier::Base.new(Config.configuration.notifier)
-      @branches = Branch::Collection.new(@git.remotes_hash, Config.configuration.branches)
+      store = Branch::Store.new(Config.configuration.branch_info_file, @git, logger: logger)
+      @branches = Branch::Collection.fetch(@git.remotes_hash, store, Config.configuration.branches)
     end
 
     def logger
@@ -73,13 +74,10 @@ module FlashFlow
     end
 
     def commit_branch_info
-      if Config.configuration.branch_info_file
-        @stories.each do |story_id|
-          @branches.add_story(@git.merge_remote, @git.working_branch, story_id)
-        end
-        Branch::Store.new(Config.configuration.branch_info_file, @git, logger: logger).merge_and_save(@branches.branches)
-        @git.add_and_commit(Config.configuration.branch_info_file, 'Branch Info', add: { force: true })
+      @stories.each do |story_id|
+        @branches.add_story(@git.merge_remote, @git.working_branch, story_id)
       end
+      @branches.save!
     end
 
     def merge_branches
@@ -94,10 +92,10 @@ module FlashFlow
     end
 
     def git_merge(branch)
-      @git.run("rev-parse #{branch.remote}/#{branch.ref}")
-      branch.sha = @git.last_stdout.strip
-
-      if merge_success?(branch)
+      if !mark_sha(branch)
+        @branches.mark_deleted(branch)
+        @notifier.deleted_branch(branch) unless branch.ref == @git.working_branch
+      elsif merge_success?(branch)
         @branches.mark_success(branch)
       else
         @branches.mark_failure(branch, merge_rollback)
@@ -146,12 +144,24 @@ module FlashFlow
     def merge_success?(branch)
       fetch(branch.remote)
 
-      @git.run("merge #{branch.remote}/#{branch.ref}")
+      @git.run("merge --no-ff #{branch.remote}/#{branch.ref}")
 
       @git.last_success? || @git.rerere_resolve!
     end
 
     private
+
+    def mark_sha(branch)
+      fetch(branch.remote)
+
+      @git.run("rev-parse #{branch.remote}/#{branch.ref}")
+      if @git.last_success?
+        branch.sha = @git.last_stdout.strip
+        true
+      else
+        false
+      end
+    end
 
     def merge_rollback
       @git.run("reset --hard HEAD")

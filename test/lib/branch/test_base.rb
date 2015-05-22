@@ -80,6 +80,34 @@ module FlashFlow
         assert_equal(branch.metadata, branch_hash['metadata'])
       end
 
+      def test_from_hash_with_time_objects
+        branch_hash['updated_at'] = Time.now - 200
+        branch_hash['created_at'] = Time.now - 200
+        branch = Base.from_hash(branch_hash)
+        assert_equal(branch.updated_at, branch_hash['updated_at'])
+        assert_equal(branch.created_at, branch_hash['created_at'])
+      end
+
+      def test_from_hash_with_nil_times
+        time = Time.parse('2015-05-22 09:47:07 -0700')
+        branch_hash['updated_at'] = branch_hash['created_at'] = nil
+        Time.stub(:now, time) do
+          branch = Base.from_hash(branch_hash)
+
+          assert_equal(branch.updated_at, time)
+          assert_equal(branch.created_at, time)
+        end
+      end
+
+      def test_from_hash_with_string_times
+        time = Time.parse('2015-05-22 09:47:07 -0700')
+        branch_hash['updated_at'] = '2015-05-22 09:47:07 -0700'
+        branch_hash['created_at'] = '2015-05-22 09:47:07 -0700'
+        branch = Base.from_hash(branch_hash)
+        assert_equal(branch.updated_at, time)
+        assert_equal(branch.created_at, time)
+      end
+
       def test_double_equals
         branch1 = Base.from_hash(branch_hash)
         branch2 = Base.from_hash(branch_hash)
@@ -130,6 +158,16 @@ module FlashFlow
 
         branch.success!
         refute(branch.removed?)
+      end
+
+      def test_deleted
+        branch = Base.new(1,2,3)
+
+        branch.deleted!
+        assert(branch.deleted?)
+
+        branch.success!
+        refute(branch.deleted?)
       end
 
       def test_unknown
