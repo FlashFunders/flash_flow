@@ -41,7 +41,7 @@ module FlashFlow
       end
 
       def issue_tracker
-        @issue_tracker ||= @issue_tracker_class && @issue_tracker_class.new(get_branches, git, @config)
+        @issue_tracker ||= @issue_tracker_class && @issue_tracker_class.new(get_branches, git, @config['class'])
       end
     end
   end
