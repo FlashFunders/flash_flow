@@ -13,7 +13,8 @@ module FlashFlow
 
       def setup
         @mock_git = MockGit.new
-        @collection = Collection.new({ 'origin' => 'the_origin_url' })
+        @mock_store = Minitest::Mock.new
+        @collection = Collection.new({ 'origin' => 'the_origin_url' }, @mock_store)
         @branch = Base.new('origin', 'the_origin_url', 'some_branch')
         @storage = Store.new('/dev/null', @mock_git)
       end
@@ -82,8 +83,8 @@ module FlashFlow
     end
 
     class MockGit
-      def read_file_from_merge_branch;
-      end
+      def read_file_from_merge_branch; end
+      def add_and_commit(_,_,_=nil); end
 
       def in_merge_branch
         yield

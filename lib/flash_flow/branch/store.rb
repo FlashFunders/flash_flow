@@ -13,6 +13,11 @@ module FlashFlow
       def merge(old, new)
         merged_branches = new.dup
 
+        merged_branches.each do |_, info|
+          info.updated_at = Time.now
+          info.created_at ||= Time.now
+        end
+
         old.each do |full_ref, info|
           if merged_branches.has_key?(full_ref)
             merged_branches[full_ref].created_at = info.created_at
@@ -23,16 +28,15 @@ module FlashFlow
           end
         end
 
-        merged_branches.each do |_, info|
-          info.updated_at = Time.now
-          info.created_at ||= Time.now
-        end
-
         merged_branches
       end
 
       def merge_and_save(new_branches)
         write(merge(get, new_branches))
+      end
+
+      def fetch
+        get.values
       end
 
       def get
@@ -53,6 +57,8 @@ module FlashFlow
           file ||= File.open(@filename, 'w')
           file.puts JSON.pretty_generate(branches)
           file.close
+
+          @git.add_and_commit(@filename, 'Branch Info', add: { force: true })
         end
       end
     end

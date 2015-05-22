@@ -3,6 +3,12 @@
 require 'flash_flow'
 
 options = FlashFlow::Options.parse
+
+if options[:install]
+  FlashFlow::Install.install
+  exit(0)
+end
+
 FlashFlow::Config.configure!(options[:config_file])
 case
   when options[:prod_deploy]

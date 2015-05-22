@@ -15,6 +15,10 @@ module FlashFlow
       def merge_conflict(branch)
         @notifier.merge_conflict(branch) if @notifier.respond_to?(:merge_conflict)
       end
+
+      def deleted_branch(branch)
+        @notifier.deleted_branch(branch) if @notifier.respond_to?(:deleted_branch)
+      end
     end
   end
 end

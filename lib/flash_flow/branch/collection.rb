@@ -8,21 +8,25 @@ module FlashFlow
 
       attr_accessor :branches, :remotes
 
-      def initialize(remotes, config=nil)
+      def initialize(remotes, store, config=nil)
         @remotes = remotes
+        @store = store
         @branches = {}
 
-        collection_class_name = config && config['class'] && config['class']['name']
-        return unless collection_class_name
-
-        collection_class = Object.const_get(collection_class_name)
-        @collection_instance = collection_class.new(config['class'])
-
-        fetch
+        if config && config['class'] && config['class']['name']
+          collection_class = Object.const_get(config['class']['name'])
+          @collection_instance = collection_class.new(config['class'])
+        end
       end
 
-      def self.from_hash(remotes, hash)
-        collection = new(remotes)
+      def self.fetch(remotes, store, config=nil)
+        collection = new(remotes, store, config)
+        collection.fetch
+        collection
+      end
+
+      def self.from_hash(remotes, store, hash)
+        collection = new(remotes, store)
         collection.branches = hash.dup
         collection
       end
@@ -60,11 +64,15 @@ module FlashFlow
         @branches.select { |_, v| v.fail? }
       end
 
+      def save!
+        @store.merge_and_save(@branches)
+      end
+
       def fetch
-        if @collection_instance.respond_to?(:fetch)
-          @collection_instance.fetch.each do |b|
-            update_or_add(b)
-          end
+        fetch_from = @collection_instance.respond_to?(:fetch) ? @collection_instance : @store
+
+        fetch_from.fetch.each do |b|
+          update_or_add(b)
         end
       end
 
@@ -85,6 +93,13 @@ module FlashFlow
         update_or_add(branch)
         branch.fail!(conflict_sha)
         @collection_instance.mark_failure(branch) if @collection_instance.respond_to?(:mark_failure)
+        branch
+      end
+
+      def mark_deleted(branch)
+        update_or_add(branch)
+        branch.deleted!
+        @collection_instance.mark_deleted(branch) if @collection_instance.respond_to?(:mark_deleted)
         branch
       end
 

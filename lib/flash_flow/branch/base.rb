@@ -21,9 +21,20 @@ module FlashFlow
         base.status = hash['status']
         base.stories = hash['stories']
         base.metadata = hash['metadata']
-        base.updated_at = hash['updated_at']
-        base.created_at = hash['created_at']
+        base.updated_at = massage_time(hash['updated_at'])
+        base.created_at = massage_time(hash['created_at'])
         base
+      end
+
+      def self.massage_time(time)
+        case time
+          when Time
+            time
+          when NilClass
+            Time.now
+          else
+            Time.parse(time)
+        end
       end
 
       def ==(other)
@@ -88,6 +99,14 @@ module FlashFlow
 
       def removed?
         self.status == 'removed'
+      end
+
+      def deleted!
+        self.status = 'deleted'
+      end
+
+      def deleted?
+        self.status == 'deleted'
       end
 
       def unknown!

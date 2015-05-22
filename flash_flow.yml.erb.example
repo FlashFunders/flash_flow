@@ -1,0 +1,81 @@
+## The basic settings for your app
+
+git:
+  # This is what allows you to resolve merge conflicts using flash_flow, rerere is amazing. There's
+  # more description elsewhere about how this works.
+  use_rerere: true
+
+  # Which remote to push the merge branch to
+  merge_remote: origin
+
+  # This branch is owned by flash_flow, it force pushes every time. So don't use a branch to which you make
+  # commits. Treat this as 100% ephemeral, but if you can you should deploy it automatically to your
+  # review/staging env when it gets pushed.
+  merge_branch: acceptance
+
+  # This is your mainline production branch that is the basis for the merge branch
+  master_branch: master
+
+# An arbitrary file that flash_flow will write to in the merge branch and use to store branch information.
+# Make sure it doesn't collide with a file you actually need in your application. You don't need to look at
+# this file in general.
+branch_info_file: 'your/random/file'
+
+
+
+### Everything below here is optional and should be deleted or remain commented out if you don't need it
+
+
+## This will send merge conflict notifications to the hipchat room configured below, only for branches
+## other than your own.
+
+#notifier:
+#  class:
+#    name: 'FlashFlow::Notifier::Hipchat'
+#    token: <%= ENV['HIPCHAT_TOKEN'] %>
+#    room: 'Flash Flow Notifications'
+
+
+## If you use Pivotal Tracker, this integration can finish, deliver, un-deliver, and comment when
+## deployed to production if you set it up.
+## Must be used in conjuction with the "--story or --stories" options.
+## You need to run "flash_flow --review-deploy" when you deploy to your review enviroment to get the
+## deliver/un-deliver functionality.
+## You need to run "flash_flow --prod-deploy" when you deploy to production to get the "Deployed to production"
+## comment when your story is deployed to prod.
+
+#issue_tracker:
+#  class:
+#    name: 'FlashFlow::IssueTracker::Pivotal'
+#    token: <%= ENV['TRACKER_TOKEN'] %>
+#    project_id: # Your Pivotal project id goes here
+
+
+## We use this to ensure only one person at a time runs flash_flow. It checks the github issue when
+## flash_flow starts, and if it's open flash_flow exits. Otherwise it opens the issue (thus locking
+## other users out) and then closes it when flash_flow is done with its work. Using github in this way
+## is weird, and not a 100% reliable lock, but it at least prevents most possible cases of odd
+## concurrency issues.
+
+#lock:
+#  class:
+#    name: 'FlashFlow::Lock::Github'
+#    token: <%= ENV['GH_TOKEN'] %>
+#    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
+#    issue_id: # Your github issue id goes here
+
+
+## We use Github as our source of truth for which branches to merge. All open pull requests that don't
+## have the "do not merge" label on them get merged. If you configure this flash_flow will automatically
+## create a PR for your branch when it runs. If your branch can't merge, it will still be PR'ed, but it
+## will have the "unmergeable" label on it (that label is strictly informational, no functionality is
+## affected at all).
+
+#branches:
+#  class:
+#    name: 'FlashFlow::Branch::Github'
+#    token: <%= ENV['GH_TOKEN'] %>
+#    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
+#    master_branch: master
+#    unmergeable_label: unmergeable
+#    do_not_merge_label: 'do not merge'
