@@ -17,5 +17,5 @@ case
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_delivered
   else
     FlashFlow::Deploy.new(options).run
-    FlashFlow::IssueTracker::Base.new.stories_pushed
+    FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_pushed
 end
