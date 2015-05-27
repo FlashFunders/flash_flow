@@ -7,19 +7,26 @@ Add this line to your application's Gemfile:
 
     gem 'flash_flow'
 
-And then:
+And then run:
 
-    $ bundle
+    $ bundle install
+    $ bundle exec flash_flow --install
 
 Or install it yourself as:
 
     $ gem install flash_flow
 
-And then copy flash_flow.yml.example to your application.
+And then run:
+
+    $ flash_flow --install
+
+After "installing" flash_flow, you'll have a file "config/flash_flow.yml.erb". If your remote is origin,
+your master branch is master, and you're fine using "acceptance" as the branch that flash_flow owns, you
+are ready to go for flash_flow basic. If not, edit that file and change branch and remote names accordingly.
 
 ## Usage
 flash_flow is a ruby script which, in the simplest case, can just be run by calling `flash_flow`.
-What that will do (once your application is properly configured) is
+What that will do (once your application is properly configured) is:
 
 1. Push your branch to the `merge_remote`
 2. Reset your `merge_branch` to be the same as your `master_branch`
