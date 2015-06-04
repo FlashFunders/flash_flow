@@ -82,7 +82,7 @@ module FlashFlow
       end
 
       def shipped?(branch)
-        @git.master_branch_contains?(branch.sha)
+        branch.sha && @git.master_branch_contains?(branch.sha)
       end
 
       def get_story(story_id)
