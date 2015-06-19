@@ -41,9 +41,7 @@ module FlashFlow
       end
 
       def get_last_event
-        Octokit.issue_events(repo, issue_id)
-        last_issue_events_page = Octokit.last_response.rels[:last].get
-        last_issue_events_page.data.last
+        Octokit.issue_events(repo, issue_id).last.rels[:self].get.data
       end
 
       def issue_open?
