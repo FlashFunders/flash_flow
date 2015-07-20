@@ -28,6 +28,10 @@ module FlashFlow
         issue_tracker.production_deploy if issue_tracker.respond_to?(:production_deploy)
       end
 
+      def release_notes(hours)
+        issue_tracker.release_notes(hours) if issue_tracker.respond_to?(:release_notes)
+      end
+
       private
 
       def git

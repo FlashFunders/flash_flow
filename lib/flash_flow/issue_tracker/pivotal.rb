@@ -42,6 +42,23 @@ module FlashFlow
         end
       end
 
+      def release_notes(hours)
+        stories = @project.iteration(:done).last(2).map(&:stories)
+        stories << @project.iteration(:current).stories
+
+        release_notes = stories.flatten.map do |story|
+          shipped_text = already_has_comment?(story, Regexp.new("^#{note_prefix}"))
+          next unless shipped_text
+
+          {id: story.id, title: story.name, time: Time.strptime(shipped_text, note_time_format)}
+        end.compact
+
+        release_notes = release_notes.select { |story| story[:time] >= (Time.now - hours.to_i*60*60) }
+        release_notes.sort_by {|story| story[:time] }.reverse.each do |story|
+          puts "PT##{story[:id]} #{story[:title]} (#{story[:time]})"
+        end
+      end
+
       private
 
       def undeliver(story_id)
@@ -74,11 +91,18 @@ module FlashFlow
       def comment(story_id)
         story = get_story(story_id)
         if story
-          note_prefix = 'Shipped to production on'
           unless already_has_comment?(story, Regexp.new("^#{note_prefix}"))
-            story.notes.create(:text => Time.now.strftime("#{note_prefix} %m/%d/%Y at %H:%M"))
+            story.notes.create(:text => Time.now.strftime(note_time_format))
           end
         end
+      end
+
+      def note_prefix
+        'Shipped to production on'
+      end
+
+      def note_time_format
+        "#{note_prefix} %m/%d/%Y at %H:%M"
       end
 
       def shipped?(branch)
