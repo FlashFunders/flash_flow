@@ -1,4 +1,5 @@
 require 'pivotal-tracker'
+require 'time'
 
 module FlashFlow
   module IssueTracker
@@ -42,6 +43,16 @@ module FlashFlow
         end
       end
 
+      def release_notes(hours)
+        release_stories = done_and_current_stories.map do |story|
+          shipped_text = has_shipped_text?(story)
+          format_release_data(story.id, story.name, shipped_text) if shipped_text
+        end.compact
+
+        release_notes = release_by(release_stories, hours)
+        print_release_notes(release_notes)
+      end
+
       private
 
       def undeliver(story_id)
@@ -74,15 +85,42 @@ module FlashFlow
       def comment(story_id)
         story = get_story(story_id)
         if story
-          note_prefix = 'Shipped to production on'
-          unless already_has_comment?(story, Regexp.new("^#{note_prefix}"))
-            story.notes.create(:text => Time.now.strftime("#{note_prefix} %m/%d/%Y at %H:%M"))
+          unless has_shipped_text?(story)
+            story.notes.create(:text => Time.now.strftime(note_time_format))
           end
         end
       end
 
+      def note_prefix
+        'Shipped to production on'
+      end
+
+      def note_time_format
+        "#{note_prefix} %m/%d/%Y at %H:%M"
+      end
+
+      def format_release_data(story_id, story_name, shipped_text)
+        {id: story_id, title: story_name, time: Time.strptime(shipped_text, note_time_format)}
+      end
+
       def shipped?(branch)
         branch.sha && @git.master_branch_contains?(branch.sha)
+      end
+
+      def done_and_current_stories
+        [@project.iteration(:done).last(2).map(&:stories) + @project.iteration(:current).stories].flatten
+      end
+
+      def release_by(release_stories, hours)
+        release_stories
+          .select { |story| story[:time] >= (Time.now - hours.to_i*60*60) }
+          .sort_by {|story| story[:time] }.reverse
+      end
+
+      def print_release_notes(release_notes)
+        release_notes.each do |story|
+          puts "PT##{story[:id]} #{story[:title]} (#{story[:time]})"
+        end
       end
 
       def get_story(story_id)
@@ -91,6 +129,10 @@ module FlashFlow
 
       def already_has_comment?(story, comment)
         story.notes.all.map(&:text).detect { |text| text =~ comment }
+      end
+
+      def has_shipped_text?(story)
+        already_has_comment?(story, Regexp.new("^#{note_prefix}"))
       end
 
       def shipped_branches

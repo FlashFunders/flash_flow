@@ -10,6 +10,7 @@ module FlashFlow
         opts.on('', '--install', 'Copy flashfunders.yml.example to your repo and exit') { |v| options[:install] = true }
         opts.on('', '--prod-deploy', 'Run IssueTracker#deploy_production and exit') { |v| options[:prod_deploy] = true }
         opts.on('', '--review-deploy', 'Run IssueTracker#deploy_review and exit') { |v| options[:review_deploy] = true }
+        opts.on('', '--release-notes hours', 'Run IssueTracker#release_notes and exit') { |v| options[:release_notes] = v }
         opts.on('-n', '--no-merge', 'Run flash flow, but do not merge this branch') { |v| options[:do_not_merge] = true }
         opts.on('', '--story id1', 'story id for this branch') { |v| options[:stories] = [v] }
         opts.on('', '--stories id1,id2', 'comma-delimited list of story ids for this branch') { |v| options[:stories] = v.split(',') }

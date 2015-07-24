@@ -107,7 +107,6 @@ module FlashFlow
         story_mock = MiniTest::Mock.new
                          .expect(:id, '111')
                          .expect(:notes, fake_notes)
-                         # .expect(:notes, fake_notes)
 
         stub_tracker_gem(@project_mock) do
           mock_find(story_mock)
@@ -118,6 +117,27 @@ module FlashFlow
         story_mock.verify
         fake_notes.verify
       end
+
+      def test_list_release_notes_with_time_scope
+        time_now = Time.now.strftime("%m/%d/%Y at %H:%M")
+        fake_notes = Minitest::Mock.new
+                      .expect(:all, [mock_comment('Some random comment'), mock_comment("Shipped to production on #{time_now}")])
+        story_mock = MiniTest::Mock.new
+                      .expect(:id, '111')
+                      .expect(:name, 'fake_name')
+                      .expect(:notes, fake_notes)
+        
+        stub_tracker_gem(@project_mock) do
+          pivotal = Pivotal.new(sample_branches, mock_git)
+          pivotal.stub(:done_and_current_stories, [story_mock]) do
+            pivotal.release_notes(24)
+          end
+        end
+
+        story_mock.verify
+        fake_notes.verify
+      end
+
       private
 
       def stub_tracker_gem(project)
