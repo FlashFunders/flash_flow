@@ -8,6 +8,7 @@ module FlashFlow
       def initialize(branches, git, opts={})
         @branches = branches
         @git = git
+        @timezone = opts['timezone'] || "+00:00"
 
         PivotalTracker::Client.token = opts['token']
         PivotalTracker::Client.use_ssl = true
@@ -86,7 +87,7 @@ module FlashFlow
         story = get_story(story_id)
         if story
           unless has_shipped_text?(story)
-            story.notes.create(:text => Time.now.strftime(note_time_format))
+            story.notes.create(:text => Time.now.utc.localtime(@timezone).strftime(note_time_format))
           end
         end
       end
