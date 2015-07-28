@@ -42,7 +42,7 @@ branch_info_file: 'your/random/file'
 ## You need to run "flash_flow --review-deploy" when you deploy to your review enviroment to get the
 ## deliver/un-deliver functionality.
 ## You need to run "flash_flow --prod-deploy" when you deploy to production to get the "Deployed to production"
-## Timezone is UTC, you can config utc offset in "timezone:" attribute below.
+## The timezone attribute will be set to system time zone (TZ environment variable).
 ## comment when your story is deployed to prod.
 
 #issue_tracker:
@@ -50,7 +50,7 @@ branch_info_file: 'your/random/file'
 #    name: 'FlashFlow::IssueTracker::Pivotal'
 #    token: <%= ENV['TRACKER_TOKEN'] %>
 #    project_id: # Your Pivotal project id goes here
-#    timezone: '−07:00'
+#    timezone: 'US/Pacific'
 
 
 ## We use this to ensure only one person at a time runs flash_flow. It checks the github issue when
