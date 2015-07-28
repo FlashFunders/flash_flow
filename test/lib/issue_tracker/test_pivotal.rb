@@ -1,9 +1,12 @@
 require 'minitest_helper'
 require 'flash_flow/issue_tracker/pivotal'
+require 'flash_flow/time_helper'
 
 module FlashFlow
   module IssueTracker
     class TestPivotal < Minitest::Test
+      include TimeHelper
+
       def setup
         @project_mock = MiniTest::Mock.new
         @stories = MiniTest::Mock.new
@@ -83,9 +86,10 @@ module FlashFlow
       end
 
       def test_production_deploy_comments
+        shipped_text = with_time_zone("US/Pacific") { Time.now.strftime("Shipped to production on %m/%d/%Y at %H:%M") }
         fake_notes = Minitest::Mock.new
                           .expect(:all, [mock_comment('Some random comment'), mock_comment('Some other random comment')])
-                          .expect(:create, true, [{ text: Time.now.strftime("Shipped to production on %m/%d/%Y at %H:%M") }])
+                          .expect(:create, true, [{ text: shipped_text }])
         story_mock = MiniTest::Mock.new
                           .expect(:id, '111')
                           .expect(:notes, fake_notes)
@@ -94,7 +98,7 @@ module FlashFlow
         stub_tracker_gem(@project_mock) do
           mock_find(story_mock)
 
-          Pivotal.new(sample_branches, mock_git).production_deploy
+          Pivotal.new(sample_branches, mock_git, {'timezone' => "US/Pacific"}).production_deploy
         end
 
         story_mock.verify
@@ -126,7 +130,7 @@ module FlashFlow
                       .expect(:id, '111')
                       .expect(:name, 'fake_name')
                       .expect(:notes, fake_notes)
-        
+
         stub_tracker_gem(@project_mock) do
           pivotal = Pivotal.new(sample_branches, mock_git)
           pivotal.stub(:done_and_current_stories, [story_mock]) do

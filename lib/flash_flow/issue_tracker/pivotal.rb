@@ -1,13 +1,16 @@
 require 'pivotal-tracker'
 require 'time'
+require 'flash_flow/time_helper'
 
 module FlashFlow
   module IssueTracker
     class Pivotal
+      include TimeHelper
 
       def initialize(branches, git, opts={})
         @branches = branches
         @git = git
+        @timezone = opts['timezone'] || "UTC"
 
         PivotalTracker::Client.token = opts['token']
         PivotalTracker::Client.use_ssl = true
@@ -86,7 +89,7 @@ module FlashFlow
         story = get_story(story_id)
         if story
           unless has_shipped_text?(story)
-            story.notes.create(:text => Time.now.strftime(note_time_format))
+            story.notes.create(:text => with_time_zone(@timezone) { Time.now.strftime(note_time_format) })
           end
         end
       end
@@ -146,6 +149,7 @@ module FlashFlow
       def removed_branches
         @branches.select { |_, v| v.removed? }
       end
+
     end
   end
 end
