@@ -123,23 +123,28 @@ module FlashFlow
       end
 
       def test_list_release_notes_with_time_scope
-        time_now = Time.now.strftime("%m/%d/%Y at %H:%M")
+        time = Time.now
+        time -= time.sec
+        time_now = time.strftime("%m/%d/%Y at %H:%M")
         fake_notes = Minitest::Mock.new
                       .expect(:all, [mock_comment('Some random comment'), mock_comment("Shipped to production on #{time_now}")])
         story_mock = MiniTest::Mock.new
                       .expect(:id, '111')
                       .expect(:name, 'fake_name')
                       .expect(:notes, fake_notes)
+        fake_file = MiniTest::Mock.new
+                      .expect(:puts, nil, ["PT#111 fake_name (#{time})"])
 
         stub_tracker_gem(@project_mock) do
           pivotal = Pivotal.new(sample_branches, mock_git)
           pivotal.stub(:done_and_current_stories, [story_mock]) do
-            pivotal.release_notes(24)
+            pivotal.release_notes(24, fake_file)
           end
         end
 
         story_mock.verify
         fake_notes.verify
+        fake_file.verify
       end
 
       private

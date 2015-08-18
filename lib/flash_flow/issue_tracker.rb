@@ -28,8 +28,8 @@ module FlashFlow
         issue_tracker.production_deploy if issue_tracker.respond_to?(:production_deploy)
       end
 
-      def release_notes(hours)
-        issue_tracker.release_notes(hours) if issue_tracker.respond_to?(:release_notes)
+      def release_notes(hours, file=STDOUT)
+        issue_tracker.release_notes(hours, file) if issue_tracker.respond_to?(:release_notes)
       end
 
       private
