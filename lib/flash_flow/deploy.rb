@@ -13,6 +13,7 @@ module FlashFlow
     def initialize(opts={})
       @do_not_merge = opts[:do_not_merge]
       @force = opts[:force]
+      @rerere_forget = opts[:rerere_forget]
       @stories = [opts[:stories]].flatten.compact
 
       @git = Git.new(Config.configuration.git, logger)
@@ -92,14 +93,16 @@ module FlashFlow
     end
 
     def git_merge(branch)
+      is_working_branch = branch.ref == @git.working_branch
+
       if !mark_sha(branch)
         @branches.mark_deleted(branch)
-        @notifier.deleted_branch(branch) unless branch.ref == @git.working_branch
-      elsif merge_success?(branch)
+        @notifier.deleted_branch(branch) unless is_working_branch
+      elsif merge_success?(branch, (is_working_branch && @rerere_forget))
         @branches.mark_success(branch)
       else
         @branches.mark_failure(branch, merge_rollback)
-        @notifier.merge_conflict(branch) unless branch.ref == @git.working_branch
+        @notifier.merge_conflict(branch) unless is_working_branch
       end
     end
 
@@ -141,15 +144,25 @@ module FlashFlow
       end
     end
 
-    def merge_success?(branch)
+    private
+
+
+    def merge_success?(branch, rerere_forget)
       fetch(branch.remote)
 
       @git.run("merge --no-ff #{branch.remote}/#{branch.ref}")
 
-      @git.last_success? || @git.rerere_resolve!
+      @git.last_success? || try_rerere(rerere_forget)
     end
 
-    private
+    def try_rerere(rerere_forget)
+      if rerere_forget
+        @git.run('rerere forget')
+        false
+      else
+        @git.rerere_resolve!
+      end
+    end
 
     def mark_sha(branch)
       fetch(branch.remote)
