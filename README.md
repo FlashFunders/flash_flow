@@ -1,5 +1,8 @@
 # Flash Flow
 
+Flash Flow is a ruby gem that helps your team keep your acceptance environment up to date. Check out
+[this gist](https://gist.github.com/bradleyjucsc/bfbb8742889edf1b423a) for a detailed explanation of
+how it works.
 
 ## Installation
 
