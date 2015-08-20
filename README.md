@@ -89,6 +89,10 @@ flash_flow is run by anyone else it will not be included. It will add the "do no
 request if you're using that. Anytime you run flash_flow without this option, the branch you're running from will
 be included in the `merge_branch` even if it has previously been set to "do not merge".
 
+#### --rerere-forget
+If you've resolved a merge conflict the wrong way, run with this option on the problem branch. The remembered
+resolution will be deleted and you'll get to re-resolve your conflict.
+
 #### --story <story_id>
 Associates a story id with this branch. See "configuring an issue tracker" for why this can be useful.
 
@@ -100,16 +104,24 @@ Forces pushes your branch. All it does is add "-f" to the git push command, so y
 you're doing if you use this. The `merge_branch` always gets force pushed at the end, this option has nothing to do
 with that.
 
+#### --release-notes <hours>
+Lists all the stories that have been deployed to production in the last <hours> hours. Only relevant if you run
+--prod-deploy when you deploy.
+
 #### --config-file FILE_PATH
 This tells flash_flow how to find the configuration file. If you just put the file in config/flash_flow.yml you will
 never need this option.
 
 #### --prod-deploy
-Passing this option makes every other option useless (except for the --config-file), because this is the only time
-flash_flow doesn't do all the merging and pushing and notifying. This option just calls
-"IssueTracker#production_deploy". If you have Pivotal Tracker configured it will look at all stories associated with
-branches, and if that branch is deployed to `master_branch` it will add a comment to the story about it having been
-deployed to production.
+If you have Pivotal Tracker configured it will look at all stories associated with branches, and if that branch is
+deployed to `master_branch` it will add a comment to those stories that says
+"Deployed to production on MM/DD/YY at XX:XX". This is meant to be used right after every deploy to your production
+environment. The acceptance branch will not be re-built in this case.
+
+#### --review-deploy
+If you have Pivotal Tracker configured it will look at all stories associated with branches, and if that branch is
+deployed to `acceptance_branch` it will mark any finished stories as delivered. This is best used right after every
+deploy to your acceptance environment. The acceptance branch will not be re-built in this case.
 
 ### Merge conflicts
 When we first started using flash_flow, if your branch had a merge conflict you were out of luck. You had to wait for

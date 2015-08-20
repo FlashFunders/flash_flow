@@ -57,21 +57,52 @@ module FlashFlow
       end
     end
 
-    def test_merge_conflict_notification
-      collection = Minitest::Mock.new
-      collection.expect(:mark_failure, true, [@branch, true])
-      @deploy.instance_variable_set('@branches'.to_sym, collection)
+    def test_deleted_branch
+      collection.expect(:mark_deleted, true, [@branch])
 
-      notifier = Minitest::Mock.new
-      notifier.expect(:merge_conflict, true, [@branch])
-      @deploy.instance_variable_set('@notifier'.to_sym, notifier)
+      notifier.expect(:deleted_branch, true, [@branch])
 
-      @deploy.stub(:merge_success?, false) do
-        @deploy.stub(:merge_rollback, true) do
-          @deploy.git_merge(@branch)
-        end
+      merger.expect(:do_merge, :deleted, [ false ])
+
+      BranchMerger.stub(:new, merger) do
+        @deploy.git_merge(@branch, false)
       end
+
       notifier.verify
+      collection.verify
+      merger.verify
+    end
+
+    def test_merge_conflict
+      collection.expect(:mark_failure, true, [@branch, 'some_sha'])
+
+      notifier.expect(:merge_conflict, true, [@branch])
+
+      merger
+          .expect(:do_merge, :conflict, [ false ])
+          .expect(:conflict_sha, 'some_sha')
+
+      BranchMerger.stub(:new, merger) do
+        @deploy.git_merge(@branch, false)
+      end
+
+      notifier.verify
+      collection.verify
+      merger.verify
+    end
+
+    def test_successful_merge
+      collection.expect(:mark_success, true, [@branch])
+
+      merger.expect(:do_merge, :success, [ false ]).expect(:sha, 'sha')
+
+      BranchMerger.stub(:new, merger) do
+        @deploy.git_merge(@branch, false)
+      end
+
+      collection.verify
+      merger.verify
+      assert_equal(@branch.sha, 'sha')
     end
 
     def test_ignore_pushing_master_or_acceptance
@@ -82,15 +113,25 @@ module FlashFlow
       end
     end
 
-    def test_merge_rollback
-      git = Minitest::Mock.new
-      git.expect(:run, nil, ["reset --hard HEAD"])
-      git.expect(:run, nil, ["rev-parse HEAD"])
-      git.expect(:last_stdout, "hello\n", [])
-      @deploy.instance_variable_set('@git'.to_sym, git)
+    private
 
-      assert_equal(@deploy.send(:merge_rollback), 'hello')
-      assert(git.verify)
+    def merger
+      @merger ||= Minitest::Mock.new
     end
+
+    def notifier
+      return @notifier if @notifier
+
+      @notifier = Minitest::Mock.new
+      @deploy.instance_variable_set('@notifier'.to_sym, @notifier)
+    end
+
+    def collection
+      return @collection if @collection
+
+      @collection = Minitest::Mock.new
+      @deploy.instance_variable_set('@branches'.to_sym, @collection)
+    end
+
   end
 end
