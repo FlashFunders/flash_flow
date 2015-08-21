@@ -4,6 +4,7 @@ require 'flash_flow/git'
 require 'flash_flow/branch'
 require 'flash_flow/lock'
 require 'flash_flow/notifier'
+require 'flash_flow/branch_merger'
 
 module FlashFlow
   class Deploy
@@ -13,6 +14,7 @@ module FlashFlow
     def initialize(opts={})
       @do_not_merge = opts[:do_not_merge]
       @force = opts[:force]
+      @rerere_forget = opts[:rerere_forget]
       @stories = [opts[:stories]].flatten.compact
 
       @git = Git.new(Config.configuration.git, logger)
@@ -65,14 +67,6 @@ module FlashFlow
       end
     end
 
-    def fetch(remote)
-      @fetched_remotes ||= {}
-      unless @fetched_remotes[remote]
-        @git.fetch(remote)
-        @fetched_remotes[remote] = true
-      end
-    end
-
     def commit_branch_info
       @stories.each do |story_id|
         @branches.add_story(@git.merge_remote, @git.working_branch, story_id)
@@ -87,19 +81,27 @@ module FlashFlow
           raise RuntimeError.new("No remote found for #{branch.remote_url}. Please run 'git remote add *your_remote_name* #{branch.remote_url}' and try again.")
         end
 
-        git_merge(branch)
+        fetch(branch.remote)
+        git_merge(branch, branch.ref == @git.working_branch)
       end
     end
 
-    def git_merge(branch)
-      if !mark_sha(branch)
-        @branches.mark_deleted(branch)
-        @notifier.deleted_branch(branch) unless branch.ref == @git.working_branch
-      elsif merge_success?(branch)
-        @branches.mark_success(branch)
-      else
-        @branches.mark_failure(branch, merge_rollback)
-        @notifier.merge_conflict(branch) unless branch.ref == @git.working_branch
+    def git_merge(branch, is_working_branch)
+      merger = BranchMerger.new(@git, branch)
+      forget_rerere = is_working_branch && @rerere_forget
+
+      case merger.do_merge(forget_rerere)
+        when :deleted
+          @branches.mark_deleted(branch)
+          @notifier.deleted_branch(branch) unless is_working_branch
+
+        when :success
+          branch.sha = merger.sha
+          @branches.mark_success(branch)
+
+        when :conflict
+          @branches.mark_failure(branch, merger.conflict_sha)
+          @notifier.merge_conflict(branch) unless is_working_branch
       end
     end
 
@@ -141,32 +143,14 @@ module FlashFlow
       end
     end
 
-    def merge_success?(branch)
-      fetch(branch.remote)
-
-      @git.run("merge --no-ff #{branch.remote}/#{branch.ref}")
-
-      @git.last_success? || @git.rerere_resolve!
-    end
-
     private
 
-    def mark_sha(branch)
-      fetch(branch.remote)
-
-      @git.run("rev-parse #{branch.remote}/#{branch.ref}")
-      if @git.last_success?
-        branch.sha = @git.last_stdout.strip
-        true
-      else
-        false
+    def fetch(remote)
+      @fetched_remotes ||= {}
+      unless @fetched_remotes[remote]
+        @git.fetch(remote)
+        @fetched_remotes[remote] = true
       end
-    end
-
-    def merge_rollback
-      @git.run("reset --hard HEAD")
-      @git.run("rev-parse HEAD")
-      @git.last_stdout.strip
     end
   end
 end

@@ -13,6 +13,7 @@ module FlashFlow
         opts.on('--review-deploy', 'Run IssueTracker#deploy_review and exit') { |v| options[:review_deploy] = true }
         opts.on('--release-notes hours', 'Run IssueTracker#release_notes and exit') { |v| options[:release_notes] = v }
         opts.on('-n', '--no-merge', 'Run flash flow, but do not merge this branch') { |v| options[:do_not_merge] = true }
+        opts.on('--rerere-forget', 'Delete the saved patch for this branch and let the merge fail if there is a conflict') { |v| options[:rerere_forget] = true }
         opts.on('--story id1', 'story id for this branch') { |v| options[:stories] = [v] }
         opts.on('--stories id1,id2', 'comma-delimited list of story ids for this branch') { |v| options[:stories] = v.split(',') }
         opts.on('-f', '--force-push', 'Force push your branch') { |v| options[:force] = v }

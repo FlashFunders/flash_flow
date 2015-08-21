@@ -46,14 +46,14 @@ module FlashFlow
         end
       end
 
-      def release_notes(hours)
+      def release_notes(hours, file=STDOUT)
         release_stories = done_and_current_stories.map do |story|
           shipped_text = has_shipped_text?(story)
           format_release_data(story.id, story.name, shipped_text) if shipped_text
         end.compact
 
         release_notes = release_by(release_stories, hours)
-        print_release_notes(release_notes)
+        print_release_notes(release_notes, file)
       end
 
       private
@@ -120,9 +120,10 @@ module FlashFlow
           .sort_by {|story| story[:time] }.reverse
       end
 
-      def print_release_notes(release_notes)
+      def print_release_notes(release_notes, file=nil)
+        file ||= STDOUT
         release_notes.each do |story|
-          puts "PT##{story[:id]} #{story[:title]} (#{story[:time]})"
+          file.puts "PT##{story[:id]} #{story[:title]} (#{story[:time]})"
         end
       end
 
