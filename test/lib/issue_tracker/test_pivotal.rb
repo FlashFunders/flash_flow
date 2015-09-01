@@ -17,7 +17,7 @@ module FlashFlow
           mock_find(nil, '111')
           mock_find(nil, '222')
 
-          Pivotal.new(sample_branches, nil).stories_pushed
+          Pivotal.new(sample_branches, mock_git).stories_pushed
           @stories.verify
         end
       end
@@ -65,14 +65,37 @@ module FlashFlow
                             .expect(:current_state=, true, ['finished'])
                             .expect(:update, true)
           story2_mock = MiniTest::Mock.new
-                            .expect(:id, '222')
+                            .expect(:id, '112')
                             .expect(:current_state, 'finished')
           mock_find(story1_mock)
           mock_find(story2_mock)
 
-          Pivotal.new(sample_branches, nil).stories_pushed
+          Pivotal.new(sample_branches, mock_git).stories_pushed
           story1_mock.verify
           story2_mock.verify
+        end
+      end
+
+      def test_stories_pushed_only_finishes_stories_of_current_branch
+        stub_tracker_gem(@project_mock) do
+          story1_mock = MiniTest::Mock.new
+                            .expect(:id, '111')
+                            .expect(:current_state, 'started')
+                            .expect(:current_state=, true, ['finished'])
+                            .expect(:update, true)
+          story2_mock = MiniTest::Mock.new
+                            .expect(:id, '112')
+                            .expect(:current_state, 'finished')
+          story3_mock = MiniTest::Mock.new
+                            .expect(:id, '222')
+          mock_find(story1_mock)
+          mock_find(story2_mock)
+          mock_find(story3_mock)
+
+          Pivotal.new(sample_branches, mock_git).stories_pushed
+          story1_mock.verify
+          story2_mock.verify
+          story3_mock.verify
         end
       end
 
@@ -166,6 +189,8 @@ module FlashFlow
             .expect(:master_branch_contains?, false, [sample_branches.values[2].sha])
             .expect(:master_branch_contains?, false, [sample_branches.values[3].sha])
             .expect(:master_branch_contains?, false, [sample_branches.values[4].sha])
+            .expect(:working_branch, sample_branches.values[0].ref)
+            .expect(:working_branch, sample_branches.values[0].ref)
       end
 
       def mock_comment(comment)
@@ -179,7 +204,7 @@ module FlashFlow
 
       def sample_branches
         @sample_branches ||= {
-            'origin/branch1' => Branch::Base.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            'origin/branch1' => Branch::Base.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111', '112']}),
             'origin/branch2' => Branch::Base.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
             'origin/branch3' => Branch::Base.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
             'origin/branch4' => Branch::Base.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
