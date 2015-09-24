@@ -18,7 +18,7 @@ module FlashFlow
       end
 
       def stories_pushed
-        merged_working_branch.each do |_, branch|
+        merged_working_branch.to_a.each do |_, branch|
           branch.stories.to_a.each do |story_id|
             finish(story_id)
           end
@@ -152,7 +152,7 @@ module FlashFlow
       end
 
       def merged_working_branch
-        merged_branches.select { |_, branch| branch.ref == @git.working_branch }
+        merged_branches.detect { |_, branch| branch.ref == @git.working_branch }
       end
 
     end
