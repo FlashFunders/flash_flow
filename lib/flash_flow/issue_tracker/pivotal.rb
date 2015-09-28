@@ -18,7 +18,8 @@ module FlashFlow
       end
 
       def stories_pushed
-        merged_working_branch.to_a.each do |_, branch|
+        if merged_working_branch
+          branch = merged_working_branch.last
           branch.stories.to_a.each do |story_id|
             finish(story_id)
           end
