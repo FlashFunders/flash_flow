@@ -14,11 +14,13 @@ module FlashFlow
 
       def test_stories_pushed_only_marks_success_branches
         stub_tracker_gem(@project_mock) do
-          mock_find(nil, '111')
-          mock_find(nil, '222')
+          [[0,'111'],[1,'222']].each do |branch, story|
+            mock_find(nil, story)
+            git = mock_working_branch(branch)
 
-          Pivotal.new(sample_branches, nil).stories_pushed
-          @stories.verify
+            Pivotal.new(sample_branches, git).stories_pushed
+            @stories.verify
+          end
         end
       end
 
@@ -70,7 +72,30 @@ module FlashFlow
           mock_find(story1_mock)
           mock_find(story2_mock)
 
-          Pivotal.new(sample_branches, nil).stories_pushed
+          [[0,story1_mock],[1,story2_mock]].each do |branch, story|
+            git = mock_working_branch(branch)
+
+            Pivotal.new(sample_branches, git).stories_pushed
+            story.verify
+          end
+        end
+      end
+
+      def test_stories_pushed_only_finishes_stories_of_current_branch
+        stub_tracker_gem(@project_mock) do
+          story1_mock = MiniTest::Mock.new
+                            .expect(:id, '111')
+                            .expect(:current_state, 'started')
+                            .expect(:current_state=, true, ['finished'])
+                            .expect(:update, true)
+          story2_mock = MiniTest::Mock.new
+                            .expect(:id, '222')
+          mock_find(story1_mock)
+          mock_find(story2_mock)
+
+          git = mock_working_branch(0)
+
+          Pivotal.new(sample_branches, git).stories_pushed
           story1_mock.verify
           story2_mock.verify
         end
@@ -166,6 +191,12 @@ module FlashFlow
             .expect(:master_branch_contains?, false, [sample_branches.values[2].sha])
             .expect(:master_branch_contains?, false, [sample_branches.values[3].sha])
             .expect(:master_branch_contains?, false, [sample_branches.values[4].sha])
+      end
+
+      def mock_working_branch(index)
+        git = Minitest::Mock.new
+        5.times { git.expect(:working_branch, sample_branches.values[index].ref) }
+        git
       end
 
       def mock_comment(comment)
