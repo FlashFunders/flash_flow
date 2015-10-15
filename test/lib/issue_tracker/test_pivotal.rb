@@ -210,11 +210,11 @@ module FlashFlow
 
       def sample_branches
         @sample_branches ||= {
-            'origin/branch1' => Branch::Base.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
-            'origin/branch2' => Branch::Base.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
-            'origin/branch3' => Branch::Base.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
-            'origin/branch4' => Branch::Base.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
-            'origin/branch5' => Branch::Base.from_hash({'ref' => 'branch5', 'remote' => 'origin', 'sha' => 'sha5', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['555']})
+            'origin/branch1' => Data::Branch.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            'origin/branch2' => Data::Branch.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
+            'origin/branch3' => Data::Branch.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
+            'origin/branch4' => Data::Branch.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
+            'origin/branch5' => Data::Branch.from_hash({'ref' => 'branch5', 'remote' => 'origin', 'sha' => 'sha5', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['555']})
         }
       end
     end

@@ -14,7 +14,7 @@ module FlashFlow
                   'use_rerere' => true
               })
 
-      @branch = Branch::Base.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
+      @branch = Data::Branch.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
       @deploy = Deploy.new
     end
 

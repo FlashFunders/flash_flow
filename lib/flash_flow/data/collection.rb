@@ -1,8 +1,8 @@
-require 'flash_flow/branch/base'
-require 'flash_flow/branch/github'
+require 'flash_flow/data/branch'
+require 'flash_flow/data/github'
 
 module FlashFlow
-  module Branch
+  module Data
 
     class Collection
 
@@ -145,7 +145,7 @@ module FlashFlow
       end
 
       def record(remote, remote_url, ref)
-        update_or_add(Branch::Base.new(remote, remote_url, ref))
+        update_or_add(Branch.new(remote, remote_url, ref))
       end
 
     end

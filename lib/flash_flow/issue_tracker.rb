@@ -1,8 +1,8 @@
 require 'logger'
 
 require 'flash_flow/git'
-require 'flash_flow/branch'
-require 'flash_flow/branch/store'
+require 'flash_flow/data'
+require 'flash_flow/data/store'
 require 'flash_flow/issue_tracker/pivotal'
 
 module FlashFlow
@@ -39,7 +39,7 @@ module FlashFlow
       end
 
       def get_branches
-        branch_info_store = Branch::Store.new(Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
+        branch_info_store = Data::Store.new(Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
 
         branch_info_store.get
       end

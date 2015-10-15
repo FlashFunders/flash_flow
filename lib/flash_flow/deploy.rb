@@ -1,7 +1,7 @@
 require 'logger'
 
 require 'flash_flow/git'
-require 'flash_flow/branch'
+require 'flash_flow/data'
 require 'flash_flow/lock'
 require 'flash_flow/notifier'
 require 'flash_flow/branch_merger'
@@ -20,8 +20,8 @@ module FlashFlow
       @git = Git.new(Config.configuration.git, logger)
       @lock = Lock::Base.new(Config.configuration.lock)
       @notifier = Notifier::Base.new(Config.configuration.notifier)
-      store = Branch::Store.new(Config.configuration.branch_info_file, @git, logger: logger)
-      @branches = Branch::Collection.fetch(@git.remotes_hash, store, Config.configuration.branches)
+      store = Data::Store.new(Config.configuration.branch_info_file, @git, logger: logger)
+      @branches = Data::Collection.fetch(@git.remotes_hash, store, Config.configuration.branches)
     end
 
     def logger

@@ -1,8 +1,8 @@
 require 'minitest_helper'
-require 'flash_flow/branch/store'
+require 'flash_flow/data/store'
 
 module FlashFlow
-  module Branch
+  module Data
     class TestBranchInfoStore < Minitest::Test
       def sample_branches
         {
@@ -15,7 +15,7 @@ module FlashFlow
         @mock_git = MockGit.new
         @mock_store = Minitest::Mock.new
         @collection = Collection.new({ 'origin' => 'the_origin_url' }, @mock_store)
-        @branch = Base.new('origin', 'the_origin_url', 'some_branch')
+        @branch = Branch.new('origin', 'the_origin_url', 'some_branch')
         @storage = Store.new('/dev/null', @mock_git)
       end
 
@@ -76,8 +76,8 @@ module FlashFlow
 
       def old_branches
         @old_branches ||= {
-            'the_origin_url/some_old_branch' => Base.from_hash({'ref' => 'some_old_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
-            'the_origin_url/some_branch' => Base.from_hash({'ref' => 'some_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']})
+            'the_origin_url/some_old_branch' => Branch.from_hash({'ref' => 'some_old_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            'the_origin_url/some_branch' => Branch.from_hash({'ref' => 'some_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']})
         }
       end
     end

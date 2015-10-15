@@ -1,8 +1,8 @@
 require 'json'
-require 'flash_flow/branch'
+require 'flash_flow/data'
 
 module FlashFlow
-  module Branch
+  module Data
     class Store
       def initialize(filename, git, opts={})
         @filename = filename
@@ -43,7 +43,7 @@ module FlashFlow
         file_contents = @git.read_file_from_merge_branch(@filename)
         hash = JSON.parse(file_contents)
         hash.each do |key, val|
-          hash[key] = Base.from_hash(val)
+          hash[key] = Branch.from_hash(val)
         end
         hash
 

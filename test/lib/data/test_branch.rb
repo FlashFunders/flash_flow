@@ -1,18 +1,18 @@
 require 'minitest_helper'
-require 'flash_flow/branch/store'
+require 'flash_flow/data/store'
 
 module FlashFlow
-  module Branch
-    class TestBase < Minitest::Test
+  module Data
+    class TestBranch < Minitest::Test
 
       def test_merge_returns_self_if_other_is_nil
-        branch = Base.from_hash(branch_hash)
+        branch = Branch.from_hash(branch_hash)
         assert_equal(branch.merge(nil), branch)
       end
 
       def test_merge_keeps_the_oldest_created_at
-        new_branch = Base.from_hash(branch_hash)
-        old_branch = Base.from_hash(branch_hash)
+        new_branch = Branch.from_hash(branch_hash)
+        old_branch = Branch.from_hash(branch_hash)
         old_branch.created_at -= 1000
 
         assert_equal(new_branch.merge(old_branch).created_at, old_branch.created_at)
@@ -20,8 +20,8 @@ module FlashFlow
       end
 
       def test_merge_handles_nil_stories
-        new_branch = Base.from_hash(branch_hash)
-        old_branch = Base.from_hash(branch_hash)
+        new_branch = Branch.from_hash(branch_hash)
+        old_branch = Branch.from_hash(branch_hash)
 
         new_branch.stories = nil
         old_branch.stories = ['456', '789']
@@ -31,8 +31,8 @@ module FlashFlow
       end
 
       def test_merge_unions_the_stories
-        new_branch = Base.from_hash(branch_hash)
-        old_branch = Base.from_hash(branch_hash)
+        new_branch = Branch.from_hash(branch_hash)
+        old_branch = Branch.from_hash(branch_hash)
 
         new_branch.stories = ['123', '456']
         old_branch.stories = ['456', '789']
@@ -41,8 +41,8 @@ module FlashFlow
       end
 
       def test_merge_uses_other_status
-        new_branch = Base.from_hash(branch_hash)
-        old_branch = Base.from_hash(branch_hash)
+        new_branch = Branch.from_hash(branch_hash)
+        old_branch = Branch.from_hash(branch_hash)
 
         old_branch.success!
         new_branch.fail!
@@ -53,8 +53,8 @@ module FlashFlow
       end
 
       def test_merge_sets_updated_at
-        new_branch = Base.from_hash(branch_hash)
-        old_branch = Base.from_hash(branch_hash)
+        new_branch = Branch.from_hash(branch_hash)
+        old_branch = Branch.from_hash(branch_hash)
 
         original_updated_at = new_branch.updated_at
 
@@ -62,8 +62,8 @@ module FlashFlow
       end
 
       def test_merge_sets_created_at_if_not_set
-        new_branch = Base.from_hash(branch_hash)
-        old_branch = Base.from_hash(branch_hash)
+        new_branch = Branch.from_hash(branch_hash)
+        old_branch = Branch.from_hash(branch_hash)
 
         new_branch.created_at = old_branch.created_at = nil
 
@@ -71,7 +71,7 @@ module FlashFlow
       end
 
       def test_from_hash
-        branch = Base.from_hash(branch_hash)
+        branch = Branch.from_hash(branch_hash)
         assert_equal(branch.ref, branch_hash['ref'])
         assert_equal(branch.remote_url, branch_hash['remote_url'])
         assert_equal(branch.remote, branch_hash['remote'])
@@ -83,7 +83,7 @@ module FlashFlow
       def test_from_hash_with_time_objects
         branch_hash['updated_at'] = Time.now - 200
         branch_hash['created_at'] = Time.now - 200
-        branch = Base.from_hash(branch_hash)
+        branch = Branch.from_hash(branch_hash)
         assert_equal(branch.updated_at, branch_hash['updated_at'])
         assert_equal(branch.created_at, branch_hash['created_at'])
       end
@@ -92,7 +92,7 @@ module FlashFlow
         time = Time.parse('2015-05-22 09:47:07 -0700')
         branch_hash['updated_at'] = branch_hash['created_at'] = nil
         Time.stub(:now, time) do
-          branch = Base.from_hash(branch_hash)
+          branch = Branch.from_hash(branch_hash)
 
           assert_equal(branch.updated_at, time)
           assert_equal(branch.created_at, time)
@@ -103,14 +103,14 @@ module FlashFlow
         time = Time.parse('2015-05-22 09:47:07 -0700')
         branch_hash['updated_at'] = '2015-05-22 09:47:07 -0700'
         branch_hash['created_at'] = '2015-05-22 09:47:07 -0700'
-        branch = Base.from_hash(branch_hash)
+        branch = Branch.from_hash(branch_hash)
         assert_equal(branch.updated_at, time)
         assert_equal(branch.created_at, time)
       end
 
       def test_double_equals
-        branch1 = Base.from_hash(branch_hash)
-        branch2 = Base.from_hash(branch_hash)
+        branch1 = Branch.from_hash(branch_hash)
+        branch2 = Branch.from_hash(branch_hash)
         assert(branch1 == branch2)
 
         branch1.remote_url = 'different_url'
@@ -126,12 +126,12 @@ module FlashFlow
       end
 
       def test_to_hash
-        branch1 = Base.from_hash(branch_hash)
+        branch1 = Branch.from_hash(branch_hash)
         assert_equal(branch1.to_hash, branch_hash)
       end
 
       def test_success
-        branch = Base.new(1,2,3)
+        branch = Branch.new(1,2,3)
 
         branch.success!
         assert(branch.success?)
@@ -141,7 +141,7 @@ module FlashFlow
       end
 
       def test_fail
-        branch = Base.new(1,2,3)
+        branch = Branch.new(1,2,3)
 
         branch.fail!
         assert(branch.fail?)
@@ -151,7 +151,7 @@ module FlashFlow
       end
 
       def test_removed
-        branch = Base.new(1,2,3)
+        branch = Branch.new(1,2,3)
 
         branch.removed!
         assert(branch.removed?)
@@ -161,7 +161,7 @@ module FlashFlow
       end
 
       def test_deleted
-        branch = Base.new(1,2,3)
+        branch = Branch.new(1,2,3)
 
         branch.deleted!
         assert(branch.deleted?)
@@ -171,7 +171,7 @@ module FlashFlow
       end
 
       def test_unknown
-        branch = Base.new(1,2,3)
+        branch = Branch.new(1,2,3)
 
         branch.unknown!
         assert(branch.unknown?)

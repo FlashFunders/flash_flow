@@ -1,9 +1,9 @@
 require 'json'
 
 module FlashFlow
-  module Branch
+  module Data
 
-    class Base
+    class Branch
       attr_accessor :remote, :remote_url, :ref, :sha, :status, :stories, :metadata, :updated_at, :created_at
 
       def initialize(_remote, _remote_url, _ref)
