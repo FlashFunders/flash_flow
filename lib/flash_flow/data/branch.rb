@@ -4,26 +4,28 @@ module FlashFlow
   module Data
 
     class Branch
-      attr_accessor :remote, :remote_url, :ref, :sha, :status, :stories, :metadata, :updated_at, :created_at
+      attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :metadata, :updated_at, :created_at
 
       def initialize(_remote, _remote_url, _ref)
         @remote = _remote
         @remote_url = _remote_url
         @ref = _ref
+        @resolutions = {}
         @stories = []
         @updated_at = Time.now
         @created_at = Time.now
       end
 
       def self.from_hash(hash)
-        base = new(hash['remote'], hash['remote_url'], hash['ref'])
-        base.sha = hash['sha']
-        base.status = hash['status']
-        base.stories = hash['stories']
-        base.metadata = hash['metadata']
-        base.updated_at = massage_time(hash['updated_at'])
-        base.created_at = massage_time(hash['created_at'])
-        base
+        branch = new(hash['remote'], hash['remote_url'], hash['ref'])
+        branch.sha = hash['sha']
+        branch.status = hash['status']
+        branch.resolutions = hash['resolutions']
+        branch.stories = hash['stories']
+        branch.metadata = hash['metadata']
+        branch.updated_at = massage_time(hash['updated_at'])
+        branch.created_at = massage_time(hash['created_at'])
+        branch
       end
 
       def self.massage_time(time)
@@ -48,6 +50,7 @@ module FlashFlow
             'ref' => ref,
             'sha' => sha,
             'status' => status,
+            'resolutions' => resolutions,
             'stories' => stories,
             'metadata' => metadata,
             'updated_at' => updated_at,
@@ -63,6 +66,7 @@ module FlashFlow
         unless other.nil?
           self.sha = other.sha
           self.status = other.status
+          self.resolutions = other.resolutions
           self.stories = self.stories.to_a | other.stories.to_a
           self.updated_at = Time.now
           self.created_at = [(self.created_at || Time.now), (other.created_at || Time.now)].min
@@ -74,6 +78,10 @@ module FlashFlow
       def add_metadata(data)
         self.metadata ||= {}
         self.metadata.merge!(data)
+      end
+
+      def set_resolutions(_resolutions)
+        self.resolutions = _resolutions
       end
 
       def success!

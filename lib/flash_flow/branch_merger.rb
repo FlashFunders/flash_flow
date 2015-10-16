@@ -1,7 +1,7 @@
 module FlashFlow
   class BranchMerger
 
-    attr_reader :conflict_sha
+    attr_reader :conflict_sha, :resolutions
 
     def initialize(git, branch)
       @git = git
@@ -33,7 +33,7 @@ module FlashFlow
         @git.run('rerere forget')
         false
       else
-        @git.rerere_resolve!
+        @resolutions = @git.rerere_resolve!
       end
     end
 

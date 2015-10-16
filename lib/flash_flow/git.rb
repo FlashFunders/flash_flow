@@ -104,10 +104,34 @@ module FlashFlow
       if conflicts.all? { |c| c.empty? }
         run("add #{merging_files.join(" ")}")
         run('commit --no-edit')
-        true
+
+        resolutions(merging_files)
       else
         false
       end
+    end
+
+    def resolutions(files)
+      {}.tap do |hash|
+        files.map do |file|
+          hash[file] = resolution_candidates(file)
+        end.flatten
+      end
+    end
+
+    # git rerere doesn't give you a deterministic way to determine which resolution was used
+    def resolution_candidates(file)
+      @cmd_runner.run("diff -q --from-file #{file} .git/rr-cache/*/postimage")
+      different_files = split_diff_lines(@cmd_runner.last_stdout)
+
+      @cmd_runner.run('ls -la .git/rr-cache/*/postimage')
+      all_files = split_diff_lines(@cmd_runner.last_stdout)
+
+      all_files - different_files
+    end
+
+    def split_diff_lines(arr)
+      arr.split("\n").map { |s| s.split(".git/rr-cache/").last.split("/postimage").first }
     end
 
     def remotes

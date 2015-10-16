@@ -189,6 +189,7 @@ module FlashFlow
             'remote' => 'origin',
             'sha' => 'random_sha',
             'status' => 'success',
+            'resolutions' => {},
             'stories' => ['123'],
             'metadata' => {
                 'some' => 'data'

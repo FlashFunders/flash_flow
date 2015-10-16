@@ -136,6 +136,13 @@ module FlashFlow
         branch
       end
 
+      def set_resolutions(branch, resolutions)
+        update_or_add(branch)
+        branch.set_resolutions(resolutions)
+        @collection_instance.set_resolutions(branch) if @collection_instance.respond_to?(:set_resolutions)
+        branch
+      end
+
       private
 
       def key(remote_url, ref)

@@ -93,8 +93,12 @@ module FlashFlow
 
     def test_successful_merge
       collection.expect(:mark_success, true, [@branch])
+      collection.expect(:set_resolutions, true, [ @branch, { 'filename' => ["resolution_sha"] } ])
 
-      merger.expect(:do_merge, :success, [ false ]).expect(:sha, 'sha')
+      merger.
+          expect(:do_merge, :success, [ false ]).
+          expect(:sha, 'sha').
+          expect(:resolutions, { 'filename' => ["resolution_sha"] })
 
       BranchMerger.stub(:new, merger) do
         @deploy.git_merge(@branch, false)

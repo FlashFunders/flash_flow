@@ -97,6 +97,7 @@ module FlashFlow
         when :success
           branch.sha = merger.sha
           @data.mark_success(branch)
+          @data.set_resolutions(branch, merger.resolutions)
 
         when :conflict
           @data.mark_failure(branch, merger.conflict_sha)

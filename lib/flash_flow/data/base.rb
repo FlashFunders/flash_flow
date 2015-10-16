@@ -11,7 +11,7 @@ module FlashFlow
       attr_accessor :deleted_resolutions
 
       def_delegators :@collection, :add_story, :mergeable, :mark_deleted, :mark_success,
-                     :mark_failure, :remove_from_merge, :add_to_merge, :failures
+                     :mark_failure, :remove_from_merge, :add_to_merge, :failures, :set_resolutions
 
       def initialize(branch_config, filename, git, opts={})
         @git = git
