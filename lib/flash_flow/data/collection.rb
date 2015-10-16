@@ -8,9 +8,8 @@ module FlashFlow
 
       attr_accessor :branches, :remotes
 
-      def initialize(remotes, store, config=nil)
+      def initialize(remotes, config=nil)
         @remotes = remotes
-        @store = store
         @branches = {}
 
         if config && config['class'] && config['class']['name']
@@ -19,33 +18,55 @@ module FlashFlow
         end
       end
 
-      def self.fetch(remotes, store, config=nil)
-        collection = new(remotes, store, config)
+      def self.fetch(remotes, config=nil)
+        collection = new(remotes, config)
         collection.fetch
         collection
       end
 
-      def self.from_hash(remotes, store, hash)
-        collection = new(remotes, store)
-        collection.branches = hash.dup
+      def self.from_hash(remotes, hash)
+        collection = new(remotes)
+        collection.branches = branches_from_hash(hash.dup)
         collection
       end
 
-      def self.merge(old_collection, new_collection)
-        old_collection.branches.each do |key, old_branch|
-          new_branch = new_collection.branches[key]
-          old_branch.merge(new_branch)
-        end
-
-        new_collection.branches.each do |key, new_branch|
-          unless old_collection.branches.has_key?(key)
-            old_collection[key] = new_branch
-          end
+      def self.branches_from_hash(hash)
+        hash.each do |key, val|
+          hash[key] = val.is_a?(Branch) ? val : Branch.from_hash(val)
         end
       end
 
       def get(remote_url, ref)
         @branches[key(remote_url, ref)]
+      end
+
+      def to_hash
+        {}.tap do |hash|
+          @branches.each do |key, val|
+            hash[key] = val.to_hash
+          end
+        end
+      end
+
+      def reverse_merge(old)
+        merged_branches = @branches.dup
+
+        merged_branches.each do |_, info|
+          info.updated_at = Time.now
+          info.created_at ||= Time.now
+        end
+
+        old.each do |full_ref, info|
+          if merged_branches.has_key?(full_ref)
+            merged_branches[full_ref].created_at = info.created_at
+            merged_branches[full_ref].stories = info.stories.to_a | merged_branches[full_ref].stories.to_a
+          else
+            merged_branches[full_ref] = info
+            merged_branches[full_ref].status = nil
+          end
+        end
+
+        merged_branches
       end
 
       def to_a
@@ -64,14 +85,10 @@ module FlashFlow
         @branches.select { |_, v| v.fail? }
       end
 
-      def save!
-        @store.merge_and_save(@branches)
-      end
-
       def fetch
-        fetch_from = @collection_instance.respond_to?(:fetch) ? @collection_instance : @store
+        return unless @collection_instance.respond_to?(:fetch)
 
-        fetch_from.fetch.each do |b|
+        @collection_instance.fetch.each do |b|
           update_or_add(b)
         end
       end

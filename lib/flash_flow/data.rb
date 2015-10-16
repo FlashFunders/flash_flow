@@ -1,6 +1,4 @@
-require 'flash_flow/data/branch'
-require 'flash_flow/data/collection'
-require 'flash_flow/data/store'
+require 'flash_flow/data/base'
 
 module FlashFlow
   module Data

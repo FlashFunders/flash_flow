@@ -20,8 +20,7 @@ module FlashFlow
       @git = Git.new(Config.configuration.git, logger)
       @lock = Lock::Base.new(Config.configuration.lock)
       @notifier = Notifier::Base.new(Config.configuration.notifier)
-      store = Data::Store.new(Config.configuration.branch_info_file, @git, logger: logger)
-      @branches = Data::Collection.fetch(@git.remotes_hash, store, Config.configuration.branches)
+      @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
     end
 
     def logger
@@ -69,13 +68,13 @@ module FlashFlow
 
     def commit_branch_info
       @stories.each do |story_id|
-        @branches.add_story(@git.merge_remote, @git.working_branch, story_id)
+        @data.add_story(@git.merge_remote, @git.working_branch, story_id)
       end
-      @branches.save!
+      @data.save!
     end
 
     def merge_branches
-      @branches.mergeable.each do |branch|
+      @data.mergeable.each do |branch|
         remote = @git.fetch_remote_for_url(branch.remote_url)
         if remote.nil?
           raise RuntimeError.new("No remote found for #{branch.remote_url}. Please run 'git remote add *your_remote_name* #{branch.remote_url}' and try again.")
@@ -92,15 +91,15 @@ module FlashFlow
 
       case merger.do_merge(forget_rerere)
         when :deleted
-          @branches.mark_deleted(branch)
+          @data.mark_deleted(branch)
           @notifier.deleted_branch(branch) unless is_working_branch
 
         when :success
           branch.sha = merger.sha
-          @branches.mark_success(branch)
+          @data.mark_success(branch)
 
         when :conflict
-          @branches.mark_failure(branch, merger.conflict_sha)
+          @data.mark_failure(branch, merger.conflict_sha)
           @notifier.merge_conflict(branch) unless is_working_branch
       end
     end
@@ -114,9 +113,9 @@ module FlashFlow
 
       # TODO - This should use the actual remote for the branch we're on
       if @do_not_merge
-        @branches.remove_from_merge(@git.merge_remote, @git.working_branch)
+        @data.remove_from_merge(@git.merge_remote, @git.working_branch)
       else
-        @branches.add_to_merge(@git.merge_remote, @git.working_branch)
+        @data.add_to_merge(@git.merge_remote, @git.working_branch)
       end
     end
 
@@ -127,7 +126,7 @@ module FlashFlow
     def format_errors
       errors = []
       branch_not_merged = nil
-      @branches.failures.each do |full_ref, failure|
+      @data.failures.each do |full_ref, failure|
         if failure.ref == @git.working_branch
           branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{failure.metadata['conflict_sha']}\n  git merge #{@git.working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else

@@ -29,7 +29,7 @@ module FlashFlow
       collection.expect(:failures, {'origin/pushing_branch' => @branch})
       @branch.fail!('some_random_sha')
 
-      @deploy.instance_variable_set('@branches'.to_sym, collection)
+      @deploy.instance_variable_set('@data'.to_sym, collection)
 
       current_branch_error = "\nERROR: Your branch did not merge to test_acceptance. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
 
@@ -42,7 +42,7 @@ module FlashFlow
       collection = Minitest::Mock.new
       collection.expect(:failures, {'origin/pushing_branch' => @branch})
 
-      @deploy.instance_variable_set('@branches'.to_sym, collection)
+      @deploy.instance_variable_set('@data'.to_sym, collection)
 
       other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to test_acceptance due to conflicts."
 
@@ -130,7 +130,7 @@ module FlashFlow
       return @collection if @collection
 
       @collection = Minitest::Mock.new
-      @deploy.instance_variable_set('@branches'.to_sym, @collection)
+      @deploy.instance_variable_set('@data'.to_sym, @collection)
     end
 
   end
