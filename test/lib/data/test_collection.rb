@@ -64,41 +64,42 @@ module FlashFlow
       def test_reverse_merge_when_old_is_empty
         @collection.mark_success(@branch)
 
-        merged = @collection.reverse_merge({})
-        assert_equal(['the_origin_url/some_branch'], merged.keys)
-        assert(merged['the_origin_url/some_branch'].success?)
+        merged = @collection.reverse_merge(Collection.from_hash({}, {}))
+        assert_equal(['the_origin_url/some_branch'], merged.to_h.keys)
+        assert(merged.get('the_origin_url', 'some_branch').success?)
       end
 
       def test_reverse_merge_old_marks_old_branches
         @collection.mark_success(@branch)
 
-        merged = @collection.reverse_merge(old_branches)
-        assert(merged['the_origin_url/some_old_branch'].unknown?)
+        merged = @collection.reverse_merge(Collection.from_hash({}, old_branches))
+        assert(merged.get('the_origin_url', 'some_old_branch').unknown?)
       end
 
       def test_reverse_merge_old_adds_new_stories
         @collection.mark_success(@branch)
         @collection.add_story('origin', 'some_branch', '456')
-        merged = @collection.reverse_merge(old_branches)
+        merged = @collection.reverse_merge(Collection.from_hash({}, old_branches))
 
-        assert_equal(['222', '456'], merged['the_origin_url/some_branch'].stories)
+        assert_equal(['222', '456'], merged.get('the_origin_url', 'some_branch').stories)
       end
 
       def test_reverse_merge_old_uses_old_created_at
         @collection.add_to_merge('origin', 'some_old_branch')
         @collection.add_to_merge('origin', 'some_new_branch')
-        merged = @collection.reverse_merge(old_branches)
+        old_branch_collection = Collection.from_hash({}, old_branches)
+        merged = @collection.reverse_merge(old_branch_collection)
 
-        assert_equal(old_branches['the_origin_url/some_branch'].created_at, merged['the_origin_url/some_branch'].created_at)
+        assert_equal(old_branch_collection.get('the_origin_url', 'some_branch').created_at, merged.get('the_origin_url', 'some_branch').created_at)
         # Assert the new branch is created_at within the last minute
-        assert(merged['the_origin_url/some_new_branch'].created_at > (Time.now - 60))
+        assert(merged.get('the_origin_url', 'some_new_branch').created_at > (Time.now - 60))
       end
 
       def test_reverse_merge_old_uses_new_status
         @collection.mark_failure(old_branches['the_origin_url/some_branch'])
-        merged = @collection.reverse_merge(old_branches)
+        merged = @collection.reverse_merge(Collection.from_hash({}, old_branches))
 
-        assert(merged['the_origin_url/some_branch'].fail?)
+        assert(merged.get('the_origin_url', 'some_branch').fail?)
       end
 
       def test_fetch_returns_a_collection_instance

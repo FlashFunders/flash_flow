@@ -57,6 +57,7 @@ module FlashFlow
             'created_at' => created_at,
         }
       end
+      alias :to_h :to_hash
 
       def to_json(_)
         JSON.pretty_generate(to_hash)

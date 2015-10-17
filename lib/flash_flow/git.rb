@@ -84,10 +84,14 @@ module FlashFlow
       @cmd_runner.run('cp -R rr-cache/* .git/rr-cache/')
     end
 
-    def commit_rerere
+    def commit_rerere(current_rereres)
       return unless use_rerere
       @cmd_runner.run('mkdir rr-cache')
-      @cmd_runner.run('cp -R .git/rr-cache/* rr-cache/')
+      @cmd_runner.run('rm -rf rr-cache/*')
+      current_rereres.each do |rerere|
+        @cmd_runner.run("cp -R .git/rr-cache/#{rerere} rr-cache/")
+      end
+
       run('add rr-cache/')
       run("commit -m 'Update rr-cache'")
     end

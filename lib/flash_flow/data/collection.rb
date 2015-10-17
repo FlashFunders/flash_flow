@@ -47,6 +47,7 @@ module FlashFlow
           end
         end
       end
+      alias :to_h :to_hash
 
       def reverse_merge(old)
         merged_branches = @branches.dup
@@ -56,17 +57,20 @@ module FlashFlow
           info.created_at ||= Time.now
         end
 
-        old.each do |full_ref, info|
+        old.branches.each do |full_ref, info|
           if merged_branches.has_key?(full_ref)
-            merged_branches[full_ref].created_at = info.created_at
-            merged_branches[full_ref].stories = info.stories.to_a | merged_branches[full_ref].stories.to_a
+            branch = merged_branches[full_ref]
+
+            branch.created_at = info.created_at
+            branch.resolutions = branch.resolutions.to_h.merge(info.resolutions.to_h)
+            branch.stories = info.stories.to_a | merged_branches[full_ref].stories.to_a
           else
             merged_branches[full_ref] = info
             merged_branches[full_ref].status = nil
           end
         end
 
-        merged_branches
+        self.class.from_hash(remotes, merged_branches)
       end
 
       def to_a

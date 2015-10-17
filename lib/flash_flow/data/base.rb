@@ -8,8 +8,6 @@ module FlashFlow
     class Base
       extend Forwardable
 
-      attr_accessor :deleted_resolutions
-
       def_delegators :@collection, :add_story, :mergeable, :mark_deleted, :mark_success,
                      :mark_failure, :remove_from_merge, :add_to_merge, :failures, :set_resolutions
 
@@ -30,8 +28,7 @@ module FlashFlow
 
       def to_hash
         {
-            'branches' => merged_branches,
-            'deleted_resolutions' => deleted_resolutions
+            'branches' => merged_branches.to_hash
         }
       end
 

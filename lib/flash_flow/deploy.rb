@@ -45,7 +45,7 @@ module FlashFlow
           @git.in_merge_branch do
             merge_branches
             commit_branch_info
-            @git.commit_rerere
+            commit_rerere
           end
 
           @git.push_merge_branch
@@ -71,6 +71,17 @@ module FlashFlow
         @data.add_story(@git.merge_remote, @git.working_branch, story_id)
       end
       @data.save!
+    end
+
+    def commit_rerere
+      current_branches = @data.merged_branches.to_a.select { |branch| !@git.master_branch_contains?(branch.sha) && (Time.now - branch.updated_at < two_weeks) }
+      current_rereres = current_branches.map { |branch| branch.resolutions.to_h.values }.flatten
+
+      @git.commit_rerere(current_rereres)
+    end
+
+    def two_weeks
+      60 * 60 * 24 * 14
     end
 
     def merge_branches
