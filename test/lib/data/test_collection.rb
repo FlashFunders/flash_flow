@@ -1,7 +1,7 @@
 require 'minitest_helper'
 
 module FlashFlow
-  module Branch
+  module Data
     class TestCollection < Minitest::Test
 
       def setup_fake_branches
@@ -17,20 +17,19 @@ module FlashFlow
 
       def setup
         setup_fake_branches
-        @fake_store = Minitest::Mock.new
         @fake_branches = FakeBranches.branches
-        @branch = Base.new('origin', 'the_origin_url', 'some_branch')
-        @collection = Collection.new({ 'origin' => 'the_origin_url' }, @fake_store, { 'class' => { 'name' => 'FakeBranches' }})
+        @branch = Branch.new('origin', 'the_origin_url', 'some_branch')
+        @collection = Collection.new({ 'origin' => 'the_origin_url' }, { 'class' => { 'name' => 'FakeBranches' }})
       end
 
       def test_from_hash_set_branches
-        hash = { 'some_url/some_branch' => Base.new('origin', 'the_origin_url', 'some_branch') }
-        assert_equal(Collection.from_hash({}, @fake_store, hash).branches, hash)
+        hash = { 'some_url/some_branch' => Branch.new('origin', 'the_origin_url', 'some_branch') }
+        assert_equal(Collection.from_hash({}, hash).branches, hash)
       end
 
       def test_from_hash_set_remotes
         remotes = { 'some_remote' => 'some_remote_url' }
-        assert_equal(Collection.from_hash(remotes, @fake_store, {}).remotes, remotes)
+        assert_equal(Collection.from_hash(remotes, {}).remotes, remotes)
       end
 
       def test_fetch_calls_collection_class
@@ -40,16 +39,13 @@ module FlashFlow
         @fake_branches.verify
       end
 
-      def test_fetch_calls_store_if_no_collection_class
-        @fake_store.expect(:fetch, [], [])
-        @collection.fetch
-
-        @fake_store.verify
+      def test_fetch_returns_nil_if_no_collection_class
+        assert_nil(@collection.fetch)
       end
 
       def test_fetch_maps_collection_class_to_branches
-        branch = Branch::Base.new('origin', 'the_origin_url', 'some_branch')
-        @fake_branches.expect(:fetch, [Base.from_hash({'remote' => branch.remote, 'remote_url' => branch.remote_url, 'ref' => branch.ref })], [])
+        branch = Data::Branch.new('origin', 'the_origin_url', 'some_branch')
+        @fake_branches.expect(:fetch, [Branch.from_hash({'remote' => branch.remote, 'remote_url' => branch.remote_url, 'ref' => branch.ref })], [])
         @collection.fetch
 
         assert_equal(@collection.branches.values, [branch])
@@ -57,24 +53,58 @@ module FlashFlow
       end
 
       def test_fetch_finds_the_remote
-        branch = Branch::Base.new('origin', 'the_origin_url', 'some_branch')
-        @fake_branches.expect(:fetch, [Base.from_hash({'remote_url' => branch.remote_url, 'ref' => branch.ref })], [])
+        branch = Data::Branch.new('origin', 'the_origin_url', 'some_branch')
+        @fake_branches.expect(:fetch, [Branch.from_hash({'remote_url' => branch.remote_url, 'ref' => branch.ref })], [])
         @collection.fetch
 
         assert_equal(@collection.branches.values, [branch])
         @fake_branches.verify
       end
 
-      def test_save!
+      def test_reverse_merge_when_old_is_empty
         @collection.mark_success(@branch)
-        @fake_store.expect(:merge_and_save, true, [@collection.branches])
 
-        @collection.save!
+        merged = @collection.reverse_merge(Collection.from_hash({}, {}))
+        assert_equal(['the_origin_url/some_branch'], merged.to_h.keys)
+        assert(merged.get('the_origin_url', 'some_branch').success?)
+      end
+
+      def test_reverse_merge_old_marks_old_branches
+        @collection.mark_success(@branch)
+
+        merged = @collection.reverse_merge(Collection.from_hash({}, old_branches))
+        assert(merged.get('the_origin_url', 'some_old_branch').unknown?)
+      end
+
+      def test_reverse_merge_old_adds_new_stories
+        @collection.mark_success(@branch)
+        @collection.add_story('origin', 'some_branch', '456')
+        merged = @collection.reverse_merge(Collection.from_hash({}, old_branches))
+
+        assert_equal(['222', '456'], merged.get('the_origin_url', 'some_branch').stories)
+      end
+
+      def test_reverse_merge_old_uses_old_created_at
+        @collection.add_to_merge('origin', 'some_old_branch')
+        @collection.add_to_merge('origin', 'some_new_branch')
+        old_branch_collection = Collection.from_hash({}, old_branches)
+        merged = @collection.reverse_merge(old_branch_collection)
+
+        assert_equal(old_branch_collection.get('the_origin_url', 'some_branch').created_at, merged.get('the_origin_url', 'some_branch').created_at)
+        # Assert the new branch is created_at within the last minute
+        assert(merged.get('the_origin_url', 'some_new_branch').created_at > (Time.now - 60))
+      end
+
+      def test_reverse_merge_old_uses_new_status
+        @collection.mark_failure(old_branches['the_origin_url/some_branch'])
+        merged = @collection.reverse_merge(Collection.from_hash({}, old_branches))
+
+        assert(merged.get('the_origin_url', 'some_branch').fail?)
       end
 
       def test_fetch_returns_a_collection_instance
         FakeBranches.branches.expect(:fetch, [])
-        collection = Collection.fetch({ 'origin' => 'the_origin_url' }, @fake_store, { 'class' => { 'name' => 'FakeBranches' }})
+        collection = Collection.fetch({ 'origin' => 'the_origin_url' }, { 'class' => { 'name' => 'FakeBranches' }})
         assert(collection.is_a?(Collection))
       end
 
@@ -185,9 +215,9 @@ module FlashFlow
       end
 
       def test_failures
-        branch1 = Base.new('111', '111', '111')
-        branch2 = Base.new('222', '222', '222')
-        branch3 = Base.new('333', '333', '333')
+        branch1 = Branch.new('111', '111', '111')
+        branch2 = Branch.new('222', '222', '222')
+        branch3 = Branch.new('333', '333', '333')
         @collection.mark_failure(branch1)
         @collection.mark_success(branch2)
         @collection.mark_failure(branch3)
@@ -195,6 +225,14 @@ module FlashFlow
         assert_equal(@collection.failures.values, [branch1, branch3])
       end
 
+      private
+
+      def old_branches
+        @old_branches ||= {
+            'the_origin_url/some_old_branch' => Branch.from_hash({'ref' => 'some_old_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            'the_origin_url/some_branch' => Branch.from_hash({'ref' => 'some_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']})
+        }
+      end
     end
   end
 end

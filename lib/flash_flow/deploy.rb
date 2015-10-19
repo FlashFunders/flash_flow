@@ -1,7 +1,7 @@
 require 'logger'
 
 require 'flash_flow/git'
-require 'flash_flow/branch'
+require 'flash_flow/data'
 require 'flash_flow/lock'
 require 'flash_flow/notifier'
 require 'flash_flow/branch_merger'
@@ -20,8 +20,7 @@ module FlashFlow
       @git = Git.new(Config.configuration.git, logger)
       @lock = Lock::Base.new(Config.configuration.lock)
       @notifier = Notifier::Base.new(Config.configuration.notifier)
-      store = Branch::Store.new(Config.configuration.branch_info_file, @git, logger: logger)
-      @branches = Branch::Collection.fetch(@git.remotes_hash, store, Config.configuration.branches)
+      @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
     end
 
     def logger
@@ -42,22 +41,25 @@ module FlashFlow
         @lock.with_lock do
           open_pull_request
 
-          @git.reset_merge_branch
-          @git.in_merge_branch do
+          @git.reset_temp_merge_branch
+          @git.in_temp_merge_branch do
             merge_branches
             commit_branch_info
-            @git.commit_rerere
+            commit_rerere
           end
 
+          @git.copy_temp_to_merge_branch
+          @git.delete_temp_merge_branch
           @git.push_merge_branch
         end
 
         print_errors
         logger.info "### Finished #{@git.merge_branch} merge ###"
       rescue Lock::Error, OutOfSyncWithRemote => e
-        @git.run("checkout #{@git.working_branch}")
         puts 'Failure!'
         puts e.message
+      ensure
+        @git.run("checkout #{@git.working_branch}")
       end
     end
 
@@ -69,13 +71,24 @@ module FlashFlow
 
     def commit_branch_info
       @stories.each do |story_id|
-        @branches.add_story(@git.merge_remote, @git.working_branch, story_id)
+        @data.add_story(@git.merge_remote, @git.working_branch, story_id)
       end
-      @branches.save!
+      @data.save!
+    end
+
+    def commit_rerere
+      current_branches = @data.merged_branches.to_a.select { |branch| !@git.master_branch_contains?(branch.sha) && (Time.now - branch.updated_at < two_weeks) }
+      current_rereres = current_branches.map { |branch| branch.resolutions.to_h.values }.flatten
+
+      @git.commit_rerere(current_rereres)
+    end
+
+    def two_weeks
+      60 * 60 * 24 * 14
     end
 
     def merge_branches
-      @branches.mergeable.each do |branch|
+      @data.mergeable.each do |branch|
         remote = @git.fetch_remote_for_url(branch.remote_url)
         if remote.nil?
           raise RuntimeError.new("No remote found for #{branch.remote_url}. Please run 'git remote add *your_remote_name* #{branch.remote_url}' and try again.")
@@ -92,15 +105,16 @@ module FlashFlow
 
       case merger.do_merge(forget_rerere)
         when :deleted
-          @branches.mark_deleted(branch)
+          @data.mark_deleted(branch)
           @notifier.deleted_branch(branch) unless is_working_branch
 
         when :success
           branch.sha = merger.sha
-          @branches.mark_success(branch)
+          @data.mark_success(branch)
+          @data.set_resolutions(branch, merger.resolutions)
 
         when :conflict
-          @branches.mark_failure(branch, merger.conflict_sha)
+          @data.mark_failure(branch, merger.conflict_sha)
           @notifier.merge_conflict(branch) unless is_working_branch
       end
     end
@@ -114,9 +128,9 @@ module FlashFlow
 
       # TODO - This should use the actual remote for the branch we're on
       if @do_not_merge
-        @branches.remove_from_merge(@git.merge_remote, @git.working_branch)
+        @data.remove_from_merge(@git.merge_remote, @git.working_branch)
       else
-        @branches.add_to_merge(@git.merge_remote, @git.working_branch)
+        @data.add_to_merge(@git.merge_remote, @git.working_branch)
       end
     end
 
@@ -127,7 +141,7 @@ module FlashFlow
     def format_errors
       errors = []
       branch_not_merged = nil
-      @branches.failures.each do |full_ref, failure|
+      @data.failures.each do |full_ref, failure|
         if failure.ref == @git.working_branch
           branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{failure.metadata['conflict_sha']}\n  git merge #{@git.working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
         else

@@ -1,7 +1,7 @@
 require 'minitest_helper'
 
 module FlashFlow
-  module Branch
+  module Data
     class TestGithub < Minitest::Test
 
       class SomeFakeError < RuntimeError; end

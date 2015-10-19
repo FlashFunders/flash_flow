@@ -1,8 +1,8 @@
 require 'octokit'
-require 'flash_flow/branch/base'
+require 'flash_flow/data/branch'
 
 module FlashFlow
-  module Branch
+  module Data
     class Github
 
       attr_accessor :repo, :unmergeable_label
@@ -33,7 +33,7 @@ module FlashFlow
 
       def fetch
         pull_requests.map do |pr|
-          Base.from_hash(
+          Branch.from_hash(
               'remote_url' => pr.head.repo.ssh_url,
               'ref' => pr.head.ref,
               'status' => status_from_labels(pr),

@@ -19,20 +19,19 @@ module FlashFlow
 
       def stories_pushed
         if merged_working_branch
-          branch = merged_working_branch.last
-          branch.stories.to_a.each do |story_id|
+          merged_working_branch.stories.to_a.each do |story_id|
             finish(story_id)
           end
         end
       end
 
       def stories_delivered
-        merged_branches.each do |_, branch|
+        merged_branches.each do |branch|
           branch.stories.to_a.each do |story_id|
             deliver(story_id)
           end
         end
-        removed_branches.each do |_, branch|
+        removed_branches.each do |branch|
           branch.stories.to_a.each do |story_id|
             undeliver(story_id)
           end
@@ -40,7 +39,7 @@ module FlashFlow
       end
 
       def production_deploy
-        shipped_branches.each do |_, branch|
+        shipped_branches.each do |branch|
           branch.stories.to_a.each do |story_id|
             comment(story_id)
           end
@@ -141,19 +140,19 @@ module FlashFlow
       end
 
       def shipped_branches
-        @branches.select { |_, b| shipped?(b) }
+        @branches.select { |b| shipped?(b) }
       end
 
       def merged_branches
-        @branches.select { |_, v| v.success? }
+        @branches.select { |b| b.success? }
       end
 
       def removed_branches
-        @branches.select { |_, v| v.removed? }
+        @branches.select { |b| b.removed? }
       end
 
       def merged_working_branch
-        merged_branches.detect { |_, branch| branch.ref == @git.working_branch }
+        merged_branches.detect { |b| b.ref == @git.working_branch }
       end
 
     end

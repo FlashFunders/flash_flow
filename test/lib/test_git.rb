@@ -30,18 +30,20 @@ module FlashFlow
 
     def test_commit_rerere_checks_flag
       @git_args['use_rerere'] = false
-      instance.commit_rerere
+      instance.commit_rerere([])
 
       @cmd_runner.verify
     end
 
     def test_commit_rerere_runs_commands
       @cmd_runner.expect(:run, true, ['mkdir rr-cache'])
-      @cmd_runner.expect(:run, true, ['cp -R .git/rr-cache/* rr-cache/'])
+      @cmd_runner.expect(:run, true, ['rm -rf rr-cache/*'])
+      @cmd_runner.expect(:run, true, ['cp -R .git/rr-cache/xyz rr-cache/'])
+      @cmd_runner.expect(:run, true, ['cp -R .git/rr-cache/abc rr-cache/'])
       @cmd_runner.expect(:run, true, ['git add rr-cache/'])
       @cmd_runner.expect(:run, true, ["git commit -m 'Update rr-cache'"])
 
-      instance.commit_rerere
+      instance.commit_rerere(['xyz', 'abc'])
       @cmd_runner.verify
     end
 

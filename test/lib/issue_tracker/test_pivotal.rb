@@ -186,16 +186,16 @@ module FlashFlow
 
       def mock_git
         Minitest::Mock.new
-            .expect(:master_branch_contains?, true, [sample_branches.values[0].sha])
-            .expect(:master_branch_contains?, false, [sample_branches.values[1].sha])
-            .expect(:master_branch_contains?, false, [sample_branches.values[2].sha])
-            .expect(:master_branch_contains?, false, [sample_branches.values[3].sha])
-            .expect(:master_branch_contains?, false, [sample_branches.values[4].sha])
+            .expect(:master_branch_contains?, true, [sample_branches[0].sha])
+            .expect(:master_branch_contains?, false, [sample_branches[1].sha])
+            .expect(:master_branch_contains?, false, [sample_branches[2].sha])
+            .expect(:master_branch_contains?, false, [sample_branches[3].sha])
+            .expect(:master_branch_contains?, false, [sample_branches[4].sha])
       end
 
       def mock_working_branch(index)
         git = Minitest::Mock.new
-        5.times { git.expect(:working_branch, sample_branches.values[index].ref) }
+        5.times { git.expect(:working_branch, sample_branches[index].ref) }
         git
       end
 
@@ -209,13 +209,12 @@ module FlashFlow
       end
 
       def sample_branches
-        @sample_branches ||= {
-            'origin/branch1' => Branch::Base.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
-            'origin/branch2' => Branch::Base.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
-            'origin/branch3' => Branch::Base.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
-            'origin/branch4' => Branch::Base.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
-            'origin/branch5' => Branch::Base.from_hash({'ref' => 'branch5', 'remote' => 'origin', 'sha' => 'sha5', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['555']})
-        }
+        @sample_branches ||= [Data::Branch.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            Data::Branch.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
+            Data::Branch.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
+            Data::Branch.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
+            Data::Branch.from_hash({'ref' => 'branch5', 'remote' => 'origin', 'sha' => 'sha5', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['555']})
+        ]
       end
     end
   end

@@ -62,7 +62,7 @@ module FlashFlow
     end
 
     def branch
-      @branch ||= Branch::Base.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
+      @branch ||= Data::Branch.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
     end
 
     def git

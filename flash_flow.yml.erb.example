@@ -75,7 +75,7 @@ branch_info_file: 'your/random/file'
 
 #branches:
 #  class:
-#    name: 'FlashFlow::Branch::Github'
+#    name: 'FlashFlow::Data::Github'
 #    token: <%= ENV['GH_TOKEN'] %>
 #    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
 #    master_branch: master
