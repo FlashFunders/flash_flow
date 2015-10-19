@@ -20,7 +20,7 @@ module FlashFlow
       end
 
       def write(branches, file=nil)
-        @git.in_merge_branch do
+        @git.in_temp_merge_branch do
           file ||= File.open(@filename, 'w')
           file.puts JSON.pretty_generate(branches)
           file.close

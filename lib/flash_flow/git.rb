@@ -174,11 +174,11 @@ module FlashFlow
       run("show -s --format=%cd head")
     end
 
-    def reset_merge_branch
+    def reset_temp_merge_branch
       in_branch(master_branch) do
         run("fetch #{merge_remote}")
-        run("branch -D #{merge_branch}")
-        run("checkout -b #{merge_branch}")
+        run("branch -D #{temp_merge_branch}")
+        run("checkout -b #{temp_merge_branch}")
         run("reset --hard #{merge_remote}/#{master_branch}")
       end
     end
@@ -187,11 +187,46 @@ module FlashFlow
       run("push -f #{merge_remote} #{merge_branch}")
     end
 
+    def copy_temp_to_merge_branch
+      run("checkout #{temp_merge_branch}")
+      run("merge --strategy=ours --no-edit #{merge_branch}")
+      run("checkout #{merge_branch}")
+      run("merge #{temp_merge_branch}")
+
+      run("log #{merge_remote}/#{merge_branch}..#{merge_branch}~3")
+      log = last_stdout
+      run("diff --name-only #{merge_remote}/#{merge_branch} #{merge_branch}")
+      files = last_stdout.split("\n")
+      run("reset #{merge_remote}/#{merge_branch}")
+      run("add #{files.join(" ")}")
+      run("commit -m '#{commit_message(log)}'")
+      # require 'byebug'; debugger
+      # puts 'hello'
+    end
+
+    def commit_message(log)
+      "Flash Flow run from branch: #{working_branch}\n\n#{log}"
+    end
+
+    def delete_temp_merge_branch
+      in_merge_branch do
+        run("branch -d #{temp_merge_branch}")
+      end
+    end
+
+    def in_temp_merge_branch(&block)
+      in_branch(temp_merge_branch, &block)
+    end
+
     def in_merge_branch(&block)
       in_branch(merge_branch, &block)
     end
 
     private
+
+    def temp_merge_branch
+      "flash_flow/#{merge_branch}"
+    end
 
     def in_branch(branch)
       begin
