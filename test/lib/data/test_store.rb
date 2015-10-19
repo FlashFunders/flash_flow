@@ -45,7 +45,7 @@ module FlashFlow
       def read_file_from_merge_branch; end
       def add_and_commit(_,_,_=nil); end
 
-      def in_merge_branch
+      def in_temp_merge_branch
         yield
       end
     end

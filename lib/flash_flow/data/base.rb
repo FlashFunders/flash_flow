@@ -27,9 +27,7 @@ module FlashFlow
       end
 
       def to_hash
-        {
-            'branches' => merged_branches.to_hash
-        }
+        merged_branches.to_hash
       end
 
       def merged_branches
