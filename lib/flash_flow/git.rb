@@ -193,15 +193,7 @@ module FlashFlow
       run("checkout #{merge_branch}")
       run("merge #{temp_merge_branch}")
 
-      run("log #{merge_remote}/#{merge_branch}..#{merge_branch}~3")
-      log = last_stdout
-      run("diff --name-only #{merge_remote}/#{merge_branch} #{merge_branch}")
-      files = last_stdout.split("\n")
-      run("reset #{merge_remote}/#{merge_branch}")
-      run("add #{files.join(" ")}")
-      run("commit -m '#{commit_message(log)}'")
-      # require 'byebug'; debugger
-      # puts 'hello'
+      squash_commits
     end
 
     def commit_message(log)
@@ -223,6 +215,20 @@ module FlashFlow
     end
 
     private
+
+    def squash_commits
+      # There are three commits created by flash flow that we don't need in the message
+      run("log #{merge_remote}/#{merge_branch}..#{merge_branch}~3")
+      log = last_stdout
+
+      # Get all the files that differ between existing acceptance and new acceptance
+      run("diff --name-only #{merge_remote}/#{merge_branch} #{merge_branch}")
+      files = last_stdout.split("\n")
+      run("reset #{merge_remote}/#{merge_branch}")
+      run("add #{files.map { |f| "'#{f}'" }.join(" ")}")
+
+      run("commit -m '#{commit_message(log)}'")
+    end
 
     def temp_merge_branch
       "flash_flow/#{merge_branch}"
