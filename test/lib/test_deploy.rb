@@ -18,18 +18,55 @@ module FlashFlow
       @deploy = Deploy.new
     end
 
+    def with_versions(current, written)
+      original_version = FlashFlow::VERSION
+      FlashFlow.send(:remove_const, :VERSION)
+      FlashFlow.const_set(:VERSION, current)
+      data.expect(:version, written)
+      yield
+      data.verify
+      FlashFlow.send(:remove_const, :VERSION)
+      FlashFlow.const_set(:VERSION, original_version)
+    end
+
+    def test_version_is_nil
+      with_versions('1.1.1', nil) do
+        assert_nil(@deploy.check_version)
+      end
+    end
+
+    def test_check_version_greater
+      with_versions('2.0.0', '1.1.1') do
+        assert_nil(@deploy.check_version)
+      end
+
+      with_versions('1.2.0', '1.1.1') do
+        assert_nil(@deploy.check_version)
+      end
+    end
+
+    def test_check_version_less_raises
+      with_versions('1.1.1', '2.1.0') do
+        assert_raises(RuntimeError) { @deploy.check_version }
+      end
+
+      with_versions('1.2.0', '2.1.0') do
+        assert_raises(RuntimeError) { @deploy.check_version }
+      end
+    end
+
+    def test_check_version_equal
+
+    end
+
     def test_print_errors_with_no_errors
-      collection = Minitest::Mock.new
-      collection.expect(:failures, {})
+      data.expect(:failures, {})
       assert_equal(@deploy.format_errors, 'Success!')
     end
 
     def test_print_errors_when_current_branch_cant_merge
-      collection = Minitest::Mock.new
-      collection.expect(:failures, {'origin/pushing_branch' => @branch})
+      data.expect(:failures, {'origin/pushing_branch' => @branch})
       @branch.fail!('some_random_sha')
-
-      @deploy.instance_variable_set('@data'.to_sym, collection)
 
       current_branch_error = "\nERROR: Your branch did not merge to test_acceptance. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
 
@@ -39,10 +76,7 @@ module FlashFlow
     end
 
     def test_print_errors_when_another_branch_cant_merge
-      collection = Minitest::Mock.new
-      collection.expect(:failures, {'origin/pushing_branch' => @branch})
-
-      @deploy.instance_variable_set('@data'.to_sym, collection)
+      data.expect(:failures, {'origin/pushing_branch' => @branch})
 
       other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to test_acceptance due to conflicts."
 
@@ -58,7 +92,7 @@ module FlashFlow
     end
 
     def test_deleted_branch
-      collection.expect(:mark_deleted, true, [@branch])
+      data.expect(:mark_deleted, true, [@branch])
 
       notifier.expect(:deleted_branch, true, [@branch])
 
@@ -69,12 +103,12 @@ module FlashFlow
       end
 
       notifier.verify
-      collection.verify
+      data.verify
       merger.verify
     end
 
     def test_merge_conflict
-      collection.expect(:mark_failure, true, [@branch, 'some_sha'])
+      data.expect(:mark_failure, true, [@branch, 'some_sha'])
 
       notifier.expect(:merge_conflict, true, [@branch])
 
@@ -87,13 +121,13 @@ module FlashFlow
       end
 
       notifier.verify
-      collection.verify
+      data.verify
       merger.verify
     end
 
     def test_successful_merge
-      collection.expect(:mark_success, true, [@branch])
-      collection.expect(:set_resolutions, true, [ @branch, { 'filename' => ["resolution_sha"] } ])
+      data.expect(:mark_success, true, [@branch])
+      data.expect(:set_resolutions, true, [ @branch, { 'filename' => ["resolution_sha"] } ])
 
       merger.
           expect(:do_merge, :success, [ false ]).
@@ -104,7 +138,7 @@ module FlashFlow
         @deploy.git_merge(@branch, false)
       end
 
-      collection.verify
+      data.verify
       merger.verify
       assert_equal(@branch.sha, 'sha')
     end
@@ -130,11 +164,11 @@ module FlashFlow
       @deploy.instance_variable_set('@notifier'.to_sym, @notifier)
     end
 
-    def collection
-      return @collection if @collection
+    def data
+      return @data if @data
 
-      @collection = Minitest::Mock.new
-      @deploy.instance_variable_set('@data'.to_sym, @collection)
+      @data = Minitest::Mock.new
+      @deploy.instance_variable_set('@data'.to_sym, @data)
     end
 
   end
