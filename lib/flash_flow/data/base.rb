@@ -1,4 +1,5 @@
 require 'json'
+require 'flash_flow/version'
 require 'flash_flow/data/branch'
 require 'flash_flow/data/collection'
 require 'flash_flow/data/store'
@@ -22,12 +23,19 @@ module FlashFlow
             Collection.from_hash(remotes, backwards_compatible_store['branches'])
       end
 
+      def version
+        backwards_compatible_store['version']
+      end
+
       def save!
         @store.write(to_hash)
       end
 
       def to_hash
-        merged_branches.to_hash
+        {
+            'version'  => FlashFlow::VERSION,
+            'branches' => merged_branches.to_hash
+        }
       end
 
       def merged_branches

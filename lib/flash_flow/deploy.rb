@@ -28,6 +28,7 @@ module FlashFlow
     end
 
     def run
+      check_version
       check_repo
       puts "Building #{@git.merge_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
       logger.info "\n\n### Beginning #{@git.merge_branch} merge ###\n\n"
@@ -66,6 +67,19 @@ module FlashFlow
     def check_repo
       if @git.staged_and_working_dir_files.any?
         raise RuntimeError.new('You have changes in your working directory. Please stash and try again')
+      end
+    end
+
+    def check_version
+      data_version = @data.version
+      return if data_version.nil?
+
+      written_version = data_version.split(".").map(&:to_i)
+      running_version = FlashFlow::VERSION.split(".").map(&:to_i)
+
+      unless written_version[0] < running_version[0] ||
+          (written_version[0] == running_version[0] && written_version[1] <= running_version[1]) # Ignore the point release number
+        raise RuntimeError.new("Your version of flash flow (#{FlashFlow::VERSION}) is behind the version that was last used (#{data_version}) by a member of your team. Please upgrade to at least #{written_version[0]}.#{written_version[1]}.0 and try again.")
       end
     end
 

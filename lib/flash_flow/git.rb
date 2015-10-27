@@ -197,7 +197,7 @@ module FlashFlow
     end
 
     def commit_message(log)
-      "Flash Flow run from branch: #{working_branch}\n\n#{log}"
+      "Flash Flow run from branch: #{working_branch}\n\n#{log}".gsub(/'/, '')
     end
 
     def delete_temp_merge_branch
