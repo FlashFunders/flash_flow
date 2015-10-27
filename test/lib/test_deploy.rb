@@ -18,17 +18,6 @@ module FlashFlow
       @deploy = Deploy.new
     end
 
-    def with_versions(current, written)
-      original_version = FlashFlow::VERSION
-      FlashFlow.send(:remove_const, :VERSION)
-      FlashFlow.const_set(:VERSION, current)
-      data.expect(:version, written)
-      yield
-      data.verify
-      FlashFlow.send(:remove_const, :VERSION)
-      FlashFlow.const_set(:VERSION, original_version)
-    end
-
     def test_version_is_nil
       with_versions('1.1.1', nil) do
         assert_nil(@deploy.check_version)
@@ -68,7 +57,7 @@ module FlashFlow
       data.expect(:failures, {'origin/pushing_branch' => @branch})
       @branch.fail!('some_random_sha')
 
-      current_branch_error = "\nERROR: Your branch did not merge to test_acceptance. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout some_random_sha\n  git merge pushing_branch\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+      current_branch_error = "ERROR: Your branch did not merge to test_acceptance. Run 'flash_flow --resolve', fix the merge conflict(s) and then re-run this script\n"
 
       @deploy.instance_variable_get('@git'.to_sym).stub(:working_branch, 'pushing_branch') do
         assert_equal(current_branch_error, @deploy.format_errors)
@@ -84,9 +73,11 @@ module FlashFlow
     end
 
     def test_check_out_to_working_branch
-      @deploy.stub(:check_repo, true) do
-        Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
-          assert_output(/Failure!/) { @deploy.run }
+      @deploy.stub(:in_shadow_repo, true) do
+        @deploy.stub(:check_repo, true) do
+          Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
+            assert_output(/Failure!/) { @deploy.run }
+          end
         end
       end
     end
@@ -152,6 +143,17 @@ module FlashFlow
     end
 
     private
+
+    def with_versions(current, written)
+      original_version = FlashFlow::VERSION
+      FlashFlow.send(:remove_const, :VERSION)
+      FlashFlow.const_set(:VERSION, current)
+      data.expect(:version, written)
+      yield
+      data.verify
+      FlashFlow.send(:remove_const, :VERSION)
+      FlashFlow.const_set(:VERSION, original_version)
+    end
 
     def merger
       @merger ||= Minitest::Mock.new

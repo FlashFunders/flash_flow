@@ -18,6 +18,8 @@ module FlashFlow
         opts.on('--stories id1,id2', 'comma-delimited list of story ids for this branch') { |v| options[:stories] = v.split(',') }
         opts.on('-f', '--force-push', 'Force push your branch') { |v| options[:force] = v }
         opts.on('-c', '--config-file FILE_PATH', 'The path to your config file. Defaults to config/flash_flow.yml.erb') { |v| options[:config_file] = v }
+        opts.on('--resolve', 'Launch a bash shell to save your conflict resolutions') { |v| options[:resolve] = true }
+        opts.on('--resolve-manual', 'Print instructions to use git to resolve conflicts') { |v| options[:resolve_manual] = true }
 
         opts.on_tail("-h", "--help", "Show this message") do
           puts opts
