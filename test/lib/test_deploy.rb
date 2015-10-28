@@ -99,13 +99,12 @@ module FlashFlow
     end
 
     def test_merge_conflict
-      data.expect(:mark_failure, true, [@branch, 'some_sha'])
+      data.expect(:mark_failure, true, [@branch, nil])
 
       notifier.expect(:merge_conflict, true, [@branch])
 
       merger
           .expect(:do_merge, :conflict, [ false ])
-          .expect(:conflict_sha, 'some_sha')
 
       BranchMerger.stub(:new, merger) do
         @deploy.git_merge(@branch, false)
