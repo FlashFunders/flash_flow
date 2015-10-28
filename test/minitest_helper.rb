@@ -17,6 +17,7 @@ class Minitest::Test
     def last_command; ''; end
   end
 
+  FlashFlow.send(:remove_const, :CmdRunner) if FlashFlow.const_defined?(:CmdRunner)
   FlashFlow::CmdRunner = TestCmdRunner
 
   def reset_config!

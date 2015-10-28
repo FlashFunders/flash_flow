@@ -99,20 +99,23 @@ module FlashFlow
     def rerere_resolve!
       return false unless use_rerere
 
-      merging_files = staged_and_working_dir_files.select { |s| UNMERGED_STATUSES.include?(s[0..1]) }.map { |s| s[3..-1] }
+      if unresolved_conflicts.empty?
+        merging_files = staged_and_working_dir_files.select { |s| UNMERGED_STATUSES.include?(s[0..1]) }.map { |s| s[3..-1] }
+        conflicts = conflicted_files
 
-      conflicts = merging_files.map do |file|
-        File.open(file) { |f| f.grep(/>>>>/) }
-      end
-
-      if conflicts.all? { |c| c.empty? }
         run("add #{merging_files.join(" ")}")
         run('commit --no-edit')
 
-        resolutions(merging_files)
+        resolutions(conflicts)
       else
         false
       end
+    end
+
+    def unresolved_conflicts
+      conflicted_files.map do |file|
+        File.open(file) { |f| f.grep(/>>>>/) }.empty? ? nil : file
+      end.compact
     end
 
     def resolutions(files)
@@ -165,6 +168,11 @@ module FlashFlow
       last_stdout.split("\n").reject { |line| line[0..1] == '??' }
     end
 
+    def conflicted_files
+      run("diff --name-only --diff-filter=U")
+      last_stdout.split("\n")
+    end
+
     def current_branch
       run("rev-parse --abbrev-ref HEAD")
       last_stdout.strip
@@ -214,6 +222,17 @@ module FlashFlow
       in_branch(merge_branch, &block)
     end
 
+    def in_branch(branch)
+      begin
+        starting_branch = current_branch
+        run("checkout #{branch}")
+
+        yield
+      ensure
+        run("checkout #{starting_branch}")
+      end
+    end
+
     private
 
     def squash_commits
@@ -234,15 +253,5 @@ module FlashFlow
       "flash_flow/#{merge_branch}"
     end
 
-    def in_branch(branch)
-      begin
-        starting_branch = current_branch
-        run("checkout #{branch}")
-
-        yield
-      ensure
-        run("checkout #{starting_branch}")
-      end
-    end
   end
 end

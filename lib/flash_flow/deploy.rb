@@ -5,6 +5,7 @@ require 'flash_flow/data'
 require 'flash_flow/lock'
 require 'flash_flow/notifier'
 require 'flash_flow/branch_merger'
+require 'flash_flow/shadow_repo'
 
 module FlashFlow
   class Deploy
@@ -33,25 +34,28 @@ module FlashFlow
       puts "Building #{@git.merge_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
       logger.info "\n\n### Beginning #{@git.merge_branch} merge ###\n\n"
 
-      fetch(@git.merge_remote)
-      @git.in_original_merge_branch do
-        @git.initialize_rerere
-      end
 
       begin
-        @lock.with_lock do
-          open_pull_request
+        open_pull_request
 
-          @git.reset_temp_merge_branch
-          @git.in_temp_merge_branch do
-            merge_branches
-            commit_branch_info
-            commit_rerere
+        in_shadow_repo do
+          @lock.with_lock do
+            fetch(@git.merge_remote)
+            @git.in_original_merge_branch do
+              @git.initialize_rerere
+            end
+
+            @git.reset_temp_merge_branch
+            @git.in_temp_merge_branch do
+              merge_branches
+              commit_branch_info
+              commit_rerere
+            end
+
+            @git.copy_temp_to_merge_branch
+            @git.delete_temp_merge_branch
+            @git.push_merge_branch
           end
-
-          @git.copy_temp_to_merge_branch
-          @git.delete_temp_merge_branch
-          @git.push_merge_branch
         end
 
         print_errors
@@ -128,8 +132,12 @@ module FlashFlow
           @data.set_resolutions(branch, merger.resolutions)
 
         when :conflict
-          @data.mark_failure(branch, merger.conflict_sha)
-          @notifier.merge_conflict(branch) unless is_working_branch
+          if is_working_branch
+            @data.mark_failure(branch, merger.conflict_sha)
+          else
+            @data.mark_failure(branch, nil)
+            @notifier.merge_conflict(branch)
+          end
       end
     end
 
@@ -157,7 +165,7 @@ module FlashFlow
       branch_not_merged = nil
       @data.failures.each do |full_ref, failure|
         if failure.ref == @git.working_branch
-          branch_not_merged = "\nERROR: Your branch did not merge to #{@git.merge_branch}. Run the following commands to fix the merge conflict and then re-run this script:\n\n  git checkout #{failure.metadata['conflict_sha']}\n  git merge #{@git.working_branch}\n  # Resolve the conflicts\n  git add <conflicted files>\n  git commit --no-edit"
+          branch_not_merged = "ERROR: Your branch did not merge to #{@git.merge_branch}. Run 'flash_flow --resolve', fix the merge conflict(s) and then re-run this script\n"
         else
           errors << "WARNING: Unable to merge branch #{failure.remote}/#{failure.ref} to #{@git.merge_branch} due to conflicts."
         end
@@ -172,6 +180,12 @@ module FlashFlow
     end
 
     private
+
+    def in_shadow_repo
+      ShadowRepo.new(@git, logger: logger).in_dir do
+        yield
+      end
+    end
 
     def fetch(remote)
       @fetched_remotes ||= {}

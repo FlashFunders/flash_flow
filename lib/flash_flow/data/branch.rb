@@ -4,7 +4,7 @@ module FlashFlow
   module Data
 
     class Branch
-      attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :metadata, :updated_at, :created_at
+      attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :conflict_sha, :metadata, :updated_at, :created_at
 
       def initialize(_remote, _remote_url, _ref)
         @remote = _remote
@@ -23,6 +23,7 @@ module FlashFlow
         branch.resolutions = hash['resolutions']
         branch.stories = hash['stories']
         branch.metadata = hash['metadata']
+        branch.conflict_sha = hash['conflict_sha'] || hash['metadata'].to_h['conflict_sha']
         branch.updated_at = massage_time(hash['updated_at'])
         branch.created_at = massage_time(hash['created_at'])
         branch
@@ -52,6 +53,7 @@ module FlashFlow
             'status' => status,
             'resolutions' => resolutions,
             'stories' => stories,
+            'conflict_sha' => conflict_sha,
             'metadata' => metadata,
             'updated_at' => updated_at,
             'created_at' => created_at,
@@ -94,7 +96,7 @@ module FlashFlow
       end
 
       def fail!(conflict_sha=nil)
-        add_metadata('conflict_sha' => conflict_sha) if conflict_sha
+        self.conflict_sha = conflict_sha
         self.status = 'fail'
       end
 
