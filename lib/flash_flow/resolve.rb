@@ -49,7 +49,7 @@ module FlashFlow
     end
 
     def merge_conflicted
-      @git.run("checkout #{branch.metadata['conflict_sha']}")
+      @git.run("checkout #{branch.conflict_sha}")
       @git.run("merge origin/#{working_branch}")
     end
 
@@ -66,6 +66,8 @@ module FlashFlow
     end
 
     def launch_bash
+      bash_message
+
       with_init_file do |file|
         system("bash --init-file #{file} -i")
       end
@@ -87,7 +89,7 @@ module FlashFlow
 
 Run the following commands to fix the merge conflict and then re-run flash_flow:
   pushd #{flash_flow_directory}
-  git checkout #{branch.metadata['conflict_sha']}
+  git checkout #{branch.conflict_sha}
   git merge #{working_branch}
   # Resolve the conflicts
   git add <conflicted files>
@@ -103,7 +105,7 @@ Run the following commands to fix the merge conflict and then re-run flash_flow:
       return @data if @data
 
       in_shadow_repo do
-        @data = Data::Base.new({}, @branch_info_file, @git, logger: logger)
+        @data = Data::Base.new({}, @branch_info_file, @git, logger: @logger)
       end
 
       @data
@@ -152,7 +154,7 @@ Run the following commands to fix the merge conflict and then re-run flash_flow:
     end
 
     def check_for_conflict
-      raise NothingToResolve.new("The current branch (#{working_branch}) does not appear to be in conflict.") unless branch.metadata['conflict_sha']
+      raise NothingToResolve.new("The current branch (#{working_branch}) does not appear to be in conflict.") unless branch.conflict_sha
     end
   end
 end

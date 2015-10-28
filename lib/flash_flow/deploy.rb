@@ -132,8 +132,12 @@ module FlashFlow
           @data.set_resolutions(branch, merger.resolutions)
 
         when :conflict
-          @data.mark_failure(branch, merger.conflict_sha)
-          @notifier.merge_conflict(branch) unless is_working_branch
+          if is_working_branch
+            @data.mark_failure(branch, merger.conflict_sha)
+          else
+            @data.mark_failure(branch, nil)
+            @notifier.merge_conflict(branch)
+          end
       end
     end
 

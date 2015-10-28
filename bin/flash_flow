@@ -18,9 +18,9 @@ case
   when options[:release_notes]
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).release_notes(options[:release_notes])
   when options[:resolve]
-    FlashFlow::Resolve.new(Config.configuration.git, Config.configuration.branch_info_file, logger: Config.configuration.logger).start
+    FlashFlow::Resolve.new(FlashFlow::Config.configuration.git, FlashFlow::Config.configuration.branch_info_file, logger: FlashFlow::Config.configuration.logger).start
   when options[:resolve_manual]
-    FlashFlow::Resolve.new(Config.configuration.git, Config.configuration.branch_info_file, logger: Config.configuration.logger).manual_instructions
+    FlashFlow::Resolve.new(FlashFlow::Config.configuration.git, FlashFlow::Config.configuration.branch_info_file, logger: FlashFlow::Config.configuration.logger).manual_instructions
   else
     FlashFlow::Deploy.new(options).run
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_pushed

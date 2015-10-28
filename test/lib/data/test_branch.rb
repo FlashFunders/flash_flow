@@ -80,6 +80,19 @@ module FlashFlow
         assert_equal(branch.metadata, branch_hash['metadata'])
       end
 
+      def test_from_hash_conflict_sha
+        branch = Branch.from_hash(branch_hash)
+        assert_equal(branch.conflict_sha, 'conflict_sha')
+
+        hash = branch_hash.merge({ 'conflict_sha' => nil, 'metadata' => { 'conflict_sha' => 'another_sha' } })
+        branch = Branch.from_hash(hash)
+        assert_equal(branch.conflict_sha, 'another_sha')
+
+        hash = branch_hash.merge({ 'conflict_sha' => nil})
+        branch = Branch.from_hash(hash)
+        assert_equal(branch.conflict_sha, nil)
+      end
+
       def test_from_hash_with_time_objects
         branch_hash['updated_at'] = Time.now - 200
         branch_hash['created_at'] = Time.now - 200
@@ -191,6 +204,7 @@ module FlashFlow
             'status' => 'success',
             'resolutions' => {},
             'stories' => ['123'],
+            'conflict_sha' => 'conflict_sha',
             'metadata' => {
                 'some' => 'data'
             },
