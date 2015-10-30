@@ -36,14 +36,16 @@ What that will do (once your application is properly configured) is:
 3. Get your list of pull requests from github (or use the saved list, more on that later)
 4. Filter out any "removed" branches
 5. Merge the rest into the newly created `merge_branch`
-6. Force push the `merge_branch` to the `merge_remote`
+6. Push the `merge_branch` to the `merge_remote`
+7. The `merge_branch` is now a merge of your master branch plus all of your pull requests.
 
 ### Notes
 
 1. Step 1 will not push your branch if you're on either the `merge_branch` or `master_branch`, but it will
 still merge all the other branches and push the result.
-2. flash_flow uses your local git repo. It resets everything back to the branch you started in, but you should not do
-anything else in your repo while it's running because lots of mayhem will ensue.
+2. flash_flow creates a copy of your local git repo. The copy lives in /your/repo/dir/../.flash_flow/.
+That's where it merges all the code and pushes to the remote from. This "shadow" directory is used so
+that your local git repository is still available for your use while flash flow is running.
 
 
 ### Configuring a lock
@@ -60,20 +62,25 @@ In step 1 after your branch is pushed, a pull request into `master_branch` will 
 add the "do not merge" label to a pull request, it will be excluded from the `merge_branch`. This is extremely
 useful whenever one of your co-workers breaks the build, you can either run `flash_flow --no-merge` from their
 branch, or go directly to github and add the "do not merge" label and then re-run flash_flow from your branch.
+
 To use github as your source of merge branches you have to configure it with the class name, github token and
 repo, your master branch name and both the unmergeable label and do not merge label, which must exist on github.
 The unmergeable label is added to a pull request that has a conflict that can't be resolved and is therefore
 excluded from the merge branch.
 
 ### Configuring an issue tracker
-We use Pivotal Tracker. Anytime flash_flow is run, all the branches that get merged, if they have any stories
-associated with them (added via the `--stories` option), those stories will transition to "finished" if they
-were previously "started". When code deploys to our review environment, our deploy script runs
-`flash_flow --review-deploy`, which transitions stories associated with merged branches from "finished" to
-"delivered". At the same time, for a branch that has been removed ("--no-merge"), if the story is "delivered"
-it will transition back to "finished". In addition, as part of our production deploy
-script, we run `flash_flow --prod-deploy`, which takes all the stories that are newly in the `master_branch`
-and adds a comment "Deployed to production on 12/25/2015 at 11:11pm". So using the story option can be handy.
+We use Pivotal Tracker. When we have finished work for a story on a particular branch we run
+`flash_flow --story <story_id>`, which will transition all of those stories to "finished" if they were previously
+"started".
+
+When code deploys to our review environment, our deploy script runs `flash_flow --review-deploy`, which transitions
+stories associated with merged branches from "finished" to "delivered". At the same time, for a branch that has been
+removed ("--no-merge"), if the story is "delivered" it will transition back to "finished". This means that the only
+buttons that have to be manually clicked in tracker are "Start" and "Accept/Reject".
+
+In addition, as part of our production deploy script, we run `flash_flow --prod-deploy`, which takes all the stories
+that are newly in the `master_branch` and adds a comment "Deployed to production on 12/25/2015 at 11:11pm". Tracker
+doesn't support a real state for "In production", so for us this comment serves as that state.
 
 ### Configuring hipchat
 When a branch other than the one you're on doesn't merge cleanly and can't be fixed by rerere (more on that later
@@ -123,14 +130,22 @@ If you have Pivotal Tracker configured it will look at all stories associated wi
 deployed to `acceptance_branch` it will mark any finished stories as delivered. This is best used right after every
 deploy to your acceptance environment. The acceptance branch will not be re-built in this case.
 
-### Merge conflicts
+#### --resolve
+Launch a bash shell to save your conflict resolutions. If your branch didn't merge the last time you ran flash flow
+you'll run this command. This drops you into bash where you can save your resolved conflicts, then those resolutions
+will be remembered the next time you run flash flow.
+
+#### --resolve-manual
+Print instructions that will show you how to resolve your merge conflicts without using flash flow's version of the
+shell. If you don't use bash, or flash flow does odd things to your bash config, this is the way to go.
+
+### A note about merge conflicts
 When we first started using flash_flow, if your branch had a merge conflict you were out of luck. You had to wait for
 the branch that you were conflicting with to be merged to master, merge master into your branch, and then try again to
 get your code into the merge branch.
 
-Then we discovered git rerere, which is the coolest feature of git that almost no one seems to have heard of. Googling
-it turns up a few really good resources on how it works, but in one sentence or less what it does is remember how you
-resolved conflicts and apply those patches.
+Then we discovered git rerere, which is the coolest feature of git that almost no one seems to have heard of. Basically
+what rerere does is remember how you resolved conflicts and auto-apply those patches when it notices the same conflicts.
 
 If your branch has a conflict with the `merge_branch` flash_flow will look for a rerere patch and apply that if it
 exists. If it doesn't, flash_flow will not merge your branch (but will continue merging all the others), and it will
