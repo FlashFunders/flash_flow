@@ -29,12 +29,17 @@ module FlashFlow
       end
     end
 
+    FLASH_FLOW_BASE = '.flash_flow'
     def flash_flow_base_dir
-      @flash_flow_base_dir ||= current_dir + "/../.flash_flow"
+      if current_dir =~ /\.flash_flow/
+        "#{current_dir.split(FLASH_FLOW_BASE).first}#{FLASH_FLOW_BASE}"
+      else
+        "#{current_dir}/../#{FLASH_FLOW_BASE}"
+      end
     end
 
     def current_dir
-      @current_dir ||= Dir.getwd
+      Dir.getwd
     end
 
     def flash_flow_dir
