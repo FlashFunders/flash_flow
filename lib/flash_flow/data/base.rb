@@ -44,7 +44,10 @@ module FlashFlow
 
       def backwards_compatible_store
         @backwards_compatible_store ||= begin
-          hash = @store.get
+          hash = in_shadow_repo do
+            @store.get
+          end
+
           hash.has_key?('branches') ? hash : { 'branches' => hash }
         end
       end
@@ -53,6 +56,13 @@ module FlashFlow
         Collection.from_hash(@git.remotes, backwards_compatible_store['branches']).to_a
       end
 
+      private
+
+      def in_shadow_repo
+        ShadowRepo.new(@git).in_dir do
+          yield
+        end
+      end
     end
   end
 end

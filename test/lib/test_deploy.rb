@@ -75,8 +75,10 @@ module FlashFlow
     def test_check_out_to_working_branch
       @deploy.stub(:in_shadow_repo, true) do
         @deploy.stub(:check_repo, true) do
-          Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
-            assert_output(/Failure!/) { @deploy.run }
+          @deploy.stub(:check_version, true) do
+            Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
+              assert_output(/Failure!/) { @deploy.run }
+            end
           end
         end
       end
