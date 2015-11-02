@@ -7,6 +7,9 @@ options = FlashFlow::Options.parse
 if options[:install]
   FlashFlow::Install.install
   exit(0)
+elsif options[:version]
+  puts "Flash flow version #{FlashFlow::VERSION}\n"
+  exit(0)
 end
 
 FlashFlow::Config.configure!(options[:config_file])

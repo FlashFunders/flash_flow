@@ -9,6 +9,7 @@ module FlashFlow
         opts.separator ""
 
         opts.on('--install', 'Copy flash_flow.yml.erb to your repo and exit') { |v| options[:install] = true }
+        opts.on('-v', '--version', 'Print the current version of flash flow and exit') { |v| options[:version] = true }
         opts.on('--prod-deploy', 'Run IssueTracker#deploy_production and exit') { |v| options[:prod_deploy] = true }
         opts.on('--review-deploy', 'Run IssueTracker#deploy_review and exit') { |v| options[:review_deploy] = true }
         opts.on('--release-notes hours', 'Run IssueTracker#release_notes and exit') { |v| options[:release_notes] = v }

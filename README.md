@@ -89,6 +89,9 @@ to which the message will be sent.
 
 ### Runtime options
 
+#### -v, --version
+Print the current version of flash flow and exit.
+
 #### -n, --no-merge
 Runs flash_flow, but excludes the branch that you're on from the merge branch. If the branch you're on has breaking
 tests, you may want to get it out of your `merge_branch`, and this will do that and ensure that the next times
