@@ -2,9 +2,9 @@ PATH
   remote: .
   specs:
     flash_flow (1.1.2)
-      hipchat
-      octokit
-      pivotal-tracker
+      hipchat (~> 1.5)
+      octokit (~> 4.1)
+      pivotal-tracker (~> 0.5)
 
 GEM
   remote: https://rubygems.org/
@@ -71,11 +71,11 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.6)
-  byebug
+  byebug (> 0)
   flash_flow!
-  minitest
-  minitest-stub_any_instance
-  rake
+  minitest (> 0)
+  minitest-stub_any_instance (> 0)
+  rake (> 0)
 
 BUNDLED WITH
    1.10.6
