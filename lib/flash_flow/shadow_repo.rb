@@ -16,6 +16,7 @@ module FlashFlow
       create_shadow_repo
 
       Dir.chdir(flash_flow_dir) do
+        @git.fetch(@git.merge_remote)
         @git.run("reset --hard HEAD") if opts[:reset]
 
         yield
