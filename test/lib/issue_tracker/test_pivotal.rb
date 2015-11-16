@@ -172,6 +172,73 @@ module FlashFlow
         fake_file.verify
       end
 
+      def test_story_deployable
+        story_mock = MiniTest::Mock.new
+                         .expect(:id, '111')
+                         .expect(:current_state, 'accepted')
+
+        stub_tracker_gem(@project_mock) do
+          mock_find(story_mock)
+          assert(Pivotal.new(sample_branches, mock_git).story_deployable?('111'))
+        end
+      end
+
+      def test_story_deployable_false
+        story_mock = MiniTest::Mock.new
+                         .expect(:id, '111')
+                         .expect(:current_state, 'delivered')
+
+        stub_tracker_gem(@project_mock) do
+          mock_find(story_mock)
+          refute(Pivotal.new(sample_branches, mock_git).story_deployable?('111'))
+        end
+      end
+
+      def test_story_link
+        story_mock = MiniTest::Mock.new
+                         .expect(:id, '111')
+                         .expect(:url, 'http://some_url')
+
+        stub_tracker_gem(@project_mock) do
+          mock_find(story_mock)
+          assert_equal('http://some_url', Pivotal.new(sample_branches, mock_git).story_link('111'))
+        end
+      end
+
+      def test_story_title
+        story_mock = MiniTest::Mock.new
+                         .expect(:id, '111')
+                         .expect(:name, 'Some Title')
+
+        stub_tracker_gem(@project_mock) do
+          mock_find(story_mock)
+          assert_equal('Some Title', Pivotal.new(sample_branches, mock_git).story_title('111'))
+        end
+      end
+
+      def test_release_keys
+        story_mock = MiniTest::Mock.new
+                         .expect(:id, '111')
+                         .expect(:labels, 'Release-1, Not-A-Release-2, release-3')
+                         .expect(:labels, 'Release-1, Not-A-Release-2, release-3')
+
+        stub_tracker_gem(@project_mock) do
+          mock_find(story_mock)
+          assert_equal(['Release-1', 'release-3'], Pivotal.new(sample_branches, mock_git, 'release_label_prefix' => 'release').release_keys('111'))
+        end
+      end
+
+      def test_stories_for_release
+        story_mock = MiniTest::Mock.new
+                         .expect(:id, '111')
+
+        stub_tracker_gem(@project_mock) do
+          mock_all([story_mock], label: 'release')
+          assert_equal(['111'], Pivotal.new(sample_branches, mock_git).stories_for_release('release'))
+        end
+
+      end
+
       private
 
       def stub_tracker_gem(project)
@@ -206,6 +273,10 @@ module FlashFlow
       def mock_find(story, story_id=nil)
         story_id ||= story.id
         @project_mock.expect(:stories, @stories.expect(:find, story, [story_id]))
+      end
+
+      def mock_all(stories, opts={})
+        @project_mock.expect(:stories, @stories.expect(:all, stories, [opts]))
       end
 
       def sample_branches

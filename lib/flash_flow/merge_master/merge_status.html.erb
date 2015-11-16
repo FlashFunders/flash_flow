@@ -1,0 +1,138 @@
+<html>
+<head>
+  <style>
+      .story {
+          padding: 15px 0;
+      }
+
+      span {
+          margin-left: 30px;
+      }
+
+      .branch {
+          border: solid black 1px;
+          margin: 30px 0;
+          padding: 30px;
+      }
+
+      img {
+          margin: 60px;
+      }
+
+      .good-to-go {
+          background-color: lightgreen;
+      }
+
+      .status.shippable {
+          color: green;
+      }
+
+      .status {
+          margin-right: 30px;
+      }
+
+      .status.not-shippable {
+          color: lightpink;
+      }
+
+      .story .status {
+          margin-left: 30px;
+          width: 14%;
+          min-width: 100px;
+          display: inline-block;
+      }
+
+      .release {
+          padding-left: 15px;
+      }
+  </style>
+</head>
+<body>
+<% @branches.each do |branch, branch_hash| %>
+    <div class="branch <%= branch_hash[:shippable?] ? 'good-to-go' : '' %>">
+      <h2 class="status <%= branch_hash[:shippable?] ? 'shippable' : 'not-shippable' %>">
+        <%= branch_hash[:shippable?] ? 'Ready to ship' : 'Can not ship' %>
+      </h2>
+
+      <h2>
+        <span class="status <%= branch_hash[:branch_can_ship?] ? 'shippable' : 'not-shippable' %>"><%= branch_hash[:branch_can_ship?] ? 'Code ready' : 'Code not ready' %></span>
+        <a href='<%= branch_hash[:branch_url] %>'><%= branch_hash[:name] %></a>
+      </h2>
+
+      <% (branch_hash[:connected_branches].to_a - [branch]).each do |connected_branch| %>
+          <% connected_branch_hash = @branches[connected_branch] %>
+          <h2>
+            <span style="margin-right: 30px;">Must ship with: </span>
+            <a href='<%= connected_branch_hash[:branch_url] %>'><%= connected_branch_hash[:name] %></a>
+          </h2>
+      <% end %>
+
+      <div class="grouping">
+        <% if branch_hash[:stories].empty? %>
+            <h3>
+              This branch has no stories
+            </h3>
+        <% else %>
+            <h3>
+              Stories for this branch
+            </h3>
+            <% branch_hash[:my_stories].each do |story_id| %>
+                <% story = @stories[story_id] %>
+                <div class="story">
+                  <span class="status <%= story[:can_ship?] ? 'shippable' : 'not-shippable' %>"><%= story[:can_ship?] ? 'Story ready' : 'Story not ready' %></span>
+                  <a href='<%= story[:url] %>'><%= story[:title] %></a>
+                  <span><%= story[:release_keys].empty? ? '' : "Related releases: #{story[:release_keys].join(", ")}" %></span>
+                </div>
+            <% end %>
+
+            <% unless (branch_hash[:stories] - branch_hash[:my_stories]).empty? %>
+                <h3>
+                  Stories that must be released with this branch
+                </h3>
+                <% (branch_hash[:stories] - branch_hash[:my_stories]).each do |story_id| %>
+                    <% story = @stories[story_id] %>
+                    <div class="story">
+                      <span class="status <%= story[:can_ship?] ? 'shippable' : 'not-shippable' %>"><%= story[:can_ship?] ? 'Story ready' : 'Story not ready' %></span>
+                      <a href='<%= story[:url] %>'><%= story[:title] %></a>
+                      <span><%= story[:release_keys].empty? ? '' : "Related releases: #{story[:release_keys].join(", ")}" %></span>
+                    </div>
+                <% end %>
+            <% end %>
+        <% end %>
+      </div>
+
+      <div class="grouping">
+        <% if branch_hash[:releases].empty? %>
+            <h3>
+              This branch has no associated releases
+            </h3>
+        <% else %>
+            <h3>
+              Releases for this branch
+            </h3>
+            <% branch_hash[:releases].each do |release_key| %>
+                <div class="release">
+                  <h4><%= release_key %></h4>
+                  <% @releases[release_key][:stories].each do |story_id| %>
+                      <% story = @stories[story_id] %>
+                      <div class="story">
+                        <span class="status <%= story[:can_ship?] ? 'shippable' : 'not-shippable' %>"><%= story[:can_ship?] ? 'Story ready' : 'Story not ready' %></span>
+                        <a href='<%= story[:url] %>'><%= story[:title] %></a>
+                        <span><%= story[:release_keys].empty? ? '' : "Related releases: #{story[:release_keys].join(", ")}" %></span>
+                      </div>
+                  <% end %>
+                </div>
+            <% end %>
+        <% end %>
+      </div>
+
+      <% if branch_hash[:stories].size > 1 %>
+          <img src='file:///<%= branch_hash[:image] %>'/>
+      <% end %>
+
+    </div>
+
+
+<% end %>
+</body>
+</html>

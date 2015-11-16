@@ -32,6 +32,26 @@ module FlashFlow
         issue_tracker.release_notes(hours, file) if issue_tracker.respond_to?(:release_notes)
       end
 
+      def story_deployable?(story_id)
+        issue_tracker.story_deployable?(story_id) if issue_tracker.respond_to?(:story_deployable?)
+      end
+
+      def story_link(story_id)
+        issue_tracker.story_link(story_id) if issue_tracker.respond_to?(:story_link)
+      end
+
+      def story_title(story_id)
+        issue_tracker.story_title(story_id) if issue_tracker.respond_to?(:story_title)
+      end
+
+      def release_keys(story_id)
+        issue_tracker.release_keys(story_id) if issue_tracker.respond_to?(:release_keys)
+      end
+
+      def stories_for_release(release_key)
+        issue_tracker.stories_for_release(release_key) if issue_tracker.respond_to?(:stories_for_release)
+      end
+
       private
 
       def git

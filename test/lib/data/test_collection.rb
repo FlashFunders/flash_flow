@@ -214,6 +214,56 @@ module FlashFlow
         @fake_branches.verify
       end
 
+      def test_can_ship_returns_true
+        collection = Collection.new({})
+        assert(collection.can_ship?(@branch))
+      end
+
+      def test_can_ship_calls_branches_class
+        @fake_branches.expect(:can_ship?, true, [@branch])
+        @collection.can_ship?(@branch)
+        @fake_branches.verify
+      end
+
+      def test_branch_link_returns_nil
+        collection = Collection.new({})
+        assert_nil(collection.branch_link(@branch))
+      end
+
+      def test_branch_link_calls_branches_class
+        @fake_branches.expect(:branch_link, 'http://link_to_branch.com', [@branch])
+        assert_equal('http://link_to_branch.com', @collection.branch_link(@branch))
+        @fake_branches.verify
+      end
+
+      def test_current_branches
+        branch1 = Branch.new('111', '111', '111')
+        branch2 = Branch.new('222', '222', '222')
+        branch3 = Branch.new('333', '333', '333')
+        branch2.current_record = true
+        @collection.mark_success(branch1)
+        @collection.mark_success(branch2)
+        @collection.mark_success(branch3)
+
+        assert_equal(@collection.current_branches, [branch2])
+      end
+
+      def test_mark_all_as_current
+        branch1 = Branch.new('111', '111', '111')
+        branch2 = Branch.new('222', '222', '222')
+        branch3 = Branch.new('333', '333', '333')
+        branch2.current_record = true
+        @collection.mark_success(branch1)
+        @collection.mark_success(branch2)
+        @collection.mark_success(branch3)
+
+        assert_equal(@collection.current_branches, [branch2])
+
+        @collection.mark_all_as_current
+
+        assert_equal(@collection.current_branches, [branch1, branch2, branch3])
+      end
+
       def test_failures
         branch1 = Branch.new('111', '111', '111')
         branch2 = Branch.new('222', '222', '222')

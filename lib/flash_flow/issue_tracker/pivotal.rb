@@ -11,10 +11,11 @@ module FlashFlow
         @branches = branches
         @git = git
         @timezone = opts['timezone'] || "UTC"
+        @project_id = opts['project_id']
 
         PivotalTracker::Client.token = opts['token']
         PivotalTracker::Client.use_ssl = true
-        @project = PivotalTracker::Project.find(opts['project_id'])
+        @release_label_prefix = Regexp.new("^#{opts['release_label_prefix'] || 'release'}", Regexp::IGNORECASE)
       end
 
       def stories_pushed
@@ -56,7 +57,41 @@ module FlashFlow
         print_release_notes(release_notes, file)
       end
 
+      def story_deployable?(story_id)
+        story = get_story(story_id)
+
+        story.current_state == 'accepted'
+      end
+
+      def story_link(story_id)
+        story = get_story(story_id)
+
+        story.url if story
+      end
+
+      def story_title(story_id)
+        story = get_story(story_id)
+
+        story.name if story
+      end
+
+      def release_keys(story_id)
+        story = get_story(story_id)
+
+        return [] if story.labels.nil?
+
+        story.labels.split(",").map(&:strip).select { |label| label =~ @release_label_prefix }.map(&:strip)
+      end
+
+      def stories_for_release(release_key)
+        stories_for_label(release_key)
+      end
+
       private
+
+      def project
+        @project ||= PivotalTracker::Project.find(@project_id)
+      end
 
       def undeliver(story_id)
         story = get_story(story_id)
@@ -111,7 +146,12 @@ module FlashFlow
       end
 
       def done_and_current_stories
-        [@project.iteration(:done).last(2).map(&:stories) + @project.iteration(:current).stories].flatten
+        [project.iteration(:done).last(2).map(&:stories) + project.iteration(:current).stories].flatten
+      end
+
+      def stories_for_label(label)
+        @stories_for_label ||= {}
+        @stories_for_label[label] ||= project.stories.all(label: label).map(&:id)
       end
 
       def release_by(release_stories, hours)
@@ -128,7 +168,8 @@ module FlashFlow
       end
 
       def get_story(story_id)
-        @project.stories.find(story_id)
+        @stories ||= {}
+        @stories[story_id] ||= project.stories.find(story_id)
       end
 
       def already_has_comment?(story, comment)

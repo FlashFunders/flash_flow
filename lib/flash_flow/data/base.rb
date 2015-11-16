@@ -9,8 +9,8 @@ module FlashFlow
     class Base
       extend Forwardable
 
-      def_delegators :@collection, :add_story, :mergeable, :mark_deleted, :mark_success,
-                     :mark_failure, :remove_from_merge, :add_to_merge, :failures, :set_resolutions
+      def_delegators :@collection, :add_story, :mergeable, :mark_deleted, :mark_success, :mark_failure,
+                     :remove_from_merge, :add_to_merge, :failures, :set_resolutions, :to_a, :can_ship?, :branch_link
 
       def initialize(branch_config, filename, git, opts={})
         @git = git
@@ -19,8 +19,10 @@ module FlashFlow
       end
 
       def initialize_collection(branch_config, remotes)
-        Collection.fetch(remotes, branch_config) ||
+        collection = Collection.fetch(remotes, branch_config) ||
             Collection.from_hash(remotes, backwards_compatible_store['branches'])
+        collection.mark_all_as_current
+        collection
       end
 
       def version

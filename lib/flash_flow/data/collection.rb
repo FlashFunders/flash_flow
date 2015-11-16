@@ -24,9 +24,10 @@ module FlashFlow
         collection
       end
 
-      def self.from_hash(remotes, hash)
+      def self.from_hash(remotes, hash, collection_instance=nil)
         collection = new(remotes)
         collection.branches = branches_from_hash(hash.dup)
+        collection.instance_variable_set(:@collection_instance, collection_instance)
         collection
       end
 
@@ -73,7 +74,7 @@ module FlashFlow
           end
         end
 
-        self.class.from_hash(remotes, merged_branches)
+        self.class.from_hash(remotes, merged_branches, @collection_instance)
       end
 
       def to_a
@@ -84,8 +85,12 @@ module FlashFlow
         to_a.each
       end
 
+      def current_branches
+        to_a.select { |branch| branch.current_record }
+      end
+
       def mergeable
-        to_a.select { |branch| branch.success? || branch.fail? || branch.unknown? }
+        current_branches.select { |branch| (branch.success? || branch.fail? || branch.unknown?) }
       end
 
       def failures
@@ -97,6 +102,12 @@ module FlashFlow
 
         @collection_instance.fetch.each do |b|
           update_or_add(b)
+        end
+      end
+
+      def mark_all_as_current
+        @branches.each do |_, branch|
+          branch.current_record = true
         end
       end
 
@@ -141,6 +152,14 @@ module FlashFlow
 
         @collection_instance.add_story(branch, story_id) if @collection_instance.respond_to?(:add_story)
         branch
+      end
+
+      def can_ship?(branch)
+        @collection_instance.respond_to?(:can_ship?) ? @collection_instance.can_ship?(branch) : true
+      end
+
+      def branch_link(branch)
+        @collection_instance.branch_link(branch) if @collection_instance.respond_to?(:branch_link)
       end
 
       def set_resolutions(branch, resolutions)
