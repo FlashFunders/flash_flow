@@ -13,6 +13,7 @@ module FlashFlow
         @master_branch = config['master_branch'] || master
         @unmergeable_label = config['unmergeable_label'] || 'unmergeable'
         @do_not_merge_label = config['do_not_merge_label'] || 'do not merge'
+        @code_reviewed_label = config['code_reviewed_label'] || 'code reviewed'
       end
 
       def initialize_connection!(token)
@@ -61,6 +62,14 @@ module FlashFlow
         add_label(branch.metadata['pr_number'], @unmergeable_label)
       end
 
+      def can_ship?(branch)
+        has_label?(branch.metadata['pr_number'], @code_reviewed_label)
+      end
+
+      def branch_link(branch)
+        branch.metadata['pr_url']
+      end
+
       private
 
       def status_from_labels(pull_request)
@@ -105,19 +114,20 @@ module FlashFlow
       end
 
       def has_label?(pull_request_number, label_name)
-        labels(pull_request_number).detect { |label| label.name == label_name }
+        !!labels(pull_request_number).detect { |label| label == label_name }
       end
 
       def labels(pull_request_number)
         @labels ||= {}
-        @labels[pull_request_number] ||= octokit.labels_for_issue(repo, pull_request_number)
+        @labels[pull_request_number] ||= octokit.labels_for_issue(repo, pull_request_number).map(&:name)
       end
 
       def metadata(pr)
         {
             'pr_number' => pr.number,
-            'user_url' => pr.user.html_url,
-            'repo_url' => pr.head.repo.html_url
+            'pr_url'    => pr.html_url,
+            'user_url'  => pr.user.html_url,
+            'repo_url'  => pr.head.repo.html_url
         }
       end
 

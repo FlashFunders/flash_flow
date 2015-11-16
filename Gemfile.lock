@@ -1,10 +1,11 @@
 PATH
   remote: .
   specs:
-    flash_flow (1.2.0)
+    flash_flow (1.2.1)
       hipchat (~> 1.5)
       octokit (~> 4.1)
       pivotal-tracker (~> 0.5)
+      ruby-graphviz (> 0)
 
 GEM
   remote: https://rubygems.org/
@@ -57,6 +58,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
+    ruby-graphviz (1.2.2)
     safe_yaml (1.0.4)
     sawyer (0.6.0)
       addressable (~> 2.3.5)

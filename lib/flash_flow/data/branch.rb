@@ -4,7 +4,8 @@ module FlashFlow
   module Data
 
     class Branch
-      attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :conflict_sha, :metadata, :updated_at, :created_at
+      attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :conflict_sha, :metadata,
+                    :current_record, :updated_at, :created_at
 
       def initialize(_remote, _remote_url, _ref)
         @remote = _remote

@@ -24,6 +24,8 @@ case
     FlashFlow::Resolve.new(FlashFlow::Config.configuration.git, FlashFlow::Config.configuration.branch_info_file, logger: FlashFlow::Config.configuration.logger).start
   when options[:resolve_manual]
     FlashFlow::Resolve.new(FlashFlow::Config.configuration.git, FlashFlow::Config.configuration.branch_info_file, logger: FlashFlow::Config.configuration.logger).manual_instructions
+  when options[:merge_status]
+    FlashFlow::MergeMaster::Status.new(FlashFlow::Config.configuration.issue_tracker, FlashFlow::Config.configuration.branches, FlashFlow::Config.configuration.branch_info_file, FlashFlow::Config.configuration.git, logger: FlashFlow::Config.configuration.logger).status
   else
     FlashFlow::Deploy.new(options).run
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_pushed
