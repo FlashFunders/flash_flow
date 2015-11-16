@@ -127,9 +127,15 @@
       </div>
 
       <% if branch_hash[:stories].size > 1 %>
-          <img src='file:///<%= branch_hash[:image] %>'/>
-      <% end %>
+          <% if branch_hash[:image] %>
+              <img src='file:///<%= branch_hash[:image] %>'/>
+          <% else %>
+              <img src=""/>
 
+              <h2 class="warning">GraphViz not installed.</h2>
+              <h4 class="warning">On a Mac, "brew install graphviz" to see a graphical version of your branch's dependencies</h4>
+          <% end %>
+      <% end %>
     </div>
 
 

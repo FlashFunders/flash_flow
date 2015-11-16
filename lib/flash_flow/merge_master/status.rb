@@ -33,7 +33,7 @@ module FlashFlow
           add_stories(connected_stories)
           add_releases(connected_releases)
           sub_g = ReleaseGraph.build(connected_branches, issue_tracker)
-          sub_g.output(png: "./graph-#{i}.png")
+          graph_file = sub_g.output("/tmp/graph-#{i}.png")
 
           branch_hash[branch] =
               Hash.new.tap do |hash|
@@ -41,7 +41,7 @@ module FlashFlow
                 hash[:branch_url] = collection.branch_link(branch)
                 hash[:branch_can_ship?] = collection.can_ship?(branch)
                 hash[:connected_branches] = connected_branches
-                hash[:image] = "#{`pwd`}/graph-#{i}.png"
+                hash[:image] = graph_file
                 hash[:my_stories] = branch.stories.to_a
                 hash[:stories] = connected_stories
                 hash[:releases] = connected_releases

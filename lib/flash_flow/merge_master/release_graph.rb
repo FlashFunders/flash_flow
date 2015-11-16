@@ -16,8 +16,15 @@ module FlashFlow
         @branches = branches
       end
 
-      def output(opts={})
-        graph.output(opts)
+      def output(png_file)
+        graph.output(png: png_file)
+        png_file
+      rescue StandardError => e
+        if e.message =~ /GraphViz/i
+          nil
+        else
+          raise e
+        end
       end
 
       def build
