@@ -1,4 +1,5 @@
 require 'flash_flow/cmd_runner'
+require 'shellwords'
 
 module FlashFlow
   class Git
@@ -22,6 +23,12 @@ module FlashFlow
       @working_branch = current_branch
     end
 
+    def in_dir
+      Dir.chdir(@cmd_runner.dir) do
+        yield
+      end
+    end
+
     def last_stdout
       @cmd_runner.last_stdout
     end
@@ -34,8 +41,8 @@ module FlashFlow
       @cmd_runner.last_success?
     end
 
-    def run(cmd)
-      @cmd_runner.run("git #{cmd}")
+    def run(cmd, opts={})
+      @cmd_runner.run("git #{cmd}", opts)
     end
 
     def add_and_commit(files, message, opts={})
@@ -53,7 +60,11 @@ module FlashFlow
     end
 
     def fetch(remote)
-      run("fetch #{remote}")
+      @fetched_remotes ||= {}
+      unless @fetched_remotes[remote]
+        run("fetch #{remote}")
+        @fetched_remotes[remote] = true
+      end
     end
 
     def master_branch_contains?(ref)
@@ -73,7 +84,7 @@ module FlashFlow
     end
 
     def read_file_from_merge_branch(filename)
-      run("show #{merge_remote}/#{merge_branch}:#{filename}")
+      run("show #{merge_remote}/#{merge_branch}:#{filename}", log: CmdRunner::LOG_CMD)
       last_stdout
     end
 
@@ -113,9 +124,11 @@ module FlashFlow
     end
 
     def unresolved_conflicts
-      conflicted_files.map do |file|
-        File.open(file) { |f| f.grep(/>>>>/) }.empty? ? nil : file
-      end.compact
+      in_dir do
+        conflicted_files.map do |file|
+          File.open(file) { |f| f.grep(/>>>>/) }.empty? ? nil : file
+        end.compact
+      end
     end
 
     def resolutions(files)
@@ -128,10 +141,10 @@ module FlashFlow
 
     # git rerere doesn't give you a deterministic way to determine which resolution was used
     def resolution_candidates(file)
-      @cmd_runner.run("diff -q --from-file #{file} .git/rr-cache/*/postimage")
+      @cmd_runner.run("diff -q --from-file #{file} .git/rr-cache/*/postimage", log: CmdRunner::LOG_CMD)
       different_files = split_diff_lines(@cmd_runner.last_stdout)
 
-      @cmd_runner.run('ls -la .git/rr-cache/*/postimage')
+      @cmd_runner.run('ls -la .git/rr-cache/*/postimage', log: CmdRunner::LOG_CMD)
       all_files = split_diff_lines(@cmd_runner.last_stdout)
 
       all_files - different_files
@@ -237,14 +250,15 @@ module FlashFlow
 
     def squash_commits
       # There are three commits created by flash flow that we don't need in the message
-      run("log #{merge_remote}/#{merge_branch}..#{merge_branch}~3")
+      run("log #{merge_remote}/#{merge_branch}..#{merge_branch}~3", log: CmdRunner::LOG_CMD)
       log = last_stdout
 
       # Get all the files that differ between existing acceptance and new acceptance
       run("diff --name-only #{merge_remote}/#{merge_branch} #{merge_branch}")
       files = last_stdout.split("\n")
       run("reset #{merge_remote}/#{merge_branch}")
-      run("add #{files.map { |f| "'#{f}'" }.join(" ")}")
+
+      run("add -f #{files.map { |f| "\"#{Shellwords.escape(f)}\"" }.join(" ")}")
 
       run("commit -m '#{commit_message(log)}'")
     end

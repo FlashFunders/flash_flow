@@ -3,24 +3,17 @@ require 'logger'
 require 'flash_flow/git'
 
 module FlashFlow
-  class ShadowRepo
+  class ShadowGit < Git
 
+    def initialize(config, logger=nil)
+      super
 
-    def initialize(git, opts={})
-      @git = git
-      @cmd_runner = CmdRunner.new(logger: opts[:logger])
-    end
-
-    def in_dir(opts={})
-      opts = { reset: true, go_back: true }.merge(opts)
       create_shadow_repo
+      @cmd_runner.dir = flash_flow_dir
 
-      Dir.chdir(flash_flow_dir) do
-        @git.fetch(@git.merge_remote)
-        @git.run("reset --hard HEAD") if opts[:reset]
-
-        yield
-      end
+      run("clean -x -f")
+      fetch(merge_remote)
+      run("reset --hard HEAD")
     end
 
     def create_shadow_repo

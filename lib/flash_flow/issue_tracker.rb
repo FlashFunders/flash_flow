@@ -55,7 +55,7 @@ module FlashFlow
       private
 
       def git
-        @git ||= Git.new(Config.configuration.git, Config.configuration.logger)
+        @git ||= ShadowGit.new(Config.configuration.git, Config.configuration.logger)
       end
 
       def get_branches

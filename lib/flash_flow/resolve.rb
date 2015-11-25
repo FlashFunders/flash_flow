@@ -12,7 +12,7 @@ module FlashFlow
       @logger = opts[:logger]
       @branch_info_file = branch_info_file
       @cmd_runner = CmdRunner.new(logger: @logger)
-      @git = Git.new(git_config, @logger)
+      @git = ShadowGit.new(git_config, @logger)
     end
 
     def manual_instructions
@@ -23,24 +23,22 @@ module FlashFlow
     def start
       check_for_conflict
 
-      in_shadow_repo do
-        in_working_branch do
-          merge_conflicted
+      in_working_branch do
+        merge_conflicted
 
-          if unresolved_conflicts.empty?
-            puts "You have already resolved all conflicts."
-          else
-            launch_bash
+        if unresolved_conflicts.empty?
+          puts "You have already resolved all conflicts."
+        else
+          launch_bash
 
-            rerere
+          rerere
 
-            unless unresolved_conflicts.empty?
-              puts "There are still unresolved conflicts in these files:\n#{unresolved_conflicts.join("\n")}\n\n"
-            end
+          unless unresolved_conflicts.empty?
+            puts "There are still unresolved conflicts in these files:\n#{unresolved_conflicts.join("\n")}\n\n"
           end
-
-          git_reset
         end
+
+        git_reset
       end
     end
 
@@ -102,28 +100,11 @@ Run the following commands to fix the merge conflict and then re-run flash_flow:
     private
 
     def data
-      return @data if @data
-
-      in_shadow_repo do
-        @data = Data::Base.new({}, @branch_info_file, @git, logger: @logger)
-      end
-
-      @data
-
+      @data ||= Data::Base.new({}, @branch_info_file, @git, logger: @logger)
     end
 
     def branch
       @branch ||= data.saved_branches.detect { |branch| branch.ref == working_branch }
-    end
-
-    def shadow_repo
-      @shadow_repo ||= ShadowRepo.new(@git, logger: @logger)
-    end
-
-    def in_shadow_repo
-      shadow_repo.in_dir do
-        yield
-      end
     end
 
     def working_branch
@@ -131,13 +112,15 @@ Run the following commands to fix the merge conflict and then re-run flash_flow:
     end
 
     def in_working_branch
-      @git.in_branch(working_branch) do
-        yield
+      @git.in_dir do
+        @git.in_branch(working_branch) do
+          yield
+        end
       end
     end
 
     def flash_flow_directory
-      shadow_repo.flash_flow_dir
+      @git.flash_flow_dir
     end
 
     def init_file_contents
