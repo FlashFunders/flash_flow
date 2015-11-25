@@ -63,7 +63,7 @@ module FlashFlow
             branch = merged_branches[full_ref]
 
             branch.created_at = info.created_at
-            branch.resolutions = branch.resolutions.to_h.merge(info.resolutions.to_h)
+            branch.resolutions = info.resolutions.to_h.merge(branch.resolutions.to_h)
             branch.stories = info.stories.to_a | merged_branches[full_ref].stories.to_a
             if branch.fail?
               branch.conflict_sha ||= info.conflict_sha

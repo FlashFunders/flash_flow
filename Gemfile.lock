@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    flash_flow (1.2.2.a)
+    flash_flow (1.2.3.alpha)
       hipchat (~> 1.5)
       octokit (~> 4.1)
       pivotal-tracker (~> 0.5)
