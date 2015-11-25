@@ -4,10 +4,6 @@ module FlashFlow
   class TestResolve< Minitest::Test
 
     class ResolveTester < Resolve
-      def in_shadow_repo
-        yield
-      end
-
       def in_working_branch
         yield
       end
@@ -71,30 +67,5 @@ module FlashFlow
       end
     end
 
-    
-    
-# def start
-#           if unresolved_conflicts.empty?
-#             puts "You have already resolved all conflicts."
-#           else
-#             launch_bash
-#             @git.run("rerere")
-#
-#             unless unresolved_conflicts.empty?
-#               puts "There are still unresolved conflicts in these files:\n#{unresolved_conflicts.join("\n")}\n\n"
-#             end
-#           end
-#
-#           @git.run("reset --hard HEAD")
-#         end
-#       end
-#     end
-
-
-    private
-
-    def shadow_repo
-      Minitest::Mock.new.expect(:in_dir, true)
-    end
   end
 end

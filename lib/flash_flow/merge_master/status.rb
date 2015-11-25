@@ -7,7 +7,7 @@ module FlashFlow
 
       def initialize(issue_tracker_config, branches_config, branch_info_file, git_config, opts={})
         @issue_tracker = IssueTracker::Base.new(issue_tracker_config)
-        @collection = Data::Base.new(branches_config, branch_info_file, Git.new(git_config)).merged_branches
+        @collection = Data::Base.new(branches_config, branch_info_file, ShadowGit.new(git_config)).merged_branches
       end
 
       def status(filename=nil)

@@ -59,7 +59,7 @@ module FlashFlow
 
       current_branch_error = "ERROR: Your branch did not merge to test_acceptance. Run 'flash_flow --resolve', fix the merge conflict(s) and then re-run this script\n"
 
-      @deploy.instance_variable_get('@git'.to_sym).stub(:working_branch, 'pushing_branch') do
+      @deploy.instance_variable_get('@local_git'.to_sym).stub(:working_branch, 'pushing_branch') do
         assert_equal(current_branch_error, @deploy.format_errors)
       end
     end
@@ -73,12 +73,10 @@ module FlashFlow
     end
 
     def test_check_out_to_working_branch
-      @deploy.stub(:in_shadow_repo, true) do
-        @deploy.stub(:check_repo, true) do
-          @deploy.stub(:check_version, true) do
-            Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
-              assert_output(/Failure!/) { @deploy.run }
-            end
+      @deploy.stub(:check_repo, true) do
+        @deploy.stub(:check_version, true) do
+          Lock::Base.stub_any_instance(:with_lock, -> { raise Lock::Error }) do
+            assert_output(/Failure!/) { @deploy.run }
           end
         end
       end
@@ -137,7 +135,7 @@ module FlashFlow
 
     def test_ignore_pushing_master_or_acceptance
       ['test_master', 'test_acceptance'].each do |branch|
-        @deploy.instance_variable_get('@git'.to_sym).stub(:working_branch, branch) do
+        @deploy.instance_variable_get('@local_git'.to_sym).stub(:working_branch, branch) do
           refute(@deploy.open_pull_request)
         end
       end

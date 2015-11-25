@@ -7,11 +7,13 @@ ENV['GH_TOKEN'] = 'fake_token'
 class Minitest::Test
 
   class TestCmdRunner < Minitest::Mock
+    LOG_NONE = :log_none
+    LOG_CMD = :log_cmd
+
     def initialize(opts={}); super(); end
-    def run(_); end
-    def last_success?
-      true
-    end
+    def run(_, opts={}); end
+    def last_success?; true; end
+    def dir=(other); other; end
     def last_stdout; ''; end
     def last_stderr; ''; end
     def last_command; ''; end

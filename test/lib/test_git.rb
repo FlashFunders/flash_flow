@@ -40,15 +40,15 @@ module FlashFlow
       @cmd_runner.expect(:run, true, ['rm -rf rr-cache/*'])
       @cmd_runner.expect(:run, true, ['cp -R .git/rr-cache/xyz rr-cache/'])
       @cmd_runner.expect(:run, true, ['cp -R .git/rr-cache/abc rr-cache/'])
-      @cmd_runner.expect(:run, true, ['git add rr-cache/'])
-      @cmd_runner.expect(:run, true, ["git commit -m 'Update rr-cache'"])
+      @cmd_runner.expect(:run, true, ['git add rr-cache/', {}])
+      @cmd_runner.expect(:run, true, ["git commit -m 'Update rr-cache'", {}])
 
       instance.commit_rerere(['xyz', 'abc'])
       @cmd_runner.verify
     end
 
     def test_read_file_from_merge_branch
-      @cmd_runner.expect(:run, true, ["git show origin/acceptance:SomeFilename.txt"])
+      @cmd_runner.expect(:run, true, ["git show origin/acceptance:SomeFilename.txt", log: CmdRunner::LOG_CMD])
       @cmd_runner.expect(:last_stdout, 'some_json', [])
       @git_args['use_rerere'] = false
 
@@ -65,7 +65,7 @@ module FlashFlow
 
     def setup_cmd_runner
       cmd_runner = Minitest::Mock.new
-      cmd_runner.expect(:run, true, ['git rev-parse --abbrev-ref HEAD'])
+      cmd_runner.expect(:run, true, ['git rev-parse --abbrev-ref HEAD', {}])
       cmd_runner.expect(:last_stdout, 'current_branch', [])
       cmd_runner
     end

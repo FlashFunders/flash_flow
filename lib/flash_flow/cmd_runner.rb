@@ -3,7 +3,11 @@ require 'open3'
 
 module FlashFlow
   class CmdRunner
-    attr_reader :dry_run, :dir, :last_command, :last_stderr, :last_stdout
+    LOG_NONE = :log_none
+    LOG_CMD = :log_cmd
+
+    attr_reader :dry_run, :last_command, :last_stderr, :last_stdout
+    attr_accessor :dir
 
     def initialize(opts={})
       @dir = opts[:dir] || '.'
@@ -11,7 +15,7 @@ module FlashFlow
       @logger = opts[:logger] || Logger.new('/dev/null')
     end
 
-    def run(cmd)
+    def run(cmd, opts={})
       @last_command = cmd
       if dry_run
         puts "#{dir}$ #{cmd}"
@@ -24,14 +28,26 @@ module FlashFlow
             @success = wait_thr.value.success?
           end
         end
-        @logger.debug("#{dir}$ #{cmd}")
-        last_stdout.split("\n").each { |line| @logger.debug(line) }
-        last_stderr.split("\n").each { |line| @logger.debug(line) }
+        log(cmd, opts[:log])
       end
     end
 
     def last_success?
       @success
+    end
+
+    private
+
+    def log(cmd, log_what)
+      if log_what == LOG_NONE
+          # Do nothing
+      else
+          @logger.debug("#{dir}$ #{cmd}")
+        unless log_what == LOG_CMD
+          last_stdout.split("\n").each { |line| @logger.debug(line) }
+          last_stderr.split("\n").each { |line| @logger.debug(line) }
+        end
+      end
     end
   end
 end
