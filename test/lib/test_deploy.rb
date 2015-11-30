@@ -49,12 +49,12 @@ module FlashFlow
     end
 
     def test_print_errors_with_no_errors
-      data.expect(:failures, {})
+      data.expect(:failures, [])
       assert_equal(@deploy.format_errors, 'Success!')
     end
 
     def test_print_errors_when_current_branch_cant_merge
-      data.expect(:failures, {'origin/pushing_branch' => @branch})
+      data.expect(:failures, [@branch])
       @branch.fail!('some_random_sha')
 
       current_branch_error = "ERROR: Your branch did not merge to test_acceptance. Run 'flash_flow --resolve', fix the merge conflict(s) and then re-run this script\n"
@@ -65,7 +65,7 @@ module FlashFlow
     end
 
     def test_print_errors_when_another_branch_cant_merge
-      data.expect(:failures, {'origin/pushing_branch' => @branch})
+      data.expect(:failures, [@branch])
 
       other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to test_acceptance due to conflicts."
 

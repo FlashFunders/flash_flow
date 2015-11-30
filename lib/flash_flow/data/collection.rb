@@ -94,7 +94,15 @@ module FlashFlow
       end
 
       def failures
-        @branches.select { |_, v| v.fail? }
+        current_branches.select { |branch| branch.fail? }
+      end
+
+      def successes
+        current_branches.select { |branch| branch.success? }
+      end
+
+      def removals
+        to_a.select { |branch| branch.removed? }
       end
 
       def fetch

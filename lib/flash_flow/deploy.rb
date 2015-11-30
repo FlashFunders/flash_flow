@@ -51,7 +51,7 @@ module FlashFlow
             commit_rerere
           end
 
-          @git.copy_temp_to_merge_branch
+          @git.copy_temp_to_merge_branch(commit_message)
           @git.delete_temp_merge_branch
           @git.push_merge_branch
         end
@@ -161,11 +161,11 @@ module FlashFlow
     def format_errors
       errors = []
       branch_not_merged = nil
-      @data.failures.each do |full_ref, failure|
-        if failure.ref == @local_git.working_branch
+      @data.failures.each do |branch|
+        if branch.ref == @local_git.working_branch
           branch_not_merged = "ERROR: Your branch did not merge to #{@local_git.merge_branch}. Run 'flash_flow --resolve', fix the merge conflict(s) and then re-run this script\n"
         else
-          errors << "WARNING: Unable to merge branch #{failure.remote}/#{failure.ref} to #{@local_git.merge_branch} due to conflicts."
+          errors << "WARNING: Unable to merge branch #{branch.remote}/#{branch.ref} to #{@local_git.merge_branch} due to conflicts."
         end
       end
       errors << branch_not_merged if branch_not_merged
@@ -175,6 +175,22 @@ module FlashFlow
       else
         errors.join("\n")
       end
+    end
+
+    def commit_message
+      message =<<-EOS
+Flash Flow run from branch: #{@local_git.working_branch}
+
+Merged branches:
+#{@data.successes.empty? ? 'None' : @data.successes.map(&:ref).join("\n")}
+
+Failed branches:
+#{@data.failures.empty? ? 'None' : @data.failures.map(&:ref).join("\n")}
+
+Removed branches:
+#{@data.removals.empty? ? 'None' : @data.removals.map(&:ref).join("\n")}
+      EOS
+      message.gsub(/'/, '')
     end
 
   end

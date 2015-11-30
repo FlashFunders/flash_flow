@@ -265,17 +265,53 @@ module FlashFlow
       end
 
       def test_failures
-        branch1 = Branch.new('111', '111', '111')
-        branch2 = Branch.new('222', '222', '222')
-        branch3 = Branch.new('333', '333', '333')
-        @collection.mark_failure(branch1)
-        @collection.mark_success(branch2)
-        @collection.mark_failure(branch3)
+        mark_branches
 
-        assert_equal(@collection.failures.values, [branch1, branch3])
+        assert_equal(@collection.failures, [fail1, fail2])
+      end
+
+      def test_successes
+        mark_branches
+
+        assert_equal(@collection.successes, [success1, success2])
+      end
+
+      def test_removals
+        mark_branches
+
+        assert_equal(@collection.removals, [removed1])
       end
 
       private
+
+      def mark_branches
+        @collection.mark_failure(fail1)
+        @collection.mark_success(success1)
+        @collection.mark_failure(fail2)
+        @removed1 = @collection.remove_from_merge(removed1.remote, removed1.ref)
+        @collection.mark_success(success2)
+        @collection.mark_all_as_current
+      end
+
+      def fail1
+        @fail1 ||= Branch.new('111', '111', '111')
+      end
+
+      def fail2
+        @fail2 ||= Branch.new('333', '333', '333')
+      end
+
+      def success1
+        @success1 ||= Branch.new('222', '222', '222')
+      end
+
+      def success2
+        @success2 ||= Branch.new('555', '555', '555')
+      end
+
+      def removed1
+        @removed1 ||= Branch.new('444', '444', '444')
+      end
 
       def old_branches
         @old_branches ||= {
