@@ -68,7 +68,7 @@ module FlashFlow
     end
 
     def master_branch_contains?(ref)
-      run("branch --contains #{ref}")
+      run("branch --contains #{ref}", log: CmdRunner::LOG_CMD)
       last_stdout.split("\n").detect { |str| str[2..-1] == master_branch }
     end
 
