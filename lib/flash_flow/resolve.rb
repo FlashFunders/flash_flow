@@ -16,8 +16,8 @@ module FlashFlow
     end
 
     def manual_instructions
-      branch = check_for_conflict
-      puts manual_not_merged_instructions(branch)
+      check_for_conflict
+      puts manual_not_merged_instructions
     end
 
     def start
@@ -60,7 +60,7 @@ module FlashFlow
     end
 
     def bash_message
-      puts "\nPlease fix the following conflicts and then 'exit':\n#{unresolved_conflicts.join("\n")}\n\n"
+      puts "\nNote: You are in a special flash_flow directory (#{Dir.pwd}). The files still open in your editor will not reflect the merge conflicts, open them from this shell to get the conflicted versions.\n\nPlease fix the following conflicts and then 'exit':\n#{unresolved_conflicts.join("\n")}\n\n"
     end
 
     def launch_bash
@@ -82,7 +82,7 @@ module FlashFlow
       File.delete(filename)
     end
 
-    def manual_not_merged_instructions(branch)
+    def manual_not_merged_instructions
       <<-EOS
 
 Run the following commands to fix the merge conflict and then re-run flash_flow:

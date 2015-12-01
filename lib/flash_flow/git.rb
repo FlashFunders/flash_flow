@@ -68,7 +68,7 @@ module FlashFlow
     end
 
     def master_branch_contains?(ref)
-      run("branch --contains #{ref}")
+      run("branch --contains #{ref}", log: CmdRunner::LOG_CMD)
       last_stdout.split("\n").detect { |str| str[2..-1] == master_branch }
     end
 
@@ -208,17 +208,13 @@ module FlashFlow
       run("push -f #{merge_remote} #{merge_branch}")
     end
 
-    def copy_temp_to_merge_branch
+    def copy_temp_to_merge_branch(commit_message)
       run("checkout #{temp_merge_branch}")
       run("merge --strategy=ours --no-edit #{merge_branch}")
       run("checkout #{merge_branch}")
       run("merge #{temp_merge_branch}")
 
-      squash_commits
-    end
-
-    def commit_message(log)
-      "Flash Flow run from branch: #{working_branch}\n\n#{log}".gsub(/'/, '')
+      squash_commits(commit_message)
     end
 
     def delete_temp_merge_branch
@@ -248,11 +244,7 @@ module FlashFlow
 
     private
 
-    def squash_commits
-      # There are three commits created by flash flow that we don't need in the message
-      run("log #{merge_remote}/#{merge_branch}..#{merge_branch}~3", log: CmdRunner::LOG_CMD)
-      log = last_stdout
-
+    def squash_commits(commit_message)
       # Get all the files that differ between existing acceptance and new acceptance
       run("diff --name-only #{merge_remote}/#{merge_branch} #{merge_branch}")
       files = last_stdout.split("\n")
@@ -260,7 +252,7 @@ module FlashFlow
 
       run("add -f #{files.map { |f| "\"#{Shellwords.escape(f)}\"" }.join(" ")}")
 
-      run("commit -m '#{commit_message(log)}'")
+      run("commit -m '#{commit_message}'")
     end
 
     def temp_merge_branch

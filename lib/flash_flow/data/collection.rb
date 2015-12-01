@@ -94,7 +94,15 @@ module FlashFlow
       end
 
       def failures
-        @branches.select { |_, v| v.fail? }
+        current_branches.select { |branch| branch.fail? }
+      end
+
+      def successes
+        current_branches.select { |branch| branch.success? }
+      end
+
+      def removals
+        to_a.select { |branch| branch.removed? }
       end
 
       def fetch
@@ -113,12 +121,14 @@ module FlashFlow
 
       def add_to_merge(remote, ref)
         branch = record(remote, nil, ref)
+        branch.current_record = true
         @collection_instance.add_to_merge(branch) if @collection_instance.respond_to?(:add_to_merge)
         branch
       end
 
       def remove_from_merge(remote, ref)
         branch = record(remote, nil, ref)
+        branch.current_record = true
         branch.removed!
         @collection_instance.remove_from_merge(branch) if @collection_instance.respond_to?(:remove_from_merge)
         branch
