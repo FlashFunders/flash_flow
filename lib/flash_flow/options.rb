@@ -21,7 +21,7 @@ module FlashFlow
         opts.on('-c', '--config-file FILE_PATH', 'The path to your config file. Defaults to config/flash_flow.yml.erb') { |v| options[:config_file] = v }
         opts.on('--resolve', 'Launch a bash shell to save your conflict resolutions') { |v| options[:resolve] = true }
         opts.on('--resolve-manual', 'Print instructions to use git to resolve conflicts') { |v| options[:resolve_manual] = true }
-        opts.on('--merge-status', 'Print instructions to use git to resolve conflicts') { |v| options[:merge_status] = true }
+        opts.on('--merge-status', 'Show status of all branches and their stories and exit') { |v| options[:merge_status] = true }
 
         opts.on_tail("-h", "--help", "Show this message") do
           puts opts
