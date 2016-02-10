@@ -31,8 +31,6 @@ module FlashFlow
           mock_find(nil, '333')
           mock_find(nil, '555')
 
-          
-
           Pivotal.new(sample_branches, nil).stories_delivered
           @stories.verify
         end
