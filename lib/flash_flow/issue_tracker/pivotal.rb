@@ -32,7 +32,8 @@ module FlashFlow
             deliver(story_id)
           end
         end
-        removed_branches.each do |branch|
+
+        removed_and_failed_branches.each do |branch|
           branch.stories.to_a.each do |story_id|
             undeliver(story_id)
           end
@@ -188,8 +189,8 @@ module FlashFlow
         @branches.select { |b| b.success? }
       end
 
-      def removed_branches
-        @branches.select { |b| b.removed? }
+      def removed_and_failed_branches
+        @branches.select { |b| b.removed? || b.fail? }
       end
 
       def merged_working_branch

@@ -28,6 +28,7 @@ module FlashFlow
         stub_tracker_gem(@project_mock) do
           mock_find(nil, '111')
           mock_find(nil, '222')
+          mock_find(nil, '333')
           mock_find(nil, '555')
 
           Pivotal.new(sample_branches, nil).stories_delivered
@@ -46,11 +47,15 @@ module FlashFlow
                             .expect(:id, '222')
                             .expect(:current_state, 'delivered')
           story3_mock = MiniTest::Mock.new
+                            .expect(:id, '333')
+                            .expect(:current_state, 'fail')
+          story4_mock = MiniTest::Mock.new
                             .expect(:id, '555')
                             .expect(:current_state, 'removed')
           mock_find(story1_mock)
           mock_find(story2_mock)
           mock_find(story3_mock)
+          mock_find(story4_mock)
 
           Pivotal.new(sample_branches, nil).stories_delivered
           story1_mock.verify
