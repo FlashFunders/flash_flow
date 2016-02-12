@@ -98,7 +98,7 @@ module FlashFlow
       end
 
       def pull_requests
-        @pull_requests ||= octokit.pull_requests(repo).sort_by(&:updated_at)
+        @pull_requests ||= octokit.pull_requests(repo).sort_by(&:created_at)
       end
 
       def remove_label(pull_request_number, label)
