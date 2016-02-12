@@ -38,7 +38,8 @@ module FlashFlow
               'remote_url' => pr.head.repo.ssh_url,
               'ref' => pr.head.ref,
               'status' => status_from_labels(pr),
-              'metadata' => metadata(pr)
+              'metadata' => metadata(pr),
+              'sha' => pr.head.sha
           )
         end
       end

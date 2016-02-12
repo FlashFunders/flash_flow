@@ -5,6 +5,7 @@ require 'flash_flow/data'
 require 'flash_flow/lock'
 require 'flash_flow/notifier'
 require 'flash_flow/branch_merger'
+require 'flash_flow/merge_order'
 require 'flash_flow/shadow_repo'
 
 module FlashFlow
@@ -104,7 +105,9 @@ module FlashFlow
     end
 
     def merge_branches
-      @data.mergeable.each do |branch|
+      ordered_branches = MergeOrder.new(@git, @data.mergeable).get_order
+      ordered_branches.each do |branch|
+
         remote = @git.fetch_remote_for_url(branch.remote_url)
         if remote.nil?
           raise RuntimeError.new("No remote found for #{branch.remote_url}. Please run 'git remote add *your_remote_name* #{branch.remote_url}' and try again.")
