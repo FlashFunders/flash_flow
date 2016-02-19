@@ -202,6 +202,7 @@ module FlashFlow
             'remote' => 'origin',
             'sha' => 'random_sha',
             'status' => 'success',
+            'merge_order' => nil,
             'resolutions' => {},
             'stories' => ['123'],
             'conflict_sha' => 'conflict_sha',
