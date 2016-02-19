@@ -5,7 +5,7 @@ module FlashFlow
 
     class Branch
       attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :conflict_sha, :metadata,
-                    :current_record, :updated_at, :created_at
+                    :current_record, :merge_order, :updated_at, :created_at
 
       def initialize(_remote, _remote_url, _ref)
         @remote = _remote
@@ -13,6 +13,7 @@ module FlashFlow
         @ref = _ref
         @resolutions = {}
         @stories = []
+        @merge_order = 0
         @updated_at = Time.now
         @created_at = Time.now
       end
@@ -21,6 +22,7 @@ module FlashFlow
         branch = new(hash['remote'], hash['remote_url'], hash['ref'])
         branch.sha = hash['sha']
         branch.status = hash['status']
+        branch.merge_order = hash['merge_order']
         branch.resolutions = hash['resolutions']
         branch.stories = hash['stories']
         branch.metadata = hash['metadata']
@@ -52,6 +54,7 @@ module FlashFlow
             'ref' => ref,
             'sha' => sha,
             'status' => status,
+            'merge_order' => merge_order,
             'resolutions' => resolutions,
             'stories' => stories,
             'conflict_sha' => conflict_sha,
@@ -70,6 +73,7 @@ module FlashFlow
         unless other.nil?
           self.sha = other.sha
           self.status = other.status
+          self.merge_order = other.merge_order
           self.resolutions = other.resolutions
           self.stories = self.stories.to_a | other.stories.to_a
           self.updated_at = Time.now
