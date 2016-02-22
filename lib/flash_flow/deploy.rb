@@ -186,7 +186,7 @@ module FlashFlow
 Flash Flow run from branch: #{@local_git.working_branch}
 
 Merged branches:
-#{@data.successes.empty? ? 'None' : @data.successes.map(&:ref).join("\n")}
+#{@data.successes.empty? ? 'None' : @data.successes.sort_by(&:merge_order).map(&:ref).join("\n")}
 
 Failed branches:
 #{@data.failures.empty? ? 'None' : @data.failures.map(&:ref).join("\n")}

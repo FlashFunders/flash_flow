@@ -141,6 +141,18 @@ module FlashFlow
       end
     end
 
+    def test_commit_message_ordering
+      data
+        .expect(:successes, ['data_successes'])
+        .expect(:successes, sample_branches)
+        .expect(:failures, [])
+        .expect(:removals, [])
+
+      expected_message = sample_branches.sort_by(&:merge_order).map(&:ref).join("\n")
+      assert_output(/#{expected_message}/) { print @deploy.commit_message }
+      data.verify
+    end
+
     private
 
     def with_versions(current, written)
@@ -172,5 +184,10 @@ module FlashFlow
       @deploy.instance_variable_set('@data'.to_sym, @data)
     end
 
+    def sample_branches
+      @sample_branches ||= [Data::Branch.from_hash({'ref' => 'branch3', 'merge_order' => 2}),
+        Data::Branch.from_hash({'ref' => 'branch1', 'merge_order' => 3}),
+        Data::Branch.from_hash({'ref' => 'branch2', 'merge_order' => 1})]
+    end
   end
 end

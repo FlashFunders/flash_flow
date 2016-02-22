@@ -13,7 +13,6 @@ module FlashFlow
         @ref = _ref
         @resolutions = {}
         @stories = []
-        @merge_order = 0
         @updated_at = Time.now
         @created_at = Time.now
       end
