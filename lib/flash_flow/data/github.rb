@@ -38,7 +38,8 @@ module FlashFlow
               'remote_url' => pr.head.repo.ssh_url,
               'ref' => pr.head.ref,
               'status' => status_from_labels(pr),
-              'metadata' => metadata(pr)
+              'metadata' => metadata(pr),
+              'sha' => pr.head.sha
           )
         end
       end
@@ -98,7 +99,7 @@ module FlashFlow
       end
 
       def pull_requests
-        @pull_requests ||= octokit.pull_requests(repo).sort_by(&:updated_at)
+        @pull_requests ||= octokit.pull_requests(repo).sort_by(&:created_at)
       end
 
       def remove_label(pull_request_number, label)
