@@ -63,7 +63,7 @@ module FlashFlow
 
     def mergeable_order(*order)
       order.map.with_index do |nth, merge_order|
-        sample_branches[nth].merge_order = merge_order
+        sample_branches[nth].merge_order = (merge_order == 2 ? nil : merge_order)
         sample_branches[nth]
       end
     end

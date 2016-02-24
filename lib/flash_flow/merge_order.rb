@@ -7,7 +7,8 @@ module FlashFlow
     end
 
     def get_order
-      branches = @branches.sort_by(&:merge_order)
+      new_branches, old_branches = @branches.partition { |branch| branch.merge_order.nil? }
+      branches = old_branches.sort_by(&:merge_order) + new_branches
 
       unchanged, changed = branches.partition { |branch| current_sha(branch) == branch.sha }
       my_branch_index = changed.find_index { |branch| branch.ref == @git.working_branch }
