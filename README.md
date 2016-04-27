@@ -147,7 +147,7 @@ When we first started using flash_flow, if your branch had a merge conflict you 
 the branch that you were conflicting with to be merged to master, merge master into your branch, and then try again to
 get your code into the merge branch.
 
-Then we discovered git rerere, which is the coolest feature of git that almost no one seems to have heard of. Basically
+Then we discovered `git rerere`, which is [the coolest feature of git that almost no one seems to have heard of](https://git-scm.com/blog/2010/03/08/rerere.html). Basically
 what rerere does is remember how you resolved conflicts and auto-apply those patches when it notices the same conflicts.
 
 If your branch has a conflict with the `merge_branch` flash_flow will look for a rerere patch and apply that if it
