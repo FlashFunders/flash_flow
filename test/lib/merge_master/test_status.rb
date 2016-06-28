@@ -69,6 +69,14 @@ module FlashFlow
           return "link-#{branch.ref}"
         end
 
+        def code_reviewed?(branch)
+          {
+              BRANCH1 => true,
+              BRANCH2 => true,
+              BRANCH3 => false,
+          }[branch]
+        end
+
         def can_ship?(branch)
           {
               BRANCH1 => true,
@@ -96,7 +104,7 @@ module FlashFlow
         branch1 = branches[FakeCollection::BRANCH1]
         branch2 = branches[FakeCollection::BRANCH2]
 
-        assert(branch1[:stories].all? { |s| @merge_master.stories[s][:can_ship?] })
+        assert(branch1[:stories].all? { |s| @merge_master.stories[s][:accepted?] })
         assert_equal(branch1[:stories], branch2[:stories])
         assert(branch1[:shippable?])
       end
@@ -104,8 +112,7 @@ module FlashFlow
       def test_not_shippable_branch
         branches = @merge_master.branches
         branch3 = branches[FakeCollection::BRANCH3]
-
-        assert_equal(branch3[:stories].map { |s| @merge_master.stories[s][:can_ship?] }, [true, false, true])
+        assert_equal(branch3[:stories].map { |s| @merge_master.stories[s][:accepted?] }, [true, false, true])
         refute(branch3[:shippable?])
       end
 

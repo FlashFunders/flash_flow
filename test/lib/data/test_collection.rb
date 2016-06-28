@@ -214,14 +214,14 @@ module FlashFlow
         @fake_branches.verify
       end
 
-      def test_can_ship_returns_true
+      def test_code_reviewd_returns_true
         collection = Collection.new({})
-        assert(collection.can_ship?(@branch))
+        assert(collection.code_reviewed?(@branch))
       end
 
-      def test_can_ship_calls_branches_class
-        @fake_branches.expect(:can_ship?, true, [@branch])
-        @collection.can_ship?(@branch)
+      def test_code_reviewd_calls_branches_class
+        @fake_branches.expect(:code_reviewed?, true, [@branch])
+        @collection.code_reviewed?(@branch)
         @fake_branches.verify
       end
 
