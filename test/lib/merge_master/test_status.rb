@@ -20,6 +20,7 @@ module FlashFlow
         STORY_ID4 = '444'
         STORY_ID5 = '555'
         STORY_ID6 = '666'
+        STORY_ID7 = '777'
 
         def story_deployable?(story_id)
           {
@@ -29,6 +30,7 @@ module FlashFlow
               STORY_ID4 => true,
               STORY_ID5 => false,
               STORY_ID6 => true,
+              STORY_ID7 => true
           }[story_id]
         end
 
@@ -40,6 +42,7 @@ module FlashFlow
               STORY_ID4 => ['release3', 'release4'],
               STORY_ID5 => [],
               STORY_ID6 => ['release4'],
+              STORY_ID7 => [],
           }[story_id]
         end
 
@@ -64,6 +67,7 @@ module FlashFlow
         BRANCH1 = Data::Branch.from_hash('ref' => 'branch1', 'stories' => ['111', '222'])
         BRANCH2 = Data::Branch.from_hash('ref' => 'branch2', 'stories' => ['333'])
         BRANCH3 = Data::Branch.from_hash('ref' => 'branch3', 'stories' => ['444', '555', '666'])
+        BRANCH4 = Data::Branch.from_hash('ref' => 'branch4', 'stories' => ['777'])
 
         def branch_link(branch)
           return "link-#{branch.ref}"
@@ -74,6 +78,7 @@ module FlashFlow
               BRANCH1 => true,
               BRANCH2 => true,
               BRANCH3 => false,
+              BRANCH4 => true,
           }[branch]
         end
 
@@ -81,12 +86,13 @@ module FlashFlow
           {
               BRANCH1 => true,
               BRANCH2 => true,
-              BRANCH3 => false,
+              BRANCH3 => true,
+              BRANCH4 => false,
           }[branch]
         end
 
         def current_branches
-          [BRANCH1, BRANCH2, BRANCH3]
+          [BRANCH1, BRANCH2, BRANCH3, BRANCH4]
         end
       end
 
@@ -114,6 +120,13 @@ module FlashFlow
         branch3 = branches[FakeCollection::BRANCH3]
         assert_equal(branch3[:stories].map { |s| @merge_master.stories[s][:accepted?] }, [true, false, true])
         refute(branch3[:shippable?])
+      end
+
+      def test_not_shippable_branch_without_shippable_label
+        branches = @merge_master.branches
+        branch4 = branches[FakeCollection::BRANCH4]
+        assert_equal(branch4[:stories].map { |s| @merge_master.stories[s][:accepted?] }, [true])
+        refute(branch4[:shippable?])
       end
 
       private
