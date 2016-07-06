@@ -10,7 +10,27 @@ module FlashFlow
         @collection = Data::Base.new(branches_config, branch_info_file, ShadowGit.new(git_config)).merged_branches
       end
 
-      def status(filename=nil)
+      def status
+        filename = File.dirname(__FILE__) + '/merge_status.csv'
+        checkmark = "\u2713".encode('utf-8')
+
+        CSV.open(filename, 'w') do |f|
+          f << ['Ready', 'Branch', 'Stories', 'Review', 'Can ship?']
+          stories_accepted_branches.each do |_, branch_hash|
+            f << [
+              branch_hash[:shippable?] ? checkmark : 'x',
+              branch_hash[:name],
+              checkmark,
+              branch_hash[:code_reviewed?] ? checkmark : 'x',
+              branch_hash[:can_ship?] ? checkmark : 'x'
+            ]
+          end
+        end
+
+        CSV.foreach(filename) { |row| puts '%-10s %-70s %-10s %-10s %-10s' % row }
+      end
+
+      def status_html(filename=nil)
         filename = File.dirname(__FILE__) + '/merge_status.html'
         @branches = branches
 
@@ -39,7 +59,8 @@ module FlashFlow
               Hash.new.tap do |hash|
                 hash[:name] = branch.ref
                 hash[:branch_url] = collection.branch_link(branch)
-                hash[:branch_can_ship?] = collection.can_ship?(branch)
+                hash[:code_reviewed?] = collection.code_reviewed?(branch)
+                hash[:can_ship?] = collection.can_ship?(branch)
                 hash[:connected_branches] = connected_branches
                 hash[:image] = graph_file
                 hash[:my_stories] = branch.stories.to_a
@@ -70,7 +91,7 @@ module FlashFlow
 
       def mark_as_shippable(branches)
         branches.each do |_, b|
-          b[:shippable?] = b[:branch_can_ship?] &&
+          b[:shippable?] = b[:code_reviewed?] && b[:can_ship?] &&
               unshippable_stories(b[:stories]).empty? &&
               unshippable_releases(b[:releases]).empty?
         end
@@ -86,11 +107,14 @@ module FlashFlow
         arr.select do |release_key|
           !unshippable_stories(@releases[release_key][:stories]).empty?
         end
-
       end
 
       def unshippable_stories(arr)
-        arr.select { |story| !@stories[story][:can_ship?] }
+        arr.select { |story| !@stories[story][:accepted?] }
+      end
+
+      def stories_accepted_branches
+        branches.select { |_, b| unshippable_stories(b[:stories]).empty? }
       end
 
       def story_info_hash(story_id)
@@ -98,7 +122,7 @@ module FlashFlow
             id: story_id,
             url: issue_tracker.story_link(story_id),
             title: issue_tracker.story_title(story_id),
-            can_ship?: issue_tracker.story_deployable?(story_id),
+            accepted?: issue_tracker.story_deployable?(story_id),
             release_keys: issue_tracker.release_keys(story_id)
         }
       end

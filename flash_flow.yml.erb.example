@@ -81,3 +81,4 @@ branch_info_file: 'your/random/file'
 #    master_branch: master
 #    unmergeable_label: unmergeable
 #    do_not_merge_label: 'do not merge'
+#    shippable_label: 'shippable'

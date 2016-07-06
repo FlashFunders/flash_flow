@@ -14,6 +14,7 @@ module FlashFlow
         @unmergeable_label = config['unmergeable_label'] || 'unmergeable'
         @do_not_merge_label = config['do_not_merge_label'] || 'do not merge'
         @code_reviewed_label = config['code_reviewed_label'] || 'code reviewed'
+        @shippable_label = config['shippable_label'] || 'shippable'
       end
 
       def initialize_connection!(token)
@@ -63,8 +64,12 @@ module FlashFlow
         add_label(branch.metadata['pr_number'], @unmergeable_label)
       end
 
-      def can_ship?(branch)
+      def code_reviewed?(branch)
         has_label?(branch.metadata['pr_number'], @code_reviewed_label)
+      end
+
+      def can_ship?(branch)
+        has_label?(branch.metadata['pr_number'], @shippable_label)
       end
 
       def branch_link(branch)

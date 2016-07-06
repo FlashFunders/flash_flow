@@ -55,7 +55,7 @@
       </h2>
 
       <h2>
-        <span class="status <%= branch_hash[:branch_can_ship?] ? 'shippable' : 'not-shippable' %>"><%= branch_hash[:branch_can_ship?] ? 'Code ready' : 'Code not ready' %></span>
+        <span class="status <%= branch_hash[:code_reviewed?] ? 'shippable' : 'not-shippable' %>"><%= branch_hash[:code_reviewed?] ? 'Code ready' : 'Code not ready' %></span>
         <a href='<%= branch_hash[:branch_url] %>'><%= branch_hash[:name] %></a>
       </h2>
 
@@ -79,7 +79,7 @@
             <% branch_hash[:my_stories].each do |story_id| %>
                 <% story = @stories[story_id] %>
                 <div class="story">
-                  <span class="status <%= story[:can_ship?] ? 'shippable' : 'not-shippable' %>"><%= story[:can_ship?] ? 'Story ready' : 'Story not ready' %></span>
+                  <span class="status <%= story[:accepted?] ? 'shippable' : 'not-shippable' %>"><%= story[:accepted?] ? 'Story ready' : 'Story not ready' %></span>
                   <a href='<%= story[:url] %>'><%= story[:title] %></a>
                   <span><%= story[:release_keys].empty? ? '' : "Related releases: #{story[:release_keys].join(", ")}" %></span>
                 </div>
@@ -92,7 +92,7 @@
                 <% (branch_hash[:stories] - branch_hash[:my_stories]).each do |story_id| %>
                     <% story = @stories[story_id] %>
                     <div class="story">
-                      <span class="status <%= story[:can_ship?] ? 'shippable' : 'not-shippable' %>"><%= story[:can_ship?] ? 'Story ready' : 'Story not ready' %></span>
+                      <span class="status <%= story[:accepted?] ? 'shippable' : 'not-shippable' %>"><%= story[:accepted?] ? 'Story ready' : 'Story not ready' %></span>
                       <a href='<%= story[:url] %>'><%= story[:title] %></a>
                       <span><%= story[:release_keys].empty? ? '' : "Related releases: #{story[:release_keys].join(", ")}" %></span>
                     </div>
@@ -116,7 +116,7 @@
                   <% @releases[release_key][:stories].each do |story_id| %>
                       <% story = @stories[story_id] %>
                       <div class="story">
-                        <span class="status <%= story[:can_ship?] ? 'shippable' : 'not-shippable' %>"><%= story[:can_ship?] ? 'Story ready' : 'Story not ready' %></span>
+                        <span class="status <%= story[:accepted?] ? 'shippable' : 'not-shippable' %>"><%= story[:accepted?] ? 'Story ready' : 'Story not ready' %></span>
                         <a href='<%= story[:url] %>'><%= story[:title] %></a>
                         <span><%= story[:release_keys].empty? ? '' : "Related releases: #{story[:release_keys].join(", ")}" %></span>
                       </div>

@@ -165,6 +165,10 @@ module FlashFlow
         branch
       end
 
+      def code_reviewed?(branch)
+        @collection_instance.respond_to?(:code_reviewed?) ? @collection_instance.code_reviewed?(branch) : true
+      end
+
       def can_ship?(branch)
         @collection_instance.respond_to?(:can_ship?) ? @collection_instance.can_ship?(branch) : true
       end

@@ -22,6 +22,7 @@ module FlashFlow
         opts.on('--resolve', 'Launch a bash shell to save your conflict resolutions') { |v| options[:resolve] = true }
         opts.on('--resolve-manual', 'Print instructions to use git to resolve conflicts') { |v| options[:resolve_manual] = true }
         opts.on('--merge-status', 'Show status of all branches and their stories and exit') { |v| options[:merge_status] = true }
+        opts.on('--merge-status-html', 'Show status of all branches and their stories in html format and exit') { |v| options[:merge_status_html] = true }
 
         opts.on_tail("-h", "--help", "Show this message") do
           puts opts
