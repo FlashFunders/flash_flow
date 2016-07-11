@@ -73,14 +73,7 @@ module FlashFlow
     end
 
     def in_original_merge_branch
-      begin
-        starting_branch = current_branch
-        run("checkout #{merge_remote}/#{merge_branch}")
-
-        yield
-      ensure
-        run("checkout #{starting_branch}")
-      end
+      in_branch("#{merge_remote}/#{merge_branch}") { yield }
     end
 
     def read_file_from_merge_branch(filename)
@@ -204,8 +197,22 @@ module FlashFlow
       end
     end
 
+    def reset_master
+      in_branch("#{master_branch}~1") do # HACK: Just checking out a non-master sha
+        run("fetch #{merge_remote}")
+        run("branch -D #{master_branch}")
+        run("checkout -b #{master_branch}")
+        run("reset --hard #{merge_remote}/#{master_branch}")
+      end
+    end
+
     def push_merge_branch
       run("push -f #{merge_remote} #{merge_branch}")
+    end
+
+    def push_master
+      run("push #{merge_remote} #{master_branch}:testing_flash_flow")
+      last_success?
     end
 
     def copy_temp_to_merge_branch(commit_message)

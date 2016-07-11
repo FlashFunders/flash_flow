@@ -11,7 +11,9 @@ require 'flash_flow/shadow_repo'
 module FlashFlow
   class Deploy
 
+    class GitPushFailure < RuntimeError ; end
     class OutOfSyncWithRemote < RuntimeError ; end
+    class UnmergeableBranch < RuntimeError ; end
 
     def initialize(opts={})
       @do_not_merge = opts[:do_not_merge]
@@ -24,10 +26,60 @@ module FlashFlow
       @lock = Lock::Base.new(Config.configuration.lock)
       @notifier = Notifier::Base.new(Config.configuration.notifier)
       @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
+
+      @master_branches = parse_branches(opts[:master_branches])
     end
 
     def logger
       @logger ||= FlashFlow::Config.configuration.logger
+    end
+
+    def parse_branches(user_branches)
+      branch_list = user_branches == ['all'] ? shippable_branch_names : [user_branches].flatten.compact
+puts branch_list
+      branch_list.map { |b| Data::Branch.new('origin', @git.remotes_hash['origin'], b) }
+    end
+
+    def run_release
+      check_version
+      check_repo
+      check_branches
+      puts "Building #{@git.master_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
+      logger.info "\n\n### Beginning #{@local_git.merge_branch} merge ###\n\n"
+
+      begin
+        mergers, errors = [], []
+
+        @lock.with_lock do
+          @git.fetch(@git.merge_remote)
+          @git.in_original_merge_branch do
+            @git.initialize_rerere
+          end
+
+          @git.reset_master
+          @git.in_branch(@git.master_branch) do
+            merge_branches(@master_branches) do |branch, merger|
+              mergers << [branch, merger]
+            end
+          end
+
+          require 'byebug'; debugger
+          errors = mergers.select { |m| m.last.result != :success }
+
+          if errors.empty?
+            raise GitPushFailure.new('Unable to push to master. See log for details.') unless @git.push_master
+          end
+        end
+
+        raise UnmergeableBranch.new("The following branches didn't merge successfully:\n  #{errors.map {|e| e.first.ref }.join("\n  ")}") unless errors.empty?
+
+        logger.info "### Finished #{@git.master_branch} merge ###"
+      rescue Lock::Error, OutOfSyncWithRemote, UnmergeableBranch, GitPushFailure => e
+        puts 'Failure!'
+        puts e.message
+      ensure
+        @local_git.run("checkout #{@local_git.working_branch}")
+      end
     end
 
     def run
@@ -47,7 +99,9 @@ module FlashFlow
 
           @git.reset_temp_merge_branch
           @git.in_temp_merge_branch do
-            merge_branches
+            merge_branches(@data.merged_branches.mergeable) do |branch, merger|
+              process_result(branch, merger)
+            end
             commit_branch_info
             commit_rerere
           end
@@ -66,6 +120,25 @@ module FlashFlow
         @local_git.run("checkout #{@local_git.working_branch}")
       end
     end
+
+    def check_branches
+      requested_not_ready_branches = (@master_branches.map(&:ref) - shippable_branch_names)
+      raise RuntimeError.new("The following branches are not ready to ship:\n#{requested_not_ready_branches.join("\n")}") unless requested_not_ready_branches.empty?
+    end
+
+    def shippable_branch_names
+      @shippable_branch_names ||= begin
+        status = MergeMaster::Status.new(Config.configuration.issue_tracker, Config.configuration.branches, Config.configuration.branch_info_file, Config.configuration.git, logger: logger)
+
+        all_branches = status.branches
+        all_branches.values.select { |b| b[:shippable?] }.map { |b| b[:name] }
+      end
+    end
+    # status = MergeMaster::Status.new(Config.configuration.issue_tracker, Config.configuration.branches, Config.configuration.branch_info_file, Config.configuration.git, logger: logger)
+    # all_branches = status.branches
+    # ready_branches = all_branches.select { |b| b[:shippable?] }.map { |b| b[:name] }
+    # requested_not_ready_branches = (master_branches.map(&:ref) - ready_branches)
+    # raise RuntimeError.new("The following branches are not ready to ship:\n#{requested_not_ready_branches.join("\n")}") unless requested_not_ready_branches.empty?
 
     def check_repo
       if @local_git.staged_and_working_dir_files.any?
@@ -104,8 +177,8 @@ module FlashFlow
       60 * 60 * 24 * 14
     end
 
-    def merge_branches
-      ordered_branches = MergeOrder.new(@git, @data.merged_branches.mergeable).get_order
+    def merge_branches(branches)
+      ordered_branches = MergeOrder.new(@git, branches).get_order
       ordered_branches.each_with_index do |branch, index|
         branch.merge_order = index + 1
 
@@ -115,18 +188,26 @@ module FlashFlow
         end
 
         @git.fetch(branch.remote)
-        git_merge(branch, branch.ref == @git.working_branch)
+        merger = git_merge(branch)
+
+        yield(branch, merger)
       end
     end
 
-    def git_merge(branch, is_working_branch)
+    def git_merge(branch)
       merger = BranchMerger.new(@git, branch)
-      forget_rerere = is_working_branch && @rerere_forget
+      forget_rerere = is_working_branch(branch) && @rerere_forget
 
-      case merger.do_merge(forget_rerere)
+      merger.do_merge(forget_rerere)
+
+      merger
+    end
+
+    def process_result(branch, merger)
+      case merger.result
         when :deleted
           @data.mark_deleted(branch)
-          @notifier.deleted_branch(branch) unless is_working_branch
+          @notifier.deleted_branch(branch) unless is_working_branch(branch)
 
         when :success
           branch.sha = merger.sha
@@ -134,13 +215,17 @@ module FlashFlow
           @data.set_resolutions(branch, merger.resolutions)
 
         when :conflict
-          if is_working_branch
+          if is_working_branch(branch)
             @data.mark_failure(branch, merger.conflict_sha)
           else
             @data.mark_failure(branch, nil)
             @notifier.merge_conflict(branch)
           end
       end
+    end
+
+    def is_working_branch(branch)
+      branch.ref == @git.working_branch
     end
 
     def open_pull_request

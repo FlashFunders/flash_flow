@@ -87,11 +87,9 @@ module FlashFlow
 
       notifier.expect(:deleted_branch, true, [@branch])
 
-      merger.expect(:do_merge, :deleted, [ false ])
+      merger.expect(:result, :deleted)
 
-      BranchMerger.stub(:new, merger) do
-        @deploy.git_merge(@branch, false)
-      end
+      @deploy.process_result(@branch, merger)
 
       notifier.verify
       data.verify
@@ -103,12 +101,9 @@ module FlashFlow
 
       notifier.expect(:merge_conflict, true, [@branch])
 
-      merger
-          .expect(:do_merge, :conflict, [ false ])
+      merger.expect(:result, :conflict)
 
-      BranchMerger.stub(:new, merger) do
-        @deploy.git_merge(@branch, false)
-      end
+      @deploy.process_result(@branch, merger)
 
       notifier.verify
       data.verify
@@ -120,13 +115,11 @@ module FlashFlow
       data.expect(:set_resolutions, true, [ @branch, { 'filename' => ["resolution_sha"] } ])
 
       merger.
-          expect(:do_merge, :success, [ false ]).
+          expect(:result, :success).
           expect(:sha, 'sha').
           expect(:resolutions, { 'filename' => ["resolution_sha"] })
 
-      BranchMerger.stub(:new, merger) do
-        @deploy.git_merge(@branch, false)
-      end
+      @deploy.process_result(@branch, merger)
 
       data.verify
       merger.verify
