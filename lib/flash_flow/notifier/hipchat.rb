@@ -10,12 +10,16 @@ module FlashFlow
       end
 
       def merge_conflict(branch)
-        user_name = branch.metadata['user_url'].split('/').last
-        user_url_link = %{<a href="#{branch.metadata['user_url']}">#{user_name}</a>}
-        ref_link = %{<a href="#{branch.metadata['repo_url']}/tree/#{branch.ref}">#{branch.ref}</a>}
+        begin
+          user_name = branch.metadata['user_url'].split('/').last
+          user_url_link = %{<a href="#{branch.metadata['user_url']}">#{user_name}</a>}
+          ref_link = %{<a href="#{branch.metadata['repo_url']}/tree/#{branch.ref}">#{branch.ref}</a>}
 
-        message = %{#{user_url_link}'s branch (#{ref_link}) did not merge successfully}
-        @client[@room].send("FlashFlow", message)
+          message = %{#{user_url_link}'s branch (#{ref_link}) did not merge successfully}
+          @client[@room].send("FlashFlow", message)
+        rescue HipChat::UnknownResponseCode => e
+          puts e.message
+        end
       end
 
       private
