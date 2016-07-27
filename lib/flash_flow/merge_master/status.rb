@@ -16,11 +16,11 @@ module FlashFlow
 
         CSV.open(filename, 'w') do |f|
           f << ['Ready', 'Branch', 'Stories', 'Review', 'Can ship?']
-          stories_accepted_branches.each do |_, branch_hash|
+          branches.each do |_, branch_hash|
             f << [
               branch_hash[:shippable?] ? checkmark : 'x',
               branch_hash[:name],
-              checkmark,
+              unshippable_stories(branch_hash[:stories]).empty? ? checkmark : 'x',
               branch_hash[:code_reviewed?] ? checkmark : 'x',
               branch_hash[:can_ship?] ? checkmark : 'x'
             ]

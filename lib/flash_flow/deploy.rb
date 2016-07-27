@@ -27,7 +27,7 @@ module FlashFlow
       @notifier = Notifier::Base.new(Config.configuration.notifier)
       @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
 
-      @master_branches = parse_branches(opts[:master_branches])
+      @release_branches = parse_branches(opts[:release_branches])
     end
 
     def logger
@@ -35,8 +35,8 @@ module FlashFlow
     end
 
     def parse_branches(user_branches)
-      branch_list = user_branches == ['all'] ? shippable_branch_names : [user_branches].flatten.compact
-puts branch_list
+      branch_list = user_branches == ['ready'] ? shippable_branch_names : [user_branches].flatten.compact
+
       branch_list.map { |b| Data::Branch.new('origin', @git.remotes_hash['origin'], b) }
     end
 
@@ -44,7 +44,7 @@ puts branch_list
       check_version
       check_repo
       check_branches
-      puts "Building #{@git.master_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
+      puts "Merging these branches into #{@git.release_branch}:\n  #{@release_branches.map(&:ref).join("\n  ")}"
       logger.info "\n\n### Beginning #{@local_git.merge_branch} merge ###\n\n"
 
       begin
@@ -56,24 +56,31 @@ puts branch_list
             @git.initialize_rerere
           end
 
-          @git.reset_master
-          @git.in_branch(@git.master_branch) do
-            merge_branches(@master_branches) do |branch, merger|
+          @git.reset_temp_merge_branch
+          @git.in_temp_merge_branch do
+            merge_branches(@release_branches) do |branch, merger|
               mergers << [branch, merger]
             end
           end
 
-          require 'byebug'; debugger
           errors = mergers.select { |m| m.last.result != :success }
 
           if errors.empty?
-            raise GitPushFailure.new('Unable to push to master. See log for details.') unless @git.push_master
+            @git.copy_temp_to_branch(@git.release_branch)
+            @git.delete_temp_merge_branch
+            unless @git.push(@git.release_branch, false)
+              raise GitPushFailure.new("Unable to push to #{@git.release_branch}. See log for details.")
+            end
           end
         end
 
-        raise UnmergeableBranch.new("The following branches didn't merge successfully:\n  #{errors.map {|e| e.first.ref }.join("\n  ")}") unless errors.empty?
+        if errors.empty?
+          puts 'Success!'
+        else
+          raise UnmergeableBranch.new("The following branches didn't merge successfully:\n  #{errors.map {|e| e.first.ref }.join("\n  ")}")
+        end
 
-        logger.info "### Finished #{@git.master_branch} merge ###"
+        logger.info "### Finished #{@git.release_branch} merge ###"
       rescue Lock::Error, OutOfSyncWithRemote, UnmergeableBranch, GitPushFailure => e
         puts 'Failure!'
         puts e.message
@@ -106,9 +113,9 @@ puts branch_list
             commit_rerere
           end
 
-          @git.copy_temp_to_merge_branch(commit_message)
+          @git.copy_temp_to_branch(@git.merge_branch, commit_message)
           @git.delete_temp_merge_branch
-          @git.push_merge_branch
+          @git.push(@git.merge_branch, true)
         end
 
         print_errors
@@ -122,7 +129,7 @@ puts branch_list
     end
 
     def check_branches
-      requested_not_ready_branches = (@master_branches.map(&:ref) - shippable_branch_names)
+      requested_not_ready_branches = (@release_branches.map(&:ref) - shippable_branch_names)
       raise RuntimeError.new("The following branches are not ready to ship:\n#{requested_not_ready_branches.join("\n")}") unless requested_not_ready_branches.empty?
     end
 
@@ -134,11 +141,6 @@ puts branch_list
         all_branches.values.select { |b| b[:shippable?] }.map { |b| b[:name] }
       end
     end
-    # status = MergeMaster::Status.new(Config.configuration.issue_tracker, Config.configuration.branches, Config.configuration.branch_info_file, Config.configuration.git, logger: logger)
-    # all_branches = status.branches
-    # ready_branches = all_branches.select { |b| b[:shippable?] }.map { |b| b[:name] }
-    # requested_not_ready_branches = (master_branches.map(&:ref) - ready_branches)
-    # raise RuntimeError.new("The following branches are not ready to ship:\n#{requested_not_ready_branches.join("\n")}") unless requested_not_ready_branches.empty?
 
     def check_repo
       if @local_git.staged_and_working_dir_files.any?
@@ -232,7 +234,7 @@ puts branch_list
       return false if [@local_git.master_branch, @local_git.merge_branch].include?(@local_git.working_branch)
 
       # TODO - This should use the actual remote for the branch we're on
-      @local_git.push(@local_git.working_branch, force: @force)
+      @local_git.push(@local_git.working_branch, @force)
       raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @local_git.last_success?
 
       # TODO - This should use the actual remote for the branch we're on
@@ -264,6 +266,14 @@ puts branch_list
       else
         errors.join("\n")
       end
+    end
+
+    def release_commit_message
+      message =<<-EOS
+Flash Flow merged these branches:
+#{@release_branches.map(&:ref).join("\n")}
+      EOS
+      message.gsub(/'/, '')
     end
 
     def commit_message
