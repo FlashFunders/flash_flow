@@ -42,7 +42,6 @@ module FlashFlow
 
     def run_release
       check_version
-      check_repo
       check_branches
       puts "Merging these branches into #{@git.release_branch}:\n  #{@release_branches.map(&:ref).join("\n  ")}"
       logger.info "\n\n### Beginning #{@local_git.merge_branch} merge ###\n\n"
