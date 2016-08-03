@@ -82,3 +82,10 @@ branch_info_file: 'your/random/file'
 #    unmergeable_label: unmergeable
 #    do_not_merge_label: 'do not merge'
 #    shippable_label: 'shippable'
+
+#release:
+#  class:
+#    name: 'FlashFlow::Release::Percy'
+#    token: <%= ENV['PERCY_TOKEN'] %>
+#    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
+#    api_url: 'https://percy.io/api/v1/'

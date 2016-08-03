@@ -16,7 +16,7 @@ module FlashFlow
     end
 
     ATTRIBUTES = [
-        :git, :branch_info_file, :log_file, :notifier, :issue_tracker, :lock, :branches
+        :git, :branch_info_file, :log_file, :notifier, :issue_tracker, :lock, :branches, :release
     ]
 
     attr_reader *ATTRIBUTES
@@ -55,6 +55,7 @@ module FlashFlow
           issue_tracker: nil,
           lock: nil,
           branches: nil,
+          release: nil
       }
     end
 
