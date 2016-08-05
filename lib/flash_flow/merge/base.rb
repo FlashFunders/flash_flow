@@ -1,0 +1,81 @@
+require 'logger'
+
+require 'flash_flow/git'
+require 'flash_flow/data'
+require 'flash_flow/lock'
+require 'flash_flow/notifier'
+require 'flash_flow/branch_merger'
+require 'flash_flow/merge_order'
+require 'flash_flow/shadow_repo'
+
+module FlashFlow
+  module Merge
+    class Base
+
+      class OutOfSyncWithRemote < RuntimeError; end
+      class UnmergeableBranch < RuntimeError; end
+
+      def initialize(opts={})
+        @local_git = Git.new(Config.configuration.git, logger)
+        @git = ShadowGit.new(Config.configuration.git, logger)
+        @lock = Lock::Base.new(Config.configuration.lock)
+        @notifier = Notifier::Base.new(Config.configuration.notifier)
+        @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
+      end
+
+      def logger
+        @logger ||= FlashFlow::Config.configuration.logger
+      end
+
+      def check_repo
+        if @local_git.staged_and_working_dir_files.any?
+          raise RuntimeError.new('You have changes in your working directory. Please stash and try again')
+        end
+      end
+
+      def check_version
+        data_version = @data.version
+        return if data_version.nil?
+
+        written_version = data_version.split(".").map(&:to_i)
+        running_version = FlashFlow::VERSION.split(".").map(&:to_i)
+
+        unless written_version[0] < running_version[0] ||
+            (written_version[0] == running_version[0] && written_version[1] <= running_version[1]) # Ignore the point release number
+          raise RuntimeError.new("Your version of flash flow (#{FlashFlow::VERSION}) is behind the version that was last used (#{data_version}) by a member of your team. Please upgrade to at least #{written_version[0]}.#{written_version[1]}.0 and try again.")
+        end
+      end
+
+      def merge_branches(branches)
+        ordered_branches = MergeOrder.new(@git, branches).get_order
+        ordered_branches.each_with_index do |branch, index|
+          branch.merge_order = index + 1
+
+          remote = @git.fetch_remote_for_url(branch.remote_url)
+          if remote.nil?
+            raise RuntimeError.new("No remote found for #{branch.remote_url}. Please run 'git remote add *your_remote_name* #{branch.remote_url}' and try again.")
+          end
+
+          @git.fetch(branch.remote)
+          merger = git_merge(branch)
+
+          yield(branch, merger)
+        end
+      end
+
+      def git_merge(branch)
+        merger = BranchMerger.new(@git, branch)
+        forget_rerere = is_working_branch(branch) && @rerere_forget
+
+        merger.do_merge(forget_rerere)
+
+        merger
+      end
+
+      def is_working_branch(branch)
+        branch.ref == @git.working_branch
+      end
+
+    end
+  end
+end

@@ -1,8 +1,8 @@
 require 'minitest_helper'
-require 'flash_flow/merge_master'
+require 'flash_flow/merge'
 
 module FlashFlow
-  module MergeMaster
+  module Merge
     class TestReleaseGraph < Minitest::Test
 
       class FakeIssueTracker

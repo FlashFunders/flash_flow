@@ -1,7 +1,7 @@
-require 'flash_flow/merge_master/release_graph'
+require 'flash_flow/merge/release_graph'
 
 module FlashFlow
-  module MergeMaster
+  module Merge
     class Status
       attr_reader :issue_tracker, :collection, :stories, :releases
 
