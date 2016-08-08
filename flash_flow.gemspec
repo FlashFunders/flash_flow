@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'hipchat', "~> 1.5"
   spec.add_dependency 'pivotal-tracker', "~> 0.5"
   spec.add_dependency 'ruby-graphviz', "> 0"
+  spec.add_dependency 'percy-client'
 
   spec.add_development_dependency "bundler", "~> 1.6"
   spec.add_development_dependency "rake", "> 0"
