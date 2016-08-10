@@ -12,6 +12,7 @@ module FlashFlow
   module Merge
     class Base
 
+      class VersionError < RuntimeError; end
       class OutOfSyncWithRemote < RuntimeError; end
       class UnmergeableBranch < RuntimeError; end
 
@@ -20,7 +21,6 @@ module FlashFlow
         @git = ShadowGit.new(Config.configuration.git, logger)
         @lock = Lock::Base.new(Config.configuration.lock)
         @notifier = Notifier::Base.new(Config.configuration.notifier)
-        @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
       end
 
       def logger

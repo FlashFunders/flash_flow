@@ -201,7 +201,7 @@ module FlashFlow
       run("push #{'-f' if force} #{merge_remote} #{branch}")
     end
 
-    def copy_temp_to_branch(branch, squash_message = nil)
+    def   copy_temp_to_branch(branch, squash_message = nil)
       run("checkout #{temp_merge_branch}")
       run("merge --strategy=ours --no-edit #{branch}")
       run("checkout #{branch}")
@@ -236,6 +236,20 @@ module FlashFlow
       end
     end
 
+    def temp_merge_branch
+      "flash_flow/#{merge_branch}"
+    end
+
+    def get_sha(branch)
+      run("rev-parse #{branch}")
+      last_stdout.strip if last_success?
+    end
+
+    def branch_exists?(branch)
+      run("rev-parse --verify #{branch}")
+      last_success?
+    end
+
     private
 
     def squash_commits(branch, commit_message)
@@ -251,15 +265,6 @@ module FlashFlow
       run("add -f #{files.map { |f| "\"#{Shellwords.escape(f)}\"" }.join(" ")}")
 
       run("commit -m '#{commit_message}'")
-    end
-
-    def branch_exists?(branch)
-      run("rev-parse --verify #{branch}")
-      last_success?
-    end
-
-    def temp_merge_branch
-      "flash_flow/#{merge_branch}"
     end
 
   end

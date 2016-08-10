@@ -13,6 +13,7 @@ module FlashFlow
 
       run("clean -x -f")
       fetch(merge_remote)
+      run("remote prune #{merge_remote}")
       run("reset --hard HEAD")
     end
 

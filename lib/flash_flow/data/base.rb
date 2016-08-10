@@ -13,6 +13,8 @@ module FlashFlow
                      :remove_from_merge, :add_to_merge, :failures, :successes, :removals, :set_resolutions,
                      :to_a, :code_reviewed?, :branch_link
 
+      attr_reader :collection
+
       def initialize(branch_config, filename, git, opts={})
         @git = git
         @store = Store.new(filename, git, opts)
@@ -20,14 +22,23 @@ module FlashFlow
       end
 
       def initialize_collection(branch_config, remotes)
-        collection = Collection.fetch(remotes, branch_config) ||
-            Collection.from_hash(remotes, backwards_compatible_store['branches'])
-        collection.mark_all_as_current
-        collection
+        stored_collection = Collection.from_hash(remotes, stored_branches)
+
+        if ! branch_config.empty?
+          collection = Collection.fetch(remotes, branch_config)
+          # Order matters. We are marking the PRs as current, not the branches stored in the json
+          collection.mark_all_as_current
+          collection.reverse_merge(stored_collection)
+
+        else
+          collection = stored_collection
+          collection.mark_all_as_current
+          collection
+        end
       end
 
       def version
-        backwards_compatible_store['version']
+        stored_data['version']
       end
 
       def save!
@@ -37,24 +48,29 @@ module FlashFlow
       def to_hash
         {
             'version'  => FlashFlow::VERSION,
-            'branches' => merged_branches.to_hash
+            'branches' => @collection.to_hash,
+            'releases' => releases
         }
       end
 
-      def merged_branches
-        @collection.reverse_merge(Collection.from_hash({}, backwards_compatible_store['branches']))
+      def stored_branches
+        @stored_branches ||= stored_data['branches'] || {}
       end
 
-      def backwards_compatible_store
-        @backwards_compatible_store ||= begin
-          hash = @store.get
+      def releases
+        @releases ||= stored_data['releases'] || []
+      end
 
-          hash.has_key?('branches') ? hash : { 'branches' => hash }
-        end
+      def merged_branches
+        @collection.reverse_merge(Collection.from_hash({}, stored_branches))
+      end
+
+      def stored_data
+        @stored_data ||= @store.get
       end
 
       def saved_branches
-        Collection.from_hash(@git.remotes, backwards_compatible_store['branches']).to_a
+        Collection.from_hash(@git.remotes, stored_branches).to_a
       end
     end
   end

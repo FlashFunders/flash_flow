@@ -20,8 +20,7 @@ module FlashFlow
     private
 
     def current_sha(branch)
-      @git.run("rev-parse #{branch.remote}/#{branch.ref}")
-      @git.last_stdout.strip if @git.last_success?
+      @git.get_sha("#{branch.remote}/#{branch.ref}")
     end
 
   end

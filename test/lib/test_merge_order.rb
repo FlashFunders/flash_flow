@@ -46,9 +46,7 @@ module FlashFlow
     private
 
     def mock_current_sha(branch, sha)
-      @git.expect(:run, sha, ["rev-parse #{branch.remote}/#{branch.ref}"])
-        .expect(:last_success?, true)
-        .expect(:last_stdout, sha)
+      @git.expect(:get_sha, sha, ["#{branch.remote}/#{branch.ref}"])
     end
 
     def mock_working_branch(branch)

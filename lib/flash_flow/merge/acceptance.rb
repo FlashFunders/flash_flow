@@ -4,11 +4,10 @@ module FlashFlow
   module Merge
     class Acceptance < Base
 
-      class OutOfSyncWithRemote < RuntimeError; end
-      class UnmergeableBranch < RuntimeError; end
-
       def initialize(opts={})
         super(opts)
+
+        @data = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, @git, logger: logger)
 
         @do_not_merge = opts[:do_not_merge]
         @force = opts[:force]
@@ -33,7 +32,7 @@ module FlashFlow
 
             @git.reset_temp_merge_branch
             @git.in_temp_merge_branch do
-              merge_branches(@data.merged_branches.mergeable) do |branch, merger|
+              merge_branches(@data.mergeable) do |branch, merger|
                 process_result(branch, merger)
               end
               commit_branch_info
@@ -63,7 +62,7 @@ module FlashFlow
       end
 
       def commit_rerere
-        current_branches = @data.merged_branches.to_a.select { |branch| !@git.master_branch_contains?(branch.sha) && (Time.now - branch.updated_at < two_weeks) }
+        current_branches = @data.to_a.select { |branch| !@git.master_branch_contains?(branch.sha) && (Time.now - branch.updated_at < two_weeks) }
         current_rereres = current_branches.map { |branch| branch.resolutions.to_h.values }.flatten
 
         @git.commit_rerere(current_rereres)

@@ -7,13 +7,16 @@ module FlashFlow
 
       def setup
         reset_config!
-        config!(git: {
-            'merge_branch' => 'test_acceptance',
-            'merge_remote' => 'test_remote',
-            'master_branch' => 'test_master',
-            'remotes' => ['fake_origin'],
-            'use_rerere' => true
-        })
+        config!(git:
+                    {
+                        'merge_branch' => 'test_acceptance',
+                        'merge_remote' => 'test_remote',
+                        'master_branch' => 'test_master',
+                        'remotes' => ['fake_origin'],
+                        'use_rerere' => true
+                    },
+                branches: {}
+        )
 
         @branch = Data::Branch.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
         @deploy = Acceptance.new
