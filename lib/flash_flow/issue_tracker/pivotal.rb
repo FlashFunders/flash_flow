@@ -61,7 +61,7 @@ module FlashFlow
       def story_deployable?(story_id)
         story = get_story(story_id)
 
-        story.current_state == 'accepted'
+        story && story.current_state == 'accepted'
       end
 
       def story_link(story_id)
@@ -79,7 +79,7 @@ module FlashFlow
       def release_keys(story_id)
         story = get_story(story_id)
 
-        return [] if story.labels.nil?
+        return [] unless story && story.labels
 
         story.labels.split(",").map(&:strip).select { |label| label =~ @release_label_prefix }.map(&:strip)
       end

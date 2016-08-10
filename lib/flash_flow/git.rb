@@ -3,7 +3,7 @@ require 'shellwords'
 
 module FlashFlow
   class Git
-    ATTRIBUTES = [:merge_remote, :merge_branch, :master_branch, :use_rerere]
+    ATTRIBUTES = [:merge_remote, :merge_branch, :master_branch, :release_branch, :use_rerere]
     attr_reader *ATTRIBUTES
     attr_reader :working_branch
 
@@ -11,7 +11,7 @@ module FlashFlow
 
     def initialize(config, logger=nil)
       @cmd_runner = CmdRunner.new(logger: logger)
-
+      config['release_branch'] ||= config['master_branch']
       ATTRIBUTES.each do |attr|
         unless config.has_key?(attr.to_s)
           raise RuntimeError.new("git configuration missing. Required config parameters: #{ATTRIBUTES}")
@@ -51,10 +51,6 @@ module FlashFlow
       run("commit -m '#{message}'")
     end
 
-    def push(branch, options)
-      run("push #{'-f' if options[:force]} #{merge_remote} #{branch}")
-    end
-
     def merge(branch)
       run("merge #{branch}")
     end
@@ -67,20 +63,17 @@ module FlashFlow
       end
     end
 
-    def master_branch_contains?(ref)
+    def branch_contains?(branch, ref)
       run("branch --contains #{ref}", log: CmdRunner::LOG_CMD)
-      last_stdout.split("\n").detect { |str| str[2..-1] == master_branch }
+      last_stdout.split("\n").detect { |str| str[2..-1] == branch }
+    end
+
+    def master_branch_contains?(ref)
+      branch_contains?(master_branch, ref)
     end
 
     def in_original_merge_branch
-      begin
-        starting_branch = current_branch
-        run("checkout #{merge_remote}/#{merge_branch}")
-
-        yield
-      ensure
-        run("checkout #{starting_branch}")
-      end
+      in_branch("#{merge_remote}/#{merge_branch}") { yield }
     end
 
     def read_file_from_merge_branch(filename)
@@ -204,21 +197,22 @@ module FlashFlow
       end
     end
 
-    def push_merge_branch
-      run("push -f #{merge_remote} #{merge_branch}")
+    def push(branch, force=false)
+      run("push #{'-f' if force} #{merge_remote} #{branch}")
     end
 
-    def copy_temp_to_merge_branch(commit_message)
+    def   copy_temp_to_branch(branch, squash_message = nil)
       run("checkout #{temp_merge_branch}")
-      run("merge --strategy=ours --no-edit #{merge_branch}")
-      run("checkout #{merge_branch}")
+      run("merge --strategy=ours --no-edit #{branch}")
+      run("checkout #{branch}")
       run("merge #{temp_merge_branch}")
 
-      squash_commits(commit_message)
+
+      squash_commits(branch, squash_message) if squash_message
     end
 
     def delete_temp_merge_branch
-      in_merge_branch do
+      in_branch(master_branch) do
         run("branch -d #{temp_merge_branch}")
       end
     end
@@ -242,21 +236,35 @@ module FlashFlow
       end
     end
 
+    def temp_merge_branch
+      "flash_flow/#{merge_branch}"
+    end
+
+    def get_sha(branch)
+      run("rev-parse #{branch}")
+      last_stdout.strip if last_success?
+    end
+
+    def branch_exists?(branch)
+      run("rev-parse --verify #{branch}")
+      last_success?
+    end
+
     private
 
-    def squash_commits(commit_message)
+    def squash_commits(branch, commit_message)
+      unless branch_exists?("#{merge_remote}/#{branch}")
+        run("push #{merge_remote} #{master_branch}:#{branch}")
+      end
+
       # Get all the files that differ between existing acceptance and new acceptance
-      run("diff --name-only #{merge_remote}/#{merge_branch} #{merge_branch}")
+      run("diff --name-only #{merge_remote}/#{branch} #{branch}")
       files = last_stdout.split("\n")
-      run("reset #{merge_remote}/#{merge_branch}")
+      run("reset #{merge_remote}/#{branch}")
 
       run("add -f #{files.map { |f| "\"#{Shellwords.escape(f)}\"" }.join(" ")}")
 
       run("commit -m '#{commit_message}'")
-    end
-
-    def temp_merge_branch
-      "flash_flow/#{merge_branch}"
     end
 
   end

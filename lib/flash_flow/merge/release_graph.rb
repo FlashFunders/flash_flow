@@ -1,7 +1,7 @@
 require 'graphviz'
 
 module FlashFlow
-  module MergeMaster
+  module Merge
     class ReleaseGraph
       attr_accessor :branches, :issue_tracker
 

@@ -13,6 +13,7 @@ module FlashFlow
         @ref = _ref
         @resolutions = {}
         @stories = []
+        @metadata = {}
         @updated_at = Time.now
         @created_at = Time.now
       end

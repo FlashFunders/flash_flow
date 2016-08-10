@@ -59,7 +59,7 @@ module FlashFlow
       end
 
       def get_branches
-        branch_info_store = Data::Base.new(Config.configuration.branches, Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
+        branch_info_store = Data::Base.new({}, Config.configuration.branch_info_file, git, logger: Config.configuration.logger)
 
         branch_info_store.saved_branches
       end

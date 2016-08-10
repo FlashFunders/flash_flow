@@ -1,13 +1,13 @@
-require 'flash_flow/merge_master/release_graph'
+require 'flash_flow/merge/release_graph'
 
 module FlashFlow
-  module MergeMaster
+  module Merge
     class Status
       attr_reader :issue_tracker, :collection, :stories, :releases
 
       def initialize(issue_tracker_config, branches_config, branch_info_file, git_config, opts={})
         @issue_tracker = IssueTracker::Base.new(issue_tracker_config)
-        @collection = Data::Base.new(branches_config, branch_info_file, ShadowGit.new(git_config)).merged_branches
+        @collection = Data::Base.new(branches_config, branch_info_file, ShadowGit.new(git_config)).collection
       end
 
       def status
@@ -16,11 +16,11 @@ module FlashFlow
 
         CSV.open(filename, 'w') do |f|
           f << ['Ready', 'Branch', 'Stories', 'Review', 'Can ship?']
-          stories_accepted_branches.each do |_, branch_hash|
+          branches.each do |_, branch_hash|
             f << [
               branch_hash[:shippable?] ? checkmark : 'x',
               branch_hash[:name],
-              checkmark,
+              unshippable_stories(branch_hash[:stories]).empty? ? checkmark : 'x',
               branch_hash[:code_reviewed?] ? checkmark : 'x',
               branch_hash[:can_ship?] ? checkmark : 'x'
             ]

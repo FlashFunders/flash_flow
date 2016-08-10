@@ -1,7 +1,7 @@
 module FlashFlow
   class BranchMerger
 
-    attr_reader :conflict_sha, :resolutions
+    attr_reader :conflict_sha, :resolutions, :result
 
     def initialize(git, branch)
       @git = git
@@ -9,15 +9,18 @@ module FlashFlow
     end
 
     def do_merge(rerere_forget)
-      return :deleted if sha.nil?
+      if sha.nil?
+        @result = :deleted
+        return
+      end
 
       @git.run("merge --no-ff #{@branch.remote}/#{@branch.ref}")
 
       if @git.last_success? || try_rerere(rerere_forget)
-        return :success
+        @result = :success
       else
         @conflict_sha = merge_rollback
-        return :conflict
+        @result = :conflict
       end
     end
 

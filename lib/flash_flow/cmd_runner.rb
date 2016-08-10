@@ -39,6 +39,7 @@ module FlashFlow
     private
 
     def log(cmd, log_what)
+      log_what = nil
       if log_what == LOG_NONE
           # Do nothing
       else

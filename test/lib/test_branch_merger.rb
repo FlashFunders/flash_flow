@@ -9,7 +9,8 @@ module FlashFlow
 
     def test_deleted_branch
       merger.stub(:sha, nil) do
-        assert_equal(merger.do_merge(true), :deleted)
+        merger.do_merge(true)
+        assert_equal(merger.result, :deleted)
       end
     end
 

@@ -1,11 +1,11 @@
 require 'minitest_helper'
-require 'flash_flow/merge_master'
+require 'flash_flow/merge'
 
 module FlashFlow
-  module MergeMaster
+  module Merge
     class TestStatus < Minitest::Test
 
-      class TestableMergeMaster < Status
+      class TestableMerge < Status
         def initialize;
         end
 
@@ -100,7 +100,7 @@ module FlashFlow
       ## Begin actual tests
 
       def setup
-        @merge_master = TestableMergeMaster.new
+        @merge_master = TestableMerge.new
         @merge_master.issue_tracker = FakeIssueTracker.new
         @merge_master.collection = FakeCollection.new
       end
