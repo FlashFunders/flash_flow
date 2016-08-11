@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    flash_flow (1.4.0)
+    flash_flow (1.4.2)
       hipchat (~> 1.5)
       octokit (~> 4.1)
       percy-client
