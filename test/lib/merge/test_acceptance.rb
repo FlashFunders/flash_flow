@@ -10,15 +10,14 @@ module FlashFlow
         config!(git:
                     {
                         'merge_branch' => 'test_acceptance',
-                        'merge_remote' => 'test_remote',
+                        'remote' => 'test_remote',
                         'master_branch' => 'test_master',
-                        'remotes' => ['fake_origin'],
                         'use_rerere' => true
                     },
                 branches: {}
         )
 
-        @branch = Data::Branch.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
+        @branch = Data::Branch.from_hash({'ref' => 'pushing_branch', 'status' => 'fail', 'stories' => []})
         @deploy = Acceptance.new
       end
 
@@ -71,7 +70,7 @@ module FlashFlow
       def test_print_errors_when_another_branch_cant_merge
         data.expect(:failures, [@branch])
 
-        other_branch_error = "WARNING: Unable to merge branch origin/pushing_branch to test_acceptance due to conflicts."
+        other_branch_error = "WARNING: Unable to merge branch test_remote/pushing_branch to test_acceptance due to conflicts."
 
         assert_equal(@deploy.format_errors, other_branch_error)
       end

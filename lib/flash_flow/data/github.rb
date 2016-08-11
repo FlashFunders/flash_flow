@@ -36,7 +36,6 @@ module FlashFlow
       def fetch
         pull_requests.map do |pr|
           Branch.from_hash(
-              'remote_url' => pr.head.repo.ssh_url,
               'ref' => pr.head.ref,
               'status' => status_from_labels(pr),
               'metadata' => metadata(pr),
@@ -90,7 +89,7 @@ module FlashFlow
       end
 
       def pr_for(branch)
-        pull_requests.detect { |p| branch.remote_url == p.head.repo.ssh_url && branch.ref == p.head.ref }
+        pull_requests.detect { |p| branch.ref == p.head.ref }
       end
 
       def update_pr(pr_number)

@@ -6,8 +6,8 @@ module FlashFlow
     class TestStore < Minitest::Test
       def setup
         @mock_git = MockGit.new
-        @collection = Collection.new({ 'origin' => 'the_origin_url' })
-        @branch = Branch.new('origin', 'the_origin_url', 'some_branch')
+        @collection = Collection.new
+        @branch = Branch.new('some_branch')
         @storage = Store.new('/dev/null', @mock_git)
       end
 
@@ -30,8 +30,8 @@ module FlashFlow
         @old_branches ||= {
             'version' => '1.0.0',
             'branches' => {
-              'the_origin_url/some_old_branch' => {'ref' => 'some_old_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'created_at' => (Time.now - 3600).to_s, 'stories' => ['111']},
-              'the_origin_url/some_branch' => {'ref' => 'some_branch', 'remote_url' => 'the_origin_url', 'remote' => 'origin', 'status' => 'success', 'created_at' => (Time.now - 1800).to_s, 'stories' => ['222']}
+              'some_old_branch' => {'ref' => 'some_old_branch', 'created_at' => (Time.now - 3600).to_s, 'stories' => ['111']},
+              'some_branch' => {'ref' => 'some_branch', 'status' => 'success', 'created_at' => (Time.now - 1800).to_s, 'stories' => ['222']}
             }
           }
       end
@@ -39,19 +39,15 @@ module FlashFlow
       def sorted_branches
         @sorted_branches ||= {
             'branches' => {
-                'the_origin_url/some_branch' => {
+                'some_branch' => {
                     'created_at' => (Time.now - 1800).to_s,
                     'ref' => 'some_branch',
-                    'remote' => 'origin',
-                    'remote_url' => 'the_origin_url',
                     'status' => 'success',
                     'stories' => ['222']
                 },
-                'the_origin_url/some_old_branch' => {
+                'some_old_branch' => {
                     'created_at' => (Time.now - 3600).to_s,
                     'ref' => 'some_old_branch',
-                    'remote' => 'origin',
-                    'remote_url' => 'the_origin_url',
                     'stories' => ['111']},
             },
             'version' => '1.0.0',

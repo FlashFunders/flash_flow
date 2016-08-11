@@ -31,12 +31,12 @@ are ready to go for flash_flow basic. If not, edit that file and change branch a
 flash_flow is a ruby script which, in the simplest case, can just be run by calling `flash_flow`.
 What that will do (once your application is properly configured) is:
 
-1. Push your branch to the `merge_remote`
+1. Push your branch to the `remote`
 2. Reset your `merge_branch` to be the same as your `master_branch`
 3. Get your list of pull requests from github (or use the saved list, more on that later)
 4. Filter out any "removed" branches
 5. Merge the rest into the newly created `merge_branch`
-6. Push the `merge_branch` to the `merge_remote`
+6. Push the `merge_branch` to the `remote`
 7. The `merge_branch` is now a merge of your master branch plus all of your pull requests.
 
 ### Notes

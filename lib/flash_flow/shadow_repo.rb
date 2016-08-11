@@ -12,8 +12,8 @@ module FlashFlow
       @cmd_runner.dir = flash_flow_dir
 
       run("clean -x -f")
-      fetch(merge_remote)
-      run("remote prune #{merge_remote}")
+      run("fetch #{remote}")
+      run("remote prune #{remote}")
       run("reset --hard HEAD")
     end
 

@@ -4,12 +4,10 @@ module FlashFlow
   module Data
 
     class Branch
-      attr_accessor :remote, :remote_url, :ref, :sha, :status, :resolutions, :stories, :conflict_sha, :metadata,
+      attr_accessor :ref, :sha, :status, :resolutions, :stories, :conflict_sha, :metadata,
                     :current_record, :merge_order, :updated_at, :created_at
 
-      def initialize(_remote, _remote_url, _ref)
-        @remote = _remote
-        @remote_url = _remote_url
+      def initialize(_ref)
         @ref = _ref
         @resolutions = {}
         @stories = []
@@ -19,7 +17,7 @@ module FlashFlow
       end
 
       def self.from_hash(hash)
-        branch = new(hash['remote'], hash['remote_url'], hash['ref'])
+        branch = new(hash['ref'])
         branch.sha = hash['sha']
         branch.status = hash['status']
         branch.merge_order = hash['merge_order']
@@ -44,13 +42,11 @@ module FlashFlow
       end
 
       def ==(other)
-        other.remote_url == remote_url && other.remote == remote && other.ref == ref
+        other.ref == ref
       end
 
       def to_hash
         {
-            'remote' => remote,
-            'remote_url' => remote_url,
             'ref' => ref,
             'sha' => sha,
             'status' => status,

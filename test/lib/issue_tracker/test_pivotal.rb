@@ -285,11 +285,11 @@ module FlashFlow
       end
 
       def sample_branches
-        @sample_branches ||= [Data::Branch.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
-            Data::Branch.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
-            Data::Branch.from_hash({'ref' => 'branch3', 'remote' => 'origin', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
-            Data::Branch.from_hash({'ref' => 'branch4', 'remote' => 'origin', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
-            Data::Branch.from_hash({'ref' => 'branch5', 'remote' => 'origin', 'sha' => 'sha5', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['555']})
+        @sample_branches ||= [Data::Branch.from_hash({'ref' => 'branch1', 'sha' => 'sha1', 'status' => 'success', 'created_at' => (Time.now - 3600), 'stories' => ['111']}),
+            Data::Branch.from_hash({'ref' => 'branch2', 'sha' => 'sha2', 'status' => 'success', 'created_at' => (Time.now - 1800), 'stories' => ['222']}),
+            Data::Branch.from_hash({'ref' => 'branch3', 'sha' => 'sha3', 'status' => 'fail', 'created_at' => (Time.now - 1800), 'stories' => ['333']}),
+            Data::Branch.from_hash({'ref' => 'branch4', 'sha' => 'sha4', 'status' => nil, 'created_at' => (Time.now - 1800), 'stories' => ['444']}),
+            Data::Branch.from_hash({'ref' => 'branch5', 'sha' => 'sha5', 'status' => 'removed', 'created_at' => (Time.now - 1800), 'stories' => ['555']})
         ]
       end
     end

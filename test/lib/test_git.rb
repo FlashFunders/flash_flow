@@ -5,9 +5,8 @@ module FlashFlow
     def setup
       @git_args = {
           'merge_branch' => 'acceptance',
-          'merge_remote' => 'origin',
+          'remote' => 'origin',
           'master_branch' => 'master',
-          'remotes' => ['origin'],
           'use_rerere' => true
       }
       @cmd_runner = setup_cmd_runner
@@ -15,6 +14,7 @@ module FlashFlow
 
     def test_initialize_rerere_checks_flag
       @git_args['use_rerere'] = false
+
       instance.initialize_rerere
 
       @cmd_runner.verify

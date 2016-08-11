@@ -63,14 +63,15 @@ module FlashFlow
     end
 
     def branch
-      @branch ||= Data::Branch.from_hash({'ref' => 'pushing_branch', 'remote' => 'origin', 'status' => 'fail', 'stories' => []})
+      @branch ||= Data::Branch.from_hash({'ref' => 'pushing_branch', 'status' => 'fail', 'stories' => []})
     end
 
     def git
       return @git if @git
 
       @git = Minitest::Mock.new
-      @git.expect(:run, true, ["merge --no-ff #{branch.remote}/#{branch.ref}"])
+      @git.expect(:remote, 'origin', [])
+      @git.expect(:run, true, ["merge --no-ff origin/#{branch.ref}"])
     end
 
   end

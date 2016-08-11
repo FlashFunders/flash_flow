@@ -5,8 +5,8 @@ git:
   # more description elsewhere about how this works.
   use_rerere: true
 
-  # Which remote to push the merge branch to
-  merge_remote: origin
+  # Which remote your branches use
+  remote: origin
 
   # This branch is owned by flash_flow, it force pushes every time. So don't use a branch to which you make
   # commits. Treat this as 100% ephemeral, but if you can you should deploy it automatically to your

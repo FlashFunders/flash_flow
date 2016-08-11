@@ -6,10 +6,9 @@ module FlashFlow
 
     class Collection
 
-      attr_accessor :branches, :remotes
+      attr_accessor :branches
 
-      def initialize(remotes, config=nil)
-        @remotes = remotes
+      def initialize(config=nil)
         @branches = {}
 
         if config && config['class'] && config['class']['name']
@@ -18,27 +17,34 @@ module FlashFlow
         end
       end
 
-      def self.fetch(remotes, config=nil)
-        collection = new(remotes, config)
+      def self.fetch(config=nil)
+        collection = new(config)
         collection.fetch
         collection
       end
 
-      def self.from_hash(remotes, hash, collection_instance=nil)
-        collection = new(remotes)
-        collection.branches = branches_from_hash(hash.dup)
+      def self.from_hash(hash, collection_instance=nil)
+        collection = new
+        collection.branches = branches_from_hash(hash)
         collection.instance_variable_set(:@collection_instance, collection_instance)
         collection
       end
 
       def self.branches_from_hash(hash)
-        hash.each do |key, val|
-          hash[key] = val.is_a?(Branch) ? val : Branch.from_hash(val)
+        {}.tap do |new_branches|
+          hash.each do |_, val|
+            branch = val.is_a?(Branch) ? val : Branch.from_hash(val)
+            new_branches[branch.ref] = branch
+          end
         end
       end
 
-      def get(remote_url, ref)
-        @branches[key(remote_url, ref)]
+      def self.key(ref)
+        ref
+      end
+
+      def get(ref)
+        @branches[key(ref)]
       end
 
       def to_hash
@@ -75,7 +81,7 @@ module FlashFlow
           end
         end
 
-        self.class.from_hash(remotes, merged_branches, @collection_instance)
+        self.class.from_hash(merged_branches, @collection_instance)
       end
 
       def to_a
@@ -120,15 +126,15 @@ module FlashFlow
         end
       end
 
-      def add_to_merge(remote, ref)
-        branch = record(remote, nil, ref)
+      def add_to_merge(ref)
+        branch = record(ref)
         branch.current_record = true
         @collection_instance.add_to_merge(branch) if @collection_instance.respond_to?(:add_to_merge)
         branch
       end
 
-      def remove_from_merge(remote, ref)
-        branch = record(remote, nil, ref)
+      def remove_from_merge(ref)
+        branch = record(ref)
         branch.current_record = true
         branch.removed!
         @collection_instance.remove_from_merge(branch) if @collection_instance.respond_to?(:remove_from_merge)
@@ -156,8 +162,8 @@ module FlashFlow
         branch
       end
 
-      def add_story(remote, ref, story_id)
-        branch = get(url_from_remote(remote), ref)
+      def add_story(ref, story_id)
+        branch = get(ref)
         branch.stories ||= []
         branch.stories << story_id
 
@@ -186,31 +192,17 @@ module FlashFlow
 
       private
 
-      def key(remote_url, ref)
-        "#{remote_url}/#{ref}"
-      end
-
-      def remote_from_url(url)
-        remotes.detect { |_, url_val| url_val == url }.first
-      end
-
-      def url_from_remote(remote)
-        remotes[remote]
-      end
-
-      def fixup(branch)
-        branch.remote ||= remote_from_url(branch.remote_url)
-        branch.remote_url ||= url_from_remote(branch.remote)
+      def key(ref)
+        self.class.key(ref)
       end
 
       def update_or_add(branch)
-        fixup(branch)
-        old_branch = @branches[key(branch.remote_url, branch.ref)]
-        @branches[key(branch.remote_url, branch.ref)] = old_branch.nil? ? branch : old_branch.merge(branch)
+        old_branch = @branches[key(branch.ref)]
+        @branches[key(branch.ref)] = old_branch.nil? ? branch : old_branch.merge(branch)
       end
 
-      def record(remote, remote_url, ref)
-        update_or_add(Branch.new(remote, remote_url, ref))
+      def record(ref)
+        update_or_add(Branch.new(ref))
       end
 
     end

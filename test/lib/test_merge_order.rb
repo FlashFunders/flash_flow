@@ -46,7 +46,8 @@ module FlashFlow
     private
 
     def mock_current_sha(branch, sha)
-      @git.expect(:get_sha, sha, ["#{branch.remote}/#{branch.ref}"])
+      @git.expect(:remote, 'origin')
+      @git.expect(:get_sha, sha, ["origin/#{branch.ref}"])
     end
 
     def mock_working_branch(branch)
@@ -54,9 +55,9 @@ module FlashFlow
     end
 
     def sample_branches
-      @sample_branches ||= [Data::Branch.from_hash({'ref' => 'branch0', 'remote' => 'origin', 'sha' => 'sha0', 'merge_order' => 1}),
-        Data::Branch.from_hash({'ref' => 'branch1', 'remote' => 'origin', 'sha' => 'sha1', 'merge_order' => 2}),
-        Data::Branch.from_hash({'ref' => 'branch2', 'remote' => 'origin', 'sha' => 'sha2', 'merge_order' => 3})]
+      @sample_branches ||= [Data::Branch.from_hash({'ref' => 'branch0', 'sha' => 'sha0', 'merge_order' => 1}),
+        Data::Branch.from_hash({'ref' => 'branch1', 'sha' => 'sha1', 'merge_order' => 2}),
+        Data::Branch.from_hash({'ref' => 'branch2', 'sha' => 'sha2', 'merge_order' => 3})]
     end
 
     def mergeable_order(*order)

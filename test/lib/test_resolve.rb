@@ -35,16 +35,14 @@ module FlashFlow
 
     def setup
       @resolve_tester = ResolveTester.new({ 'merge_branch' => 'test_acceptance',
-                               'merge_remote' => 'test_remote',
+                               'remote' => 'test_remote',
                                'master_branch' => 'test_master',
-                               'remotes' => ['fake_origin'],
                                'use_rerere' => true
                              }, 'some_file')
 
       @resolve = Resolve.new({ 'merge_branch' => 'test_acceptance',
-                                            'merge_remote' => 'test_remote',
+                                            'remote' => 'test_remote',
                                             'master_branch' => 'test_master',
-                                            'remotes' => ['fake_origin'],
                                             'use_rerere' => true
                                           }, 'some_file')
     end

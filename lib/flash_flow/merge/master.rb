@@ -29,12 +29,11 @@ module FlashFlow
             release = @data.releases.detect { |r| r['status'] == 'Pending' }
             if release
               raise PendingReleaseError.new("There is already a pending release: #{release}")
-            elsif @git.branch_exists?("#{@git.merge_remote}/#{@git.release_branch}") &&
-                !@git.branch_contains?(@git.master_branch, @git.get_sha("#{@git.merge_remote}/#{@git.release_branch}"))
+            elsif @git.branch_exists?("#{@git.remote}/#{@git.release_branch}") &&
+                !@git.branch_contains?(@git.master_branch, @git.get_sha("#{@git.remote}/#{@git.release_branch}"))
               raise PendingReleaseError.new("The release branch '#{@git.release_branch}' has commits that are not in master")
             end
 
-            @git.fetch(@git.merge_remote)
             @git.in_original_merge_branch do
               @git.initialize_rerere
             end
@@ -58,10 +57,10 @@ module FlashFlow
               @data.releases.unshift({ created_at: Time.now, sha: release_sha, status: 'Pending' })
 
               @git.in_temp_merge_branch do
-                @git.run("reset --hard #{@git.merge_remote}/#{@git.merge_branch}")
+                @git.run("reset --hard #{@git.remote}/#{@git.merge_branch}")
               end
               @git.in_merge_branch do
-                @git.run("reset --hard #{@git.merge_remote}/#{@git.merge_branch}")
+                @git.run("reset --hard #{@git.remote}/#{@git.merge_branch}")
               end
 
               @data.save!
@@ -94,7 +93,7 @@ module FlashFlow
       def parse_branches(user_branches)
         branch_list = user_branches == ['ready'] ? shippable_branch_names : [user_branches].flatten.compact
 
-        branch_list.map { |b| Data::Branch.new('origin', @git.remotes_hash['origin'], b) }
+        branch_list.map { |b| Data::Branch.new(b) }
       end
 
       def check_branches

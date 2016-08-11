@@ -25,7 +25,6 @@ module FlashFlow
           open_pull_request
 
           @lock.with_lock do
-            @git.fetch(@git.merge_remote)
             @git.in_original_merge_branch do
               @git.initialize_rerere
             end
@@ -56,7 +55,7 @@ module FlashFlow
 
       def commit_branch_info
         @stories.each do |story_id|
-          @data.add_story(@git.merge_remote, @git.working_branch, story_id)
+          @data.add_story(@git.remote, @git.working_branch, story_id)
         end
         @data.save!
       end
@@ -100,15 +99,13 @@ module FlashFlow
       def open_pull_request
         return false if [@local_git.master_branch, @local_git.merge_branch].include?(@local_git.working_branch)
 
-        # TODO - This should use the actual remote for the branch we're on
         @local_git.push(@local_git.working_branch, @force)
         raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @local_git.last_success?
 
-        # TODO - This should use the actual remote for the branch we're on
         if @do_not_merge
-          @data.remove_from_merge(@local_git.merge_remote, @local_git.working_branch)
+          @data.remove_from_merge(@local_git.remote, @local_git.working_branch)
         else
-          @data.add_to_merge(@local_git.merge_remote, @local_git.working_branch)
+          @data.add_to_merge(@local_git.working_branch)
         end
       end
 
@@ -123,7 +120,7 @@ module FlashFlow
           if branch.ref == @local_git.working_branch
             branch_not_merged = "ERROR: Your branch did not merge to #{@local_git.merge_branch}. Run 'flash_flow --resolve', fix the merge conflict(s) and then re-run this script\n"
           else
-            errors << "WARNING: Unable to merge branch #{branch.remote}/#{branch.ref} to #{@local_git.merge_branch} due to conflicts."
+            errors << "WARNING: Unable to merge branch #{@local_git.remote}/#{branch.ref} to #{@local_git.merge_branch} due to conflicts."
           end
         end
         errors << branch_not_merged if branch_not_merged

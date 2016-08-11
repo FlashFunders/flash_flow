@@ -6,10 +6,9 @@ module FlashFlow
       @config_hash = {
           'git' => {
             'use_rerere' => true,
-            'merge_remote' => 'arbitrary_remote',
+            'remote' => 'arbitrary_remote',
             'merge_branch' => 'acceptance',
-            'master_branch' => 'master',
-            'remotes' => ['origin']
+            'master_branch' => 'master'
           },
           'branch_info_file' => 'some_file.txt',
           'notifier' => {
@@ -43,10 +42,9 @@ module FlashFlow
         assert('some_file.txt' == config.branch_info_file)
         assert({
                    'use_rerere' => true,
-                   'merge_remote' => 'arbitrary_remote',
+                   'remote' => 'arbitrary_remote',
                    'merge_branch' => 'acceptance',
-                   'master_branch' => 'master',
-                   'remotes' => ['origin']
+                   'master_branch' => 'master'
                } == config.git)
         assert({ 'class' => { 'name' => 'NotifierClass' }} == config.notifier)
         assert({ 'class' => { 'name' => 'IssueTrackerClass' }} == config.issue_tracker)

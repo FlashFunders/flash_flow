@@ -14,7 +14,7 @@ module FlashFlow
         return
       end
 
-      @git.run("merge --no-ff #{@branch.remote}/#{@branch.ref}")
+      @git.run("merge --no-ff #{@git.remote}/#{@branch.ref}")
 
       if @git.last_success? || try_rerere(rerere_forget)
         @result = :success
@@ -41,7 +41,7 @@ module FlashFlow
     end
 
     def get_sha
-      @git.run("rev-parse #{@branch.remote}/#{@branch.ref}")
+      @git.run("rev-parse #{@git.remote}/#{@branch.ref}")
       @git.last_stdout.strip if @git.last_success?
     end
 

@@ -18,14 +18,14 @@ module FlashFlow
       def initialize(branch_config, filename, git, opts={})
         @git = git
         @store = Store.new(filename, git, opts)
-        @collection = initialize_collection(branch_config, git.remotes_hash)
+        @collection = initialize_collection(branch_config)
       end
 
-      def initialize_collection(branch_config, remotes)
-        stored_collection = Collection.from_hash(remotes, stored_branches)
+      def initialize_collection(branch_config)
+        stored_collection = Collection.from_hash(stored_branches)
 
         if ! branch_config.empty?
-          collection = Collection.fetch(remotes, branch_config)
+          collection = Collection.fetch(branch_config)
           # Order matters. We are marking the PRs as current, not the branches stored in the json
           collection.mark_all_as_current
           collection.reverse_merge(stored_collection)
@@ -70,7 +70,7 @@ module FlashFlow
       end
 
       def saved_branches
-        Collection.from_hash(@git.remotes, stored_branches).to_a
+        Collection.from_hash(stored_branches).to_a
       end
     end
   end

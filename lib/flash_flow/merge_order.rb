@@ -20,7 +20,7 @@ module FlashFlow
     private
 
     def current_sha(branch)
-      @git.get_sha("#{branch.remote}/#{branch.ref}")
+      @git.get_sha("#{@git.remote}/#{branch.ref}")
     end
 
   end

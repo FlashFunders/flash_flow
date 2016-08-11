@@ -73,8 +73,6 @@ module FlashFlow
       def test_from_hash
         branch = Branch.from_hash(branch_hash)
         assert_equal(branch.ref, branch_hash['ref'])
-        assert_equal(branch.remote_url, branch_hash['remote_url'])
-        assert_equal(branch.remote, branch_hash['remote'])
         assert_equal(branch.status, branch_hash['status'])
         assert_equal(branch.stories, branch_hash['stories'])
         assert_equal(branch.metadata, branch_hash['metadata'])
@@ -126,14 +124,6 @@ module FlashFlow
         branch2 = Branch.from_hash(branch_hash)
         assert(branch1 == branch2)
 
-        branch1.remote_url = 'different_url'
-        refute(branch1 == branch2)
-
-        branch1.remote_url = branch2.remote_url
-        branch1.remote = 'different remote'
-        refute(branch1 == branch2)
-
-        branch1.remote = branch2.remote
         branch1.ref = 'different ref'
         refute(branch1 == branch2)
       end
@@ -144,7 +134,7 @@ module FlashFlow
       end
 
       def test_success
-        branch = Branch.new(1,2,3)
+        branch = Branch.new(1)
 
         branch.success!
         assert(branch.success?)
@@ -154,7 +144,7 @@ module FlashFlow
       end
 
       def test_fail
-        branch = Branch.new(1,2,3)
+        branch = Branch.new(1)
 
         branch.fail!
         assert(branch.fail?)
@@ -164,7 +154,7 @@ module FlashFlow
       end
 
       def test_removed
-        branch = Branch.new(1,2,3)
+        branch = Branch.new(1)
 
         branch.removed!
         assert(branch.removed?)
@@ -174,7 +164,7 @@ module FlashFlow
       end
 
       def test_deleted
-        branch = Branch.new(1,2,3)
+        branch = Branch.new(1)
 
         branch.deleted!
         assert(branch.deleted?)
@@ -184,7 +174,7 @@ module FlashFlow
       end
 
       def test_unknown
-        branch = Branch.new(1,2,3)
+        branch = Branch.new(1)
 
         branch.unknown!
         assert(branch.unknown?)
@@ -198,8 +188,6 @@ module FlashFlow
       def branch_hash
         @branch_hash ||= {
             'ref' => 'branch 1',
-            'remote_url' => 'the_origin_url',
-            'remote' => 'origin',
             'sha' => 'random_sha',
             'status' => 'success',
             'merge_order' => nil,

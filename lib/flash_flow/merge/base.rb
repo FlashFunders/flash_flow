@@ -51,12 +51,6 @@ module FlashFlow
         ordered_branches.each_with_index do |branch, index|
           branch.merge_order = index + 1
 
-          remote = @git.fetch_remote_for_url(branch.remote_url)
-          if remote.nil?
-            raise RuntimeError.new("No remote found for #{branch.remote_url}. Please run 'git remote add *your_remote_name* #{branch.remote_url}' and try again.")
-          end
-
-          @git.fetch(branch.remote)
           merger = git_merge(branch)
 
           yield(branch, merger)
