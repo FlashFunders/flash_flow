@@ -1,4 +1,5 @@
 require 'json'
+require 'flash_flow/time_helper'
 require 'flash_flow/version'
 require 'flash_flow/data/branch'
 require 'flash_flow/data/collection'
@@ -28,13 +29,16 @@ module FlashFlow
           collection = Collection.fetch(branch_config)
           # Order matters. We are marking the PRs as current, not the branches stored in the json
           collection.mark_all_as_current
-          collection.reverse_merge(stored_collection)
+          collection = collection.reverse_merge(stored_collection)
 
         else
           collection = stored_collection
           collection.mark_all_as_current
-          collection
         end
+
+        collection.branches.delete_if { |k, v|  TimeHelper.massage_time(v.updated_at) < Time.now - TimeHelper.two_weeks  }
+
+        collection
       end
 
       def version

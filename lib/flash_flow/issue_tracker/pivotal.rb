@@ -1,11 +1,9 @@
 require 'pivotal-tracker'
-require 'time'
 require 'flash_flow/time_helper'
 
 module FlashFlow
   module IssueTracker
     class Pivotal
-      include TimeHelper
 
       def initialize(branches, git, opts={})
         @branches = branches
@@ -125,7 +123,7 @@ module FlashFlow
         story = get_story(story_id)
         if story
           unless has_shipped_text?(story)
-            story.notes.create(:text => with_time_zone(@timezone) { Time.now.strftime(note_time_format) })
+            story.notes.create(:text => TimeHelper.with_time_zone(@timezone) { Time.now.strftime(note_time_format) })
           end
         end
       end

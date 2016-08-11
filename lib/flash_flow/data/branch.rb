@@ -1,4 +1,5 @@
 require 'json'
+require 'flash_flow/time_helper'
 
 module FlashFlow
   module Data
@@ -25,20 +26,9 @@ module FlashFlow
         branch.stories = hash['stories']
         branch.metadata = hash['metadata']
         branch.conflict_sha = hash['conflict_sha'] || hash['metadata'].to_h['conflict_sha']
-        branch.updated_at = massage_time(hash['updated_at'])
-        branch.created_at = massage_time(hash['created_at'])
+        branch.updated_at = TimeHelper.massage_time(hash['updated_at'])
+        branch.created_at = TimeHelper.massage_time(hash['created_at'])
         branch
-      end
-
-      def self.massage_time(time)
-        case time
-          when Time
-            time
-          when NilClass
-            Time.now
-          else
-            Time.parse(time)
-        end
       end
 
       def ==(other)

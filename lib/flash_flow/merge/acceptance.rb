@@ -1,4 +1,5 @@
 require 'flash_flow/merge/base'
+require 'flash_flow/time_helper'
 
 module FlashFlow
   module Merge
@@ -61,14 +62,10 @@ module FlashFlow
       end
 
       def commit_rerere
-        current_branches = @data.to_a.select { |branch| !@git.master_branch_contains?(branch.sha) && (Time.now - branch.updated_at < two_weeks) }
+        current_branches = @data.to_a.select { |branch| !@git.master_branch_contains?(branch.sha) && (Time.now - branch.updated_at < TimeHelper.two_weeks) }
         current_rereres = current_branches.map { |branch| branch.resolutions.to_h.values }.flatten
 
         @git.commit_rerere(current_rereres)
-      end
-
-      def two_weeks
-        60 * 60 * 24 * 14
       end
 
       def process_result(branch, merger)
