@@ -85,7 +85,24 @@ branch_info_file: 'your/random/file'
 
 #release:
 #  class:
-#    name: 'FlashFlow::Release::Percy'
+#    name: 'FlashFlow::Release::PercyClient'
 #    token: <%= ENV['PERCY_TOKEN'] %>
 #    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
 #    api_url: 'https://percy.io/api/v1/'
+#    email: 'foo@bar.com'
+#    cc_email: 'bar@foo.com'
+#smtp:
+#  settings:
+#    domain: 'flashdough.com'
+#    address: 'smtp.sendgrid.net'
+#    user_name: <%= ENV['SMTP_USER#NAME'] %>
+#    password: <%= ENV['SMTP_PASSWORD'] %>
+#    port: 587
+#    authentication: 'plain'
+#    enable_starttls_auto: true
+#  emails:
+#    from: 'sender@domain.com'
+#    to: 'receiver@domain.com'
+#    cc: 'cc@domain.com'
+#    subject: 'The engineering team has a new release candidate'
+#    body_file: 'path/to/email_template.erb'

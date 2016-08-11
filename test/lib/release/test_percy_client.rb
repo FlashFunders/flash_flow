@@ -6,14 +6,21 @@ module FlashFlow
     class TestPercyClient < Minitest::Test
 
       def setup
+        configuration = {}
+          .merge(git_config)
+          .merge(smtp_config)
+        reset_config!
+        config!(configuration)
+
         @percy_client = Release::PercyClient.new({'token' => ''})
       end
 
       def test_find_latest_by_sha
         @percy_client.stub(:get_builds, sample_response) do
           results = @percy_client.send(:find_latest_by_sha, 'aaaaa')
-          assert_equal(results[:url], 'https://percy.io/repo/builds/2222')
-          assert_equal(results[:approved], true)
+          assert(results.has_key?('web-url'))
+          assert(results.has_key?('approved-at'))
+          assert(results.has_key?('total-comparisons-diff'))
         end
       end
 
@@ -55,6 +62,7 @@ module FlashFlow
                 "type": "builds",
                 "attributes": {
                   "web-url": "https://percy.io/repo/builds/2222",
+                  "total-comparisons-diff": 0,
                   "approved-at": "2016-08-01T22:41:58.000Z",
                   "created-at": "2016-08-01T11:11:11.111Z"
                 },
@@ -85,6 +93,24 @@ module FlashFlow
               }
             ]
           }')
+      end
+
+      def git_config
+        {
+          git: {
+            'merge_branch' => 'test_acceptance',
+            'merge_remote' => 'test_remote',
+            'master_branch' => 'test_master',
+            'remotes' => ['fake_origin'],
+            'use_rerere' => true
+          }
+        }
+      end
+
+      def smtp_config
+        {
+          smtp: {}
+        }
       end
 
     end

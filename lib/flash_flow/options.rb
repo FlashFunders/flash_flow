@@ -13,6 +13,7 @@ module FlashFlow
         opts.on('--prod-deploy', 'Run IssueTracker#deploy_production and exit') { |v| options[:prod_deploy] = true }
         opts.on('--review-deploy', 'Run IssueTracker#deploy_review and exit') { |v| options[:review_deploy] = true }
         opts.on('--release-notes hours', 'Run IssueTracker#release_notes and exit') { |v| options[:release_notes] = v }
+        opts.on('--release-email', 'Send an email with a latest build info and exit') { |v| options[:release_email] = v }
         opts.on('-n', '--no-merge', 'Run flash flow, but do not merge this branch') { |v| options[:do_not_merge] = true }
         opts.on('--rerere-forget', 'Delete the saved patch for this branch and let the merge fail if there is a conflict') { |v| options[:rerere_forget] = true }
         opts.on('--story id1', 'story id for this branch') { |v| options[:stories] = [v] }

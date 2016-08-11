@@ -4,6 +4,7 @@ require 'shellwords'
 module FlashFlow
   class Git
     ATTRIBUTES = [:remote, :merge_branch, :master_branch, :release_branch, :use_rerere]
+
     attr_reader *ATTRIBUTES
     attr_reader :working_branch
 
@@ -154,6 +155,11 @@ module FlashFlow
 
     def current_branch
       run("rev-parse --abbrev-ref HEAD")
+      last_stdout.strip
+    end
+
+    def head_sha
+      run("rev-parse HEAD")
       last_stdout.strip
     end
 
