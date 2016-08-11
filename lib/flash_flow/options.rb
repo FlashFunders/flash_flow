@@ -23,7 +23,7 @@ module FlashFlow
         opts.on('--resolve-manual', 'Print instructions to use git to resolve conflicts') { |v| options[:resolve_manual] = true }
         opts.on('--merge-status', 'Show status of all branches and their stories and exit') { |v| options[:merge_status] = true }
         opts.on('--merge-status-html', 'Show status of all branches and their stories in html format and exit') { |v| options[:merge_status_html] = true }
-        opts.on('--merge-master branch1,branch2', 'Comma-delimited list of branches to merge to master. Master gets pushed to origin. Run "--merge-master ready" to merge all ready to ship branches') { |v| options[:release_branches] = v.split(',') }
+        opts.on('--make-release branch1,branch2', 'Comma-delimited list of branches to merge to the release branch. Run "--merge-release ready" to merge all ready to ship branches') { |v| options[:release_branches] = v.split(',') }
 
         opts.on_tail("-h", "--help", "Show this message") do
           puts opts
