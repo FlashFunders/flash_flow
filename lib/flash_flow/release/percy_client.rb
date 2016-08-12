@@ -1,13 +1,14 @@
 require 'percy'
 require 'flash_flow/git'
 require 'flash_flow/mailer'
+require 'flash_flow/release/pdf_diff_generator'
 
 module FlashFlow
   module Release
     class PercyClient
 
       def initialize(config={})
-        @client = initialize_connection!(config['token'])
+        @client = initialize_connection!(config)
         @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
       end
 
@@ -25,15 +26,30 @@ module FlashFlow
         end
       end
 
+      def gen_pdf_diffs(output_file, threshold=0.0)
+        # TODO: Switch this over to Percy.get_comparisons at some point
+        PdfDiffGenerator.new.generate(get_comparisons(get_build_id), output_file, threshold)
+      end
+
       private
 
-      def initialize_connection!(token)
-        if token.nil?
-          raise RuntimeError.new("Percy token must be set in your flash flow config.")
+      def get_build_id(sha=nil)
+        build = find_latest_by_sha(sha || get_latest_sha)
+        build['web-url'].split('/').last
+      end
+
+      def initialize_connection!(config)
+        if config['token'].nil?
+          raise RuntimeError.new('Percy token must be set in your flash flow config.')
         end
 
-        Percy.client.config.access_token = token
+        Percy.client.config.access_token = config['token']
+        Percy.client.config.repo = config['repo'] unless config['repo'].nil?
         Percy.client
+      end
+
+      def get_comparisons(build_id)
+        @client.get("#{Percy.config.api_url}/builds/#{build_id}/comparisons")
       end
 
       def get_builds
