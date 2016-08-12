@@ -2,7 +2,7 @@ require 'flash_flow/merge/base'
 
 module FlashFlow
   module Merge
-    class Master < Base
+    class Release < Base
 
       class PendingReleaseError < RuntimeError; end
       class NothingToMergeError < RuntimeError; end
