@@ -48,7 +48,7 @@ module FlashFlow
 
     def merge_conflicted
       @git.run("checkout #{branch.conflict_sha}")
-      @git.run("merge {@git.remote}/#{working_branch}")
+      @git.run("merge #{@git.remote}/#{working_branch}")
     end
 
     def git_reset
