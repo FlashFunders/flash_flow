@@ -12,14 +12,14 @@ module FlashFlow
         delivery_info = Config.configuration.smtp["emails"]
 
         if delivery_info
-          body_html = body_html(data, delivery_info["body_file"])
+          delivery_info["body_html"] = body_html(data, delivery_info["body_file"])
 
           Mail.deliver do
             from     delivery_info["from"]
             to       delivery_info["to"]
             cc       delivery_info["cc"]
             subject  delivery_info["subject"]
-            body     body_html
+            body     delivery_info["body_html"]
           end
         end
       end

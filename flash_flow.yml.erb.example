@@ -93,9 +93,9 @@ branch_info_file: 'your/random/file'
 #    cc_email: 'bar@foo.com'
 #smtp:
 #  settings:
-#    domain: 'flashdough.com'
-#    address: 'smtp.sendgrid.net'
-#    user_name: <%= ENV['SMTP_USER#NAME'] %>
+#    domain: 'yourdomain.com'
+#    address: <%= ENV['SMTP_ADDRESS'] %>
+#    user_name: <%= ENV['SMTP_USERNAME'] %>
 #    password: <%= ENV['SMTP_PASSWORD'] %>
 #    port: 587
 #    authentication: 'plain'

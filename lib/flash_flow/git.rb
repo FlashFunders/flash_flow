@@ -158,11 +158,6 @@ module FlashFlow
       last_stdout.strip
     end
 
-    def head_sha
-      run("rev-parse HEAD")
-      last_stdout.strip
-    end
-
     def most_recent_commit
       run("show -s --format=%cd head")
     end

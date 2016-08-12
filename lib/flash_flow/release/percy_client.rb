@@ -66,13 +66,11 @@ module FlashFlow
       end
 
       def has_unapproved_diffs?(build)
-        build['total-comparisons-diff'] > 0 && !build['approved-at'].nil?
+        build['total-comparisons-diff'] > 0 && build['approved-at'].nil?
       end
 
       def get_latest_sha
-        @git.in_branch(@git.release_branch) do
-          @git.head_sha
-        end
+        @git.get_sha(@git.release_branch)
       end
 
     end
