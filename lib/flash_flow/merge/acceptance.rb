@@ -56,7 +56,7 @@ module FlashFlow
 
       def commit_branch_info
         @stories.each do |story_id|
-          @data.add_story(@git.remote, @git.working_branch, story_id)
+          @data.add_story(@git.working_branch, story_id)
         end
         @data.save!
       end
