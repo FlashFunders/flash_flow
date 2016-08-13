@@ -9,7 +9,6 @@ module FlashFlow
       def initialize(config={})
         @client = initialize_connection!(config['token'])
         @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
-        @mailer = FlashFlow::Mailer::Base.new(Config.configuration.smtp)
       end
 
       def find_latest_by_sha(sha)
@@ -22,7 +21,7 @@ module FlashFlow
         build = find_latest_by_sha(get_latest_sha)
 
         if has_unapproved_diffs?(build)
-          @mailer.deliver!(percy_build_url: build['web-url'])
+          mailer.deliver!(percy_build_url: build['web-url'])
         end
       end
 
@@ -71,6 +70,10 @@ module FlashFlow
 
       def get_latest_sha
         @git.get_sha(@git.release_branch)
+      end
+
+      def mailer
+        @mailer ||= FlashFlow::Mailer::Base.new(Config.configuration.smtp)
       end
 
     end

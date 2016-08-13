@@ -5,7 +5,11 @@ module FlashFlow
     class Base
 
       def initialize(config)
-        configure!(config['settings']) unless config['settings'].nil?
+        unless config&.fetch('settings', false)
+          raise RuntimeError.new("smtp settings must be set in your flash flow config.")
+        end
+
+        configure!(config['settings'])
       end
 
       def deliver!(data={})
