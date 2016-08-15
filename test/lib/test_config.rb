@@ -30,7 +30,8 @@ module FlashFlow
               'class' => {
                   'name' => 'BranchClass'
               }
-          }
+          },
+          'smtp' => {}
       }
 
       reset_config!
@@ -72,9 +73,9 @@ module FlashFlow
         assert_nil(config.lock)
       end
     end
-    
+
     private
-    
+
     def config
       Config.configuration
     end

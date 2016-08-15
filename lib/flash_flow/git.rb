@@ -4,6 +4,7 @@ require 'shellwords'
 module FlashFlow
   class Git
     ATTRIBUTES = [:remote, :merge_branch, :master_branch, :release_branch, :use_rerere]
+
     attr_reader *ATTRIBUTES
     attr_reader :working_branch
 
