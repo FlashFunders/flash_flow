@@ -20,7 +20,7 @@ module FlashFlow
           pdf.number_pages('<page> of <total>', { start_count_at: 1, align: :right, size: 12 })
           @num_pages = pdf.page_count
         end
-        puts "Wrote #{@num_pages} pages to: #{filename}"
+        puts "Wrote #{@num_pages} pages to: #{filename}" if verbose
         filename
       end
 

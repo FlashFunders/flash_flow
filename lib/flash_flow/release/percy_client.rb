@@ -26,9 +26,10 @@ module FlashFlow
         end
       end
 
-      def gen_pdf_diffs(output_file, threshold=0.0)
+      def gen_pdf_diffs(output_file, build_id=nil, threshold=0.0)
         # TODO: Switch this over to Percy.get_comparisons at some point
-        PdfDiffGenerator.new.generate(get_comparisons(get_build_id), output_file, threshold)
+        build_id ||= get_build_id
+        PdfDiffGenerator.new.generate(get_comparisons(build_id), output_file, threshold)
       end
 
       private

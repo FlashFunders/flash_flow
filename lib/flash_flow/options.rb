@@ -25,7 +25,7 @@ module FlashFlow
         opts.on('--merge-status', 'Show status of all branches and their stories and exit') { |v| options[:merge_status] = true }
         opts.on('--merge-status-html', 'Show status of all branches and their stories in html format and exit') { |v| options[:merge_status_html] = true }
         opts.on('--make-release branch1,branch2', 'Comma-delimited list of branches to merge to the release branch. Run "--merge-release ready" to merge all ready to ship branches') { |v| options[:release_branches] = v.split(',') }
-        opts.on('--gen-pdf-diffs OUTPUT_FILE,threshold', 'Generate a pdf file with screenshot differences for the latest build. OUTPUT_FILE is required. Threshold defaults to 0') { |v| options[:gen_pdf_diffs] = v.split(',') }
+        opts.on('--gen-pdf-diffs output_file,build_id,threshold', 'Generate a pdf file with screenshot differences for the specified (latest) build. output_file is required. build_id defaults to the latest build. threshold defaults to 0') { |v| options[:gen_pdf_diffs] = v.split(',') }
 
         opts.on_tail('-h', '--help', 'Show this message') do
           puts opts
