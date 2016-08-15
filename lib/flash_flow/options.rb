@@ -5,8 +5,8 @@ module FlashFlow
     def self.parse
       options = {}
       opt_parser = OptionParser.new do |opts|
-        opts.banner = "Usage: flash_flow [options]"
-        opts.separator ""
+        opts.banner = 'Usage: flash_flow [options]'
+        opts.separator ''
 
         opts.on('--install', 'Copy flash_flow.yml.erb to your repo and exit') { |v| options[:install] = true }
         opts.on('-v', '--version', 'Print the current version of flash flow and exit') { |v| options[:version] = true }
@@ -25,8 +25,9 @@ module FlashFlow
         opts.on('--merge-status', 'Show status of all branches and their stories and exit') { |v| options[:merge_status] = true }
         opts.on('--merge-status-html', 'Show status of all branches and their stories in html format and exit') { |v| options[:merge_status_html] = true }
         opts.on('--make-release branch1,branch2', 'Comma-delimited list of branches to merge to the release branch. Run "--merge-release ready" to merge all ready to ship branches') { |v| options[:release_branches] = v.split(',') }
+        opts.on('--gen-pdf-diffs output_file,build_id,threshold', 'Generate a pdf file with screenshot differences for the specified (latest) build. output_file is required. build_id defaults to the latest build. threshold defaults to 0') { |v| options[:gen_pdf_diffs] = v.split(',') }
 
-        opts.on_tail("-h", "--help", "Show this message") do
+        opts.on_tail('-h', '--help', 'Show this message') do
           puts opts
           exit
         end

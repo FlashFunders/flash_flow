@@ -32,6 +32,8 @@ case
     FlashFlow::Merge::Status.new(FlashFlow::Config.configuration.issue_tracker, FlashFlow::Config.configuration.branches, FlashFlow::Config.configuration.branch_info_file, FlashFlow::Config.configuration.git, logger: FlashFlow::Config.configuration.logger).status_html
   when options[:release_branches]
     FlashFlow::Merge::Release.new(options).run
+  when options[:gen_pdf_diffs]
+    FlashFlow::Release::Base.new(FlashFlow::Config.configuration.release).gen_pdf_diffs(*options[:gen_pdf_diffs])
   else
     FlashFlow::Merge::Acceptance.new(options).run
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_pushed
