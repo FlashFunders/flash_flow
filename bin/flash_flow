@@ -34,6 +34,8 @@ case
     FlashFlow::Merge::Release.new(options).run
   when options[:gen_pdf_diffs]
     FlashFlow::Release::Base.new(FlashFlow::Config.configuration.release).gen_pdf_diffs(*options[:gen_pdf_diffs])
+  when options[:merge_release]
+    FlashFlow::Merge::Master.new(options).run
   else
     FlashFlow::Merge::Acceptance.new(options).run
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_pushed

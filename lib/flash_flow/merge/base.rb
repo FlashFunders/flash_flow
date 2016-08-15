@@ -15,6 +15,7 @@ module FlashFlow
       class VersionError < RuntimeError; end
       class OutOfSyncWithRemote < RuntimeError; end
       class UnmergeableBranch < RuntimeError; end
+      class NothingToMergeError < RuntimeError; end
 
       def initialize(opts={})
         @local_git = Git.new(Config.configuration.git, logger)
@@ -68,6 +69,30 @@ module FlashFlow
 
       def is_working_branch(branch)
         branch.ref == @git.working_branch
+      end
+
+      def pending_release
+        @data.releases.detect { |r| r['status'] == 'Pending' }
+      end
+
+      def release_ahead_of_master
+        @git.branch_exists?("#{@git.remote}/#{@git.release_branch}") &&
+            !@git.branch_contains?(@git.master_branch, @git.get_sha("#{@git.remote}/#{@git.release_branch}"))
+      end
+
+      def write_data(commit_msg)
+        @git.in_temp_merge_branch do
+          @git.run("reset --hard #{@git.remote}/#{@git.merge_branch}")
+        end
+        @git.in_merge_branch do
+          @git.run("reset --hard #{@git.remote}/#{@git.merge_branch}")
+        end
+
+        @data.save!
+
+        @git.copy_temp_to_branch(@git.merge_branch, commit_msg)
+        @git.delete_temp_merge_branch
+        @git.push(@git.merge_branch, false)
       end
 
     end

@@ -175,12 +175,11 @@ module FlashFlow
       run("push #{'-f' if force} #{remote} #{branch}")
     end
 
-    def   copy_temp_to_branch(branch, squash_message = nil)
+    def copy_temp_to_branch(branch, squash_message = nil)
       run("checkout #{temp_merge_branch}")
       run("merge --strategy=ours --no-edit #{branch}")
       run("checkout #{branch}")
       run("merge #{temp_merge_branch}")
-
 
       squash_commits(branch, squash_message) if squash_message
     end
