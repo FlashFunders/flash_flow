@@ -2,6 +2,8 @@ require 'flash_flow/release/percy_client'
 
 module FlashFlow
   module Release
+    class QAError < RuntimeError; end
+
     class Base
       def initialize(config=nil)
         release_class_name = config && config['class'] && config['class']['name']
@@ -21,6 +23,10 @@ module FlashFlow
 
       def gen_pdf_diffs(output_file, threshold=0.0)
         @release.gen_pdf_diffs(output_file, threshold) if @release.respond_to?(:gen_pdf_diffs)
+      end
+
+      def qa_approved?(sha)
+        @release.qa_approved?(sha) if @release.respond_to?(:qa_approved?)
       end
 
     end
