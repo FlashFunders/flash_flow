@@ -77,7 +77,7 @@ module FlashFlow
 
       def release_ahead_of_master
         @git.branch_exists?("#{@git.remote}/#{@git.release_branch}") &&
-            !@git.branch_contains?(@git.master_branch, @git.get_sha("#{@git.remote}/#{@git.release_branch}"))
+            !@git.master_branch_contains?(@git.get_sha("#{@git.remote}/#{@git.release_branch}"))
       end
 
       def write_data(commit_msg)

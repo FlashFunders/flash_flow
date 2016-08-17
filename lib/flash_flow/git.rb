@@ -60,12 +60,12 @@ module FlashFlow
     end
 
     def branch_contains?(branch, ref)
-      run("branch --contains #{ref}", log: CmdRunner::LOG_CMD)
+      run("branch -a --contains #{ref}", log: CmdRunner::LOG_CMD)
       last_stdout.split("\n").detect { |str| str[2..-1] == branch }
     end
 
-    def master_branch_contains?(ref)
-      branch_contains?(master_branch, ref)
+    def master_branch_contains?(sha)
+      branch_contains?("remotes/#{remote}/#{master_branch}", sha)
     end
 
     def in_original_merge_branch
