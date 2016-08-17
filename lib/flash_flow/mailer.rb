@@ -12,8 +12,8 @@ module FlashFlow
         configure!(config['settings'])
       end
 
-      def deliver!(data={})
-        delivery_info = Config.configuration.smtp["emails"]
+      def deliver!(type, data={})
+        delivery_info = get_delivery_info(type)
 
         if delivery_info
           delivery_info["body_html"] = body_html(data, delivery_info["body_file"])
@@ -38,6 +38,10 @@ module FlashFlow
         @data = data
         erb_template = ERB.new File.read(template)
         erb_template.result(binding)
+      end
+
+      def get_delivery_info(email_type)
+        Config.configuration.smtp.dig("emails", email_type.to_s)
       end
 
     end

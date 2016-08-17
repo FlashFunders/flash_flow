@@ -30,7 +30,7 @@ module FlashFlow
           .expect(:get_sha, 'bbbbb', ['release'])
 
         @mailer = Minitest::Mock.new
-        @mailer.expect(:deliver!, true, [{percy_build_url: 'https://percy.io/repo/builds/1111'}])
+        @mailer.expect(:deliver!, true, [:compliance, {percy_build_url: 'https://percy.io/repo/builds/1111'}])
 
         @percy_client.instance_variable_set('@git'.to_sym, @git)
         @percy_client.instance_variable_set('@mailer'.to_sym, @mailer)
@@ -63,6 +63,12 @@ module FlashFlow
 
           build2 = @percy_client.find_latest_by_sha('aaaaa')
           refute(@percy_client.send(:has_unapproved_diffs?, build2))
+        end
+      end
+
+      def test_qa_approved?
+        @percy_client.stub(:get_builds, sample_response) do
+          assert(@percy_client.send(:qa_approved?, 'aaaaa'))
         end
       end
 

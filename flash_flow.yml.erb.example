@@ -94,7 +94,7 @@ branch_info_file: 'your/random/file'
 #smtp:
 #  settings:
 #    domain: 'yourdomain.com'
-#    address: <%= ENV['SMTP_ADDRESS'] %>
+#    address: <%= ENV['SMTP_HOST'] %>
 #    user_name: <%= ENV['SMTP_USERNAME'] %>
 #    password: <%= ENV['SMTP_PASSWORD'] %>
 #    port: 587

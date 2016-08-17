@@ -22,7 +22,7 @@ module FlashFlow
         build = find_latest_by_sha(get_latest_sha)
 
         if has_unapproved_diffs?(build)
-          mailer.deliver!(percy_build_url: build['web-url'])
+          mailer.deliver!(:compliance, { percy_build_url: build['web-url'] })
         end
       end
 
@@ -30,6 +30,11 @@ module FlashFlow
         # TODO: Switch this over to Percy.get_comparisons at some point
         build_id ||= get_build_id
         PdfDiffGenerator.new.generate(get_comparisons(build_id), output_file, threshold)
+      end
+
+      def qa_approved?(sha=nil)
+        build = find_latest_by_sha(sha || get_latest_sha)
+        !build['approved-at'].nil?
       end
 
       private

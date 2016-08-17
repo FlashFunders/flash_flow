@@ -213,8 +213,12 @@ module FlashFlow
       "flash_flow/#{merge_branch}"
     end
 
-    def get_sha(branch)
-      run("rev-parse #{branch}")
+    def get_sha(branch, opts={})
+      if opts[:short]
+        run("rev-parse --short #{branch}")
+      else
+        run("rev-parse #{branch}")
+      end
       last_stdout.strip if last_success?
     end
 
