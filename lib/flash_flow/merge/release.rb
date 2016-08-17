@@ -5,7 +5,6 @@ module FlashFlow
     class Release < Base
 
       class PendingReleaseError < RuntimeError; end
-      class NothingToMergeError < RuntimeError; end
       class GitPushFailure < RuntimeError; end
 
       def initialize(opts={})
@@ -26,11 +25,10 @@ module FlashFlow
           mergers, errors = [], []
 
           @lock.with_lock do
-            release = @data.releases.detect { |r| r['status'] == 'Pending' }
+            release = pending_release
             if release
               raise PendingReleaseError.new("There is already a pending release: #{release}")
-            elsif @git.branch_exists?("#{@git.remote}/#{@git.release_branch}") &&
-                !@git.branch_contains?(@git.master_branch, @git.get_sha("#{@git.remote}/#{@git.release_branch}"))
+            elsif release_ahead_of_master
               raise PendingReleaseError.new("The release branch '#{@git.release_branch}' has commits that are not in master")
             end
 
@@ -56,18 +54,7 @@ module FlashFlow
 
               @data.releases.unshift({ created_at: Time.now, sha: release_sha, status: 'Pending' })
 
-              @git.in_temp_merge_branch do
-                @git.run("reset --hard #{@git.remote}/#{@git.merge_branch}")
-              end
-              @git.in_merge_branch do
-                @git.run("reset --hard #{@git.remote}/#{@git.merge_branch}")
-              end
-
-              @data.save!
-
-              @git.copy_temp_to_branch(@git.merge_branch, 'Release data updated [ci skip]')
-              @git.delete_temp_merge_branch
-              @git.push(@git.merge_branch, false)
+              write_data('Release branch created [ci skip]')
             end
           end
 

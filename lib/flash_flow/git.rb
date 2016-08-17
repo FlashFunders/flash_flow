@@ -60,12 +60,12 @@ module FlashFlow
     end
 
     def branch_contains?(branch, ref)
-      run("branch --contains #{ref}", log: CmdRunner::LOG_CMD)
+      run("branch -a --contains #{ref}", log: CmdRunner::LOG_CMD)
       last_stdout.split("\n").detect { |str| str[2..-1] == branch }
     end
 
-    def master_branch_contains?(ref)
-      branch_contains?(master_branch, ref)
+    def master_branch_contains?(sha)
+      branch_contains?("remotes/#{remote}/#{master_branch}", sha)
     end
 
     def in_original_merge_branch
@@ -175,12 +175,11 @@ module FlashFlow
       run("push #{'-f' if force} #{remote} #{branch}")
     end
 
-    def   copy_temp_to_branch(branch, squash_message = nil)
+    def copy_temp_to_branch(branch, squash_message = nil)
       run("checkout #{temp_merge_branch}")
       run("merge --strategy=ours --no-edit #{branch}")
       run("checkout #{branch}")
       run("merge #{temp_merge_branch}")
-
 
       squash_commits(branch, squash_message) if squash_message
     end
