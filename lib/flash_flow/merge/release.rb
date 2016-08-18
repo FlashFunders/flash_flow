@@ -10,6 +10,7 @@ module FlashFlow
       def initialize(opts={})
         super(opts)
 
+        @force = opts[:force]
         @release_branches = parse_branches(opts[:release_branches])
 
         @data = Data::Base.new({}, Config.configuration.branch_info_file, @git, logger: logger)
@@ -73,10 +74,6 @@ module FlashFlow
         end
       end
 
-      def branch_data
-
-      end
-
       def parse_branches(user_branches)
         branch_list = user_branches == ['ready'] ? shippable_branch_names : [user_branches].flatten.compact
 
@@ -86,8 +83,10 @@ module FlashFlow
       def check_branches
         raise NothingToMergeError.new("Nothing to merge") if @release_branches.empty?
 
-        requested_not_ready_branches = (@release_branches.map(&:ref) - shippable_branch_names)
-        raise RuntimeError.new("The following branches are not ready to ship:\n#{requested_not_ready_branches.join("\n")}") unless requested_not_ready_branches.empty?
+        unless @force
+          requested_not_ready_branches = (@release_branches.map(&:ref) - shippable_branch_names)
+          raise RuntimeError.new("The following branches are not ready to ship:\n#{requested_not_ready_branches.join("\n")}") unless requested_not_ready_branches.empty?
+        end
       end
 
       def shippable_branch_names
