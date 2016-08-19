@@ -97,8 +97,12 @@ branch_info_file: 'your/random/file'
 #        group:
 #          reader: comma-delimited list of emails
 #          writer: comma-delimited list of emails
+#        user:
+#          reader: comma-delimited list of emails
+#          writer: comma-delimited list of emails
 #      notify: true
 #      message: 'string for the message body. %percy_url% will be replaced with the url to the percy build'
+
 #smtp:
 #  settings:
 #    domain: 'yourdomain.com'

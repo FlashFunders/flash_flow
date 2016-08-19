@@ -21,27 +21,19 @@ module FlashFlow
       end
 
       def send_compliance_email
-        begin
-          max_wait_time = @compliance_config['max_wait_time'] || 0
-          delay = @compliance_config['delay'] || 1
-          build = find_completed_build_by_sha(get_latest_sha, max_wait_time, delay)
+        max_wait_time = @compliance_config['max_wait_time'] || 0
+        delay = @compliance_config['delay'] || 1
+        build = find_completed_build_by_sha(get_latest_sha, max_wait_time, delay)
 
-          if build.nil?
-            -1
-          else
-            gen_compliance_pdf_file(build) if has_unapproved_diffs?(build)
-            0
-          end
-        rescue Exception => e
-          puts e.message
-          -1
+        unless build_approved?(build)
+          gen_compliance_pdf_file(build)
         end
       end
 
       def send_release_email
         build = find_latest_by_sha(get_latest_sha)
 
-        if has_unapproved_diffs?(build)
+        unless build_approved?(build)
           mailer.deliver!(:compliance, { percy_build_url: build['web-url'] })
         end
       end
@@ -151,12 +143,12 @@ module FlashFlow
           .select { |data| data['type'] == 'commits' }
       end
 
-      def has_unapproved_diffs?(build)
-        build['total-comparisons-diff'] > 0 && build['approved-at'].nil?
+      def build_approved?(build)
+        !build.nil? && !build['approved-at'].nil?
       end
 
       def build_completed?(build)
-        build['state'] === 'finished';
+        build['state'] == 'finished';
       end
 
       def get_latest_sha

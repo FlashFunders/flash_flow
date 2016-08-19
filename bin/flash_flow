@@ -37,8 +37,7 @@ case
   when options[:merge_release]
     FlashFlow::Merge::Master.new(options).run
   when options[:notify_compliance]
-    exit_code = FlashFlow::Release::Base.new(FlashFlow::Config.configuration.release).send_compliance_email
-    exit(exit_code)
+    FlashFlow::Release::Base.new(FlashFlow::Config.configuration.release).send_compliance_email
   else
     FlashFlow::Merge::Acceptance.new(options).run
     FlashFlow::IssueTracker::Base.new(FlashFlow::Config.configuration.issue_tracker).stories_pushed
