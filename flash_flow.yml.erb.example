@@ -89,7 +89,10 @@ branch_info_file: 'your/random/file'
 #    token: <%= ENV['PERCY_TOKEN'] %>
 #    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
 #    api_url: 'https://percy.io/api/v1/'
-#    upload:
+#    compliance:
+#      max_wait_time: minutes to wait
+#      delay: minutes between checks
+#      file_prefix: 'Release_Candidate_'
 #      permissions:
 #        group:
 #          reader: comma-delimited list of emails

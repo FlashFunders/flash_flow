@@ -21,6 +21,11 @@ module FlashFlow
         set_file_permissions(metadata.id, config)
       end
 
+      def find_files(query)
+        response = @client.list_files(q: query)
+        response.files
+      end
+
       def set_file_permissions(file_id, config={})
         @client.batch do
           %w(group user).each do |type|

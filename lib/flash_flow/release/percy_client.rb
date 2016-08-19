@@ -11,7 +11,7 @@ module FlashFlow
       def initialize(config={})
         @client = initialize_connection!(config)
         @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
-        @upload_config = config['upload']
+        @compliance_config = config['compliance']
       end
 
       def find_latest_by_sha(sha)
@@ -21,13 +21,19 @@ module FlashFlow
       end
 
       def send_compliance_email
-        build = find_latest_by_sha(get_latest_sha)
+        begin
+          max_wait_time = @compliance_config['max_wait_time'] || 0
+          delay = @compliance_config['delay'] || 1
+          build = find_completed_build_by_sha(get_latest_sha, max_wait_time, delay)
 
-        if build_completed?(build) && has_unapproved_diffs?(build)
-          pdf_url = gen_compliance_pdf_file(build)
-          mailer.deliver!(compliance: { percy_build_url: build['web-url'], pdf_diffs_url: pdf_url })
-          0
-        else
+          if build.nil?
+            -1
+          else
+            gen_compliance_pdf_file(build) if has_unapproved_diffs?(build)
+            0
+          end
+        rescue Exception => e
+          puts e.message
           -1
         end
       end
@@ -53,19 +59,44 @@ module FlashFlow
 
       private
 
-      def gen_compliance_pdf_file(build)
-        build_id = extract_build_id(build)
-        file_name = gen_pdf_diffs(gen_compliance_pdf_file_name(build_id), build_id)
-        puts "Uploading #{file_name} to Google Drive"
-        GoogleDrive.new.upload_file(file_name, @upload_config.merge({ email_body: compose_compliance_email_body(build) }))
+      def find_completed_build_by_sha(sha, max_wait_time=5, delay=1)
+        max_wait_time *= 60
+        delay *= 60
+        build = find_latest_by_sha(sha)
+        start_time = Time.now
+
+        until build_completed?(build) do
+          return nil if Time.now - start_time >= max_wait_time
+          putc '#'
+          sleep delay
+          build = find_latest_by_sha(sha)
+        end
+        build
       end
 
-      def gen_compliance_pdf_file_name(build_id)
-        "/tmp/#{Time.now.strftime('%Y%m%dT%H%M')}_#{build_id}.pdf"
+      def gen_compliance_pdf_file(build)
+        build_id = extract_build_id(build)
+        base_file_name = gen_compliance_file_name(build_id)
+        drive = GoogleDrive.new
+        existing_files = drive.find_files("name contains '#{File.basename(base_file_name)}' and mimeType = 'application/pdf'")
+
+        if existing_files.empty?
+          file_name = "#{base_file_name}_#{Time.now.strftime('%Y%m%dT%H%M')}.pdf"
+          gen_pdf_diffs(file_name, build_id)
+
+          puts "Uploading #{file_name} to Google Drive"
+          drive.upload_file(file_name, @compliance_config.merge({ email_body: compose_compliance_email_body(build) }))
+        else
+          puts "This build has already been processed: #{existing_files.first.name}."
+        end
+      end
+
+      def gen_compliance_file_name(build_id)
+        "/tmp/#{@compliance_config['file_prefix']}#{build_id}"
       end
 
       def compose_compliance_email_body(build)
-        @upload_config['message'].sub('%percy_url%', build['web-url'])
+        @compliance_config['message'].sub('%percy_url%', build['web-url'])
       end
 
       def get_build_id(sha=nil)
