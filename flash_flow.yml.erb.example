@@ -89,8 +89,13 @@ branch_info_file: 'your/random/file'
 #    token: <%= ENV['PERCY_TOKEN'] %>
 #    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
 #    api_url: 'https://percy.io/api/v1/'
-#    email: 'foo@bar.com'
-#    cc_email: 'bar@foo.com'
+#    upload:
+#      permissions:
+#        group:
+#          reader: comma-delimited list of emails
+#          writer: comma-delimited list of emails
+#      notify: true
+#      message: 'string for the message body. %percy_url% will be replaced with the url to the percy build'
 #smtp:
 #  settings:
 #    domain: 'yourdomain.com'
@@ -101,8 +106,9 @@ branch_info_file: 'your/random/file'
 #    authentication: 'plain'
 #    enable_starttls_auto: true
 #  emails:
-#    from: 'sender@domain.com'
-#    to: 'receiver@domain.com'
-#    cc: 'cc@domain.com'
-#    subject: 'The engineering team has a new release candidate'
-#    body_file: 'path/to/email_template.erb'
+#    release_ready:
+#      from: 'sender@domain.com'
+#      to: 'receiver@domain.com'
+#      cc: 'cc@domain.com'
+#      subject: 'The engineering team has a new release candidate'
+#      body_file: 'path/to/email_template.erb'

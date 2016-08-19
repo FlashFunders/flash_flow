@@ -2,6 +2,7 @@ require 'percy'
 require 'flash_flow/git'
 require 'flash_flow/mailer'
 require 'flash_flow/release/pdf_diff_generator'
+require 'flash_flow/google_drive'
 
 module FlashFlow
   module Release
@@ -10,12 +11,25 @@ module FlashFlow
       def initialize(config={})
         @client = initialize_connection!(config)
         @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
+        @upload_config = config['upload']
       end
 
       def find_latest_by_sha(sha)
         response = get_builds
         commit = find_commit_by_sha(response, sha)
         find_build_by_commit_id(response, commit['id'])
+      end
+
+      def send_compliance_email
+        build = find_latest_by_sha(get_latest_sha)
+
+        if build_completed?(build) && has_unapproved_diffs?(build)
+          pdf_url = gen_compliance_pdf_file(build)
+          mailer.deliver!(compliance: { percy_build_url: build['web-url'], pdf_diffs_url: pdf_url })
+          0
+        else
+          -1
+        end
       end
 
       def send_release_email
@@ -39,8 +53,27 @@ module FlashFlow
 
       private
 
+      def gen_compliance_pdf_file(build)
+        build_id = extract_build_id(build)
+        file_name = gen_pdf_diffs(gen_compliance_pdf_file_name(build_id), build_id)
+        puts "Uploading #{file_name} to Google Drive"
+        GoogleDrive.new.upload_file(file_name, @upload_config.merge({ email_body: compose_compliance_email_body(build) }))
+      end
+
+      def gen_compliance_pdf_file_name(build_id)
+        "/tmp/#{Time.now.strftime('%Y%m%dT%H%M')}_#{build_id}.pdf"
+      end
+
+      def compose_compliance_email_body(build)
+        @upload_config['message'].sub('%percy_url%', build['web-url'])
+      end
+
       def get_build_id(sha=nil)
         build = find_latest_by_sha(sha || get_latest_sha)
+        extract_build_id(build)
+      end
+
+      def extract_build_id(build)
         build['web-url'].split('/').last
       end
 
@@ -75,19 +108,24 @@ module FlashFlow
 
       def builds_collection(response)
         response.fetch('data', [])
-          .select do |h| h['type'] == 'builds' &&
+          .select do |h|
+          h['type'] == 'builds' &&
             h.dig('attributes', 'web-url') &&
             h.dig('relationships', 'commit', 'data', 'type') == 'commits'
-          end
+        end
       end
 
       def commits_data(response)
-        response.fetch('included', {'id' => nil})
+        response.fetch('included', { 'id' => nil })
           .select { |data| data['type'] == 'commits' }
       end
 
       def has_unapproved_diffs?(build)
         build['total-comparisons-diff'] > 0 && build['approved-at'].nil?
+      end
+
+      def build_completed?(build)
+        build['state'] === 'finished';
       end
 
       def get_latest_sha
