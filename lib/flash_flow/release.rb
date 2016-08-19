@@ -17,6 +17,10 @@ module FlashFlow
         @release.find_latest_by_sha(sha) if @release.respond_to?(:find_latest_by_sha)
       end
 
+      def send_compliance_email
+        @release.send_compliance_email if @release.respond_to?(:send_compliance_email)
+      end
+
       def send_release_email
         @release.send_release_email if @release.respond_to?(:send_release_email)
       end

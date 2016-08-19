@@ -2,6 +2,7 @@ require 'percy'
 require 'flash_flow/git'
 require 'flash_flow/mailer'
 require 'flash_flow/release/pdf_diff_generator'
+require 'flash_flow/google_drive'
 
 module FlashFlow
   module Release
@@ -10,6 +11,7 @@ module FlashFlow
       def initialize(config={})
         @client = initialize_connection!(config)
         @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
+        @compliance_config = config['compliance']
       end
 
       def find_latest_by_sha(sha)
@@ -18,10 +20,20 @@ module FlashFlow
         find_build_by_commit_id(response, commit['id'])
       end
 
+      def send_compliance_email
+        max_wait_time = @compliance_config['max_wait_time'] || 0
+        delay = @compliance_config['delay'] || 1
+        build = find_completed_build_by_sha(get_latest_sha, max_wait_time, delay)
+
+        unless build_approved?(build)
+          gen_compliance_pdf_file(build)
+        end
+      end
+
       def send_release_email
         build = find_latest_by_sha(get_latest_sha)
 
-        if has_unapproved_diffs?(build)
+        unless build_approved?(build)
           mailer.deliver!(:compliance, { percy_build_url: build['web-url'] })
         end
       end
@@ -39,8 +51,52 @@ module FlashFlow
 
       private
 
+      def find_completed_build_by_sha(sha, max_wait_time=5, delay=1)
+        max_wait_time *= 60
+        delay *= 60
+        build = find_latest_by_sha(sha)
+        start_time = Time.now
+
+        until build_completed?(build) do
+          return nil if Time.now - start_time >= max_wait_time
+          putc '#'
+          sleep delay
+          build = find_latest_by_sha(sha)
+        end
+        build
+      end
+
+      def gen_compliance_pdf_file(build)
+        build_id = extract_build_id(build)
+        base_file_name = gen_compliance_file_name(build_id)
+        drive = GoogleDrive.new
+        existing_files = drive.find_files("name contains '#{File.basename(base_file_name)}' and mimeType = 'application/pdf'")
+
+        if existing_files.empty?
+          file_name = "#{base_file_name}_#{Time.now.strftime('%Y%m%dT%H%M')}.pdf"
+          gen_pdf_diffs(file_name, build_id)
+
+          puts "Uploading #{file_name} to Google Drive"
+          drive.upload_file(file_name, @compliance_config.merge({ email_body: compose_compliance_email_body(build) }))
+        else
+          puts "This build has already been processed: #{existing_files.first.name}."
+        end
+      end
+
+      def gen_compliance_file_name(build_id)
+        "/tmp/#{@compliance_config['file_prefix']}#{build_id}"
+      end
+
+      def compose_compliance_email_body(build)
+        @compliance_config['message'].sub('%percy_url%', build['web-url'])
+      end
+
       def get_build_id(sha=nil)
         build = find_latest_by_sha(sha || get_latest_sha)
+        extract_build_id(build)
+      end
+
+      def extract_build_id(build)
         build['web-url'].split('/').last
       end
 
@@ -75,19 +131,24 @@ module FlashFlow
 
       def builds_collection(response)
         response.fetch('data', [])
-          .select do |h| h['type'] == 'builds' &&
+          .select do |h|
+          h['type'] == 'builds' &&
             h.dig('attributes', 'web-url') &&
             h.dig('relationships', 'commit', 'data', 'type') == 'commits'
-          end
+        end
       end
 
       def commits_data(response)
-        response.fetch('included', {'id' => nil})
+        response.fetch('included', { 'id' => nil })
           .select { |data| data['type'] == 'commits' }
       end
 
-      def has_unapproved_diffs?(build)
-        build['total-comparisons-diff'] > 0 && build['approved-at'].nil?
+      def build_approved?(build)
+        !build.nil? && !build['approved-at'].nil?
+      end
+
+      def build_completed?(build)
+        build['state'] == 'finished';
       end
 
       def get_latest_sha

@@ -59,10 +59,10 @@ module FlashFlow
       def test_has_unapproved_diffs?
         @percy_client.stub(:get_builds, sample_response) do
           build1 = @percy_client.find_latest_by_sha('bbbbb')
-          assert(@percy_client.send(:has_unapproved_diffs?, build1))
+          refute(@percy_client.send(:build_approved?, build1))
 
           build2 = @percy_client.find_latest_by_sha('aaaaa')
-          refute(@percy_client.send(:has_unapproved_diffs?, build2))
+          assert(@percy_client.send(:build_approved?, build2))
         end
       end
 
