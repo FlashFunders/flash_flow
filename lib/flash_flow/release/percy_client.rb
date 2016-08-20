@@ -1,5 +1,4 @@
 require 'percy'
-require 'flash_flow/git'
 require 'flash_flow/mailer'
 require 'flash_flow/release/pdf_diff_generator'
 require 'flash_flow/google_drive'
@@ -10,8 +9,8 @@ module FlashFlow
 
       def initialize(config={})
         @client = initialize_connection!(config)
-        @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
         @compliance_config = config['compliance']
+        @release_sha = config['release_sha']
       end
 
       def find_latest_by_sha(sha)
@@ -23,7 +22,7 @@ module FlashFlow
       def send_compliance_email
         max_wait_time = @compliance_config['max_wait_time'] || 0
         delay = @compliance_config['delay'] || 1
-        build = find_completed_build_by_sha(get_latest_sha, max_wait_time, delay)
+        build = find_completed_build_by_sha(@release_sha, max_wait_time, delay)
 
         unless build_approved?(build)
           gen_compliance_pdf_file(build)
@@ -31,7 +30,7 @@ module FlashFlow
       end
 
       def send_release_email
-        build = find_latest_by_sha(get_latest_sha)
+        build = find_latest_by_sha(@release_sha)
 
         unless build_approved?(build)
           mailer.deliver!(:compliance, { percy_build_url: build['web-url'] })
@@ -45,7 +44,7 @@ module FlashFlow
       end
 
       def qa_approved?(sha=nil)
-        build = find_latest_by_sha(sha || get_latest_sha)
+        build = find_latest_by_sha(sha || @release_sha)
         !build['approved-at'].nil?
       end
 
@@ -92,7 +91,7 @@ module FlashFlow
       end
 
       def get_build_id(sha=nil)
-        build = find_latest_by_sha(sha || get_latest_sha)
+        build = find_latest_by_sha(sha || @release_sha)
         extract_build_id(build)
       end
 
@@ -149,10 +148,6 @@ module FlashFlow
 
       def build_completed?(build)
         build['state'] == 'finished';
-      end
-
-      def get_latest_sha
-        @git.get_sha(@git.release_branch)
       end
 
       def mailer

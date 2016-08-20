@@ -76,6 +76,10 @@ module FlashFlow
       def saved_branches
         Collection.from_hash(stored_branches).to_a
       end
+
+      def pending_release
+        releases.detect { |r| r['status'] == 'Pending' }
+      end
     end
   end
 end

@@ -12,7 +12,7 @@ module FlashFlow
         reset_config!
         config!(configuration)
 
-        @percy_client = Release::PercyClient.new({'token' => ''})
+        @percy_client = Release::PercyClient.new({'token' => '', 'release_sha' => 'bbbbb'})
       end
 
       def test_find_latest_by_sha
@@ -25,21 +25,15 @@ module FlashFlow
       end
 
       def test_send_release_email
-        @git = Minitest::Mock.new
-          .expect(:release_branch, 'release')
-          .expect(:get_sha, 'bbbbb', ['release'])
-
         @mailer = Minitest::Mock.new
         @mailer.expect(:deliver!, true, [:compliance, {percy_build_url: 'https://percy.io/repo/builds/1111'}])
 
-        @percy_client.instance_variable_set('@git'.to_sym, @git)
         @percy_client.instance_variable_set('@mailer'.to_sym, @mailer)
 
         @percy_client.stub(:get_builds, sample_response) do
           @percy_client.send_release_email
         end
 
-        @git.verify
         @mailer.verify
       end
 

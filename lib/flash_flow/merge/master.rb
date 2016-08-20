@@ -27,7 +27,7 @@ module FlashFlow
             release = pending_release
             if !release
               raise NothingToMergeError.new("There is no pending release.")
-            elsif !release_ahead_of_master
+            elsif !release_ahead_of_master?
               raise NothingToMergeError.new("The release branch '#{@git.release_branch}' has no commits that are not in master")
             elsif !release_qa_approved?
               raise FlashFlow::Release::QAError.new("The release build '#{get_release_sha(short: true)}' has not been approved for release")

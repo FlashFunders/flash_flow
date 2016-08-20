@@ -72,12 +72,11 @@ module FlashFlow
       end
 
       def pending_release
-        @data.releases.detect { |r| r['status'] == 'Pending' }
+        @data.pending_release
       end
 
-      def release_ahead_of_master
-        @git.branch_exists?("#{@git.remote}/#{@git.release_branch}") &&
-            !@git.master_branch_contains?(@git.get_sha("#{@git.remote}/#{@git.release_branch}"))
+      def release_ahead_of_master?
+        @git.ahead_of_master?("#{@git.remote}/#{@git.release_branch}")
       end
 
       def write_data(commit_msg)

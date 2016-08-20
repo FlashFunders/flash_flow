@@ -227,6 +227,10 @@ module FlashFlow
       last_success?
     end
 
+    def ahead_of_master?(branch)
+      branch_exists?(branch) && !master_branch_contains?(get_sha(branch))
+    end
+
     private
 
     def squash_commits(branch, commit_message)
