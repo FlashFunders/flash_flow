@@ -29,7 +29,7 @@ module FlashFlow
             release = pending_release
             if release
               raise PendingReleaseError.new("There is already a pending release: #{release}")
-            elsif release_ahead_of_master
+            elsif release_ahead_of_master?
               raise PendingReleaseError.new("The release branch '#{@git.release_branch}' has commits that are not in master")
             end
 
