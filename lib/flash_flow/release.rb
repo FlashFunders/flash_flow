@@ -13,7 +13,7 @@ module FlashFlow
         return unless release_class_name
 
         @git = ShadowGit.new(Config.configuration.git, Config.configuration.logger)
-        @data = Data::Base.new({}, Config.configuration.branch_info_file, @git, logger: logger)
+        @data = Data::Base.new({}, Config.configuration.branch_info_file, @git, logger: Config.configuration.logger)
 
         @release_class = Object.const_get(release_class_name)
         @release = @release_class.new(config['class'].merge({ 'release_sha' => release_sha }))
