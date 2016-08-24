@@ -80,6 +80,10 @@ module FlashFlow
       def pending_release
         releases.detect { |r| r['status'] == 'Pending' }
       end
+
+      def ready_to_merge_release
+        releases.detect { |r| r['status'] == 'Ready to merge' }
+      end
     end
   end
 end

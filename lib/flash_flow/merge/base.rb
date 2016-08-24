@@ -75,6 +75,10 @@ module FlashFlow
         @data.pending_release
       end
 
+      def ready_to_merge_release
+        @data.ready_to_merge_release
+      end
+
       def release_ahead_of_master?
         @git.ahead_of_master?("#{@git.remote}/#{@git.release_branch}")
       end
