@@ -113,9 +113,14 @@ branch_info_file: 'your/random/file'
 #    authentication: 'plain'
 #    enable_starttls_auto: true
 #  emails:
-#    release_ready:
+#    compliance:
 #      from: 'sender@domain.com'
 #      to: 'receiver@domain.com'
 #      cc: 'cc@domain.com'
 #      subject: 'The engineering team has a new release candidate'
+#      body_file: 'app/views/flash_flow_mailer/percy_snapshots.txt.erb'
+#    release_ready:
+#      from: 'sender@domain.com'
+#      to: 'receiver@domain.com'
+#      subject: 'Release build has been approved for release'
 #      body_file: 'path/to/email_template.erb'
