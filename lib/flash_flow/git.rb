@@ -130,10 +130,10 @@ module FlashFlow
 
     # git rerere doesn't give you a deterministic way to determine which resolution was used
     def resolution_candidates(file)
-      @cmd_runner.run("diff -q --from-file #{file} .git/rr-cache/*/postimage", log: CmdRunner::LOG_CMD)
+      @cmd_runner.run("diff -q --from-file #{file} .git/rr-cache/*/postimage*", log: CmdRunner::LOG_CMD)
       different_files = split_diff_lines(@cmd_runner.last_stdout)
 
-      @cmd_runner.run('ls -la .git/rr-cache/*/postimage', log: CmdRunner::LOG_CMD)
+      @cmd_runner.run('ls -la .git/rr-cache/*/postimage*', log: CmdRunner::LOG_CMD)
       all_files = split_diff_lines(@cmd_runner.last_stdout)
 
       all_files - different_files
