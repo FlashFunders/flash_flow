@@ -1,3 +1,3 @@
 module FlashFlow
-  VERSION = '1.4.14'
+  VERSION = '1.5.0'
 end
