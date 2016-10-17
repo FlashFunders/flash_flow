@@ -15,15 +15,15 @@ module FlashFlow
       end
 
       def with_lock(&block)
-        if issue_open?
+        if issue_locked?
           raise Lock::Error.new(error_message)
         else
-          open_issue
+          lock_issue
 
           begin
             block.call
           ensure
-            close_issue
+            unlock_issue
           end
         end
       end
@@ -31,36 +31,29 @@ module FlashFlow
       private
 
       def error_message
-        last_event = get_last_event
-        actor = last_event[:actor][:login]
-        time = last_event[:created_at]
         issue_link = "https://github.com/#{repo}/issues/#{issue_id}"
-        minutes_ago = ((Time.now - time).to_i / 60) rescue 'unknown'
 
-        "#{actor} started running flash_flow #{minutes_ago} minutes ago. To manually unlock flash_flow, go here: #{issue_link} and close the issue and re-run flash_flow."
+        "flash_flow is running and locked by #{actor}. To manually unlock flash_flow, go here: #{issue_link} and remove the #{locked_label} label and re-run flash_flow."
       end
 
-      def get_last_event
-        Octokit.issue_events(repo, issue_id)
-        response = Octokit.last_response
-        pages = response.rels[:last]
-        if pages
-          return pages.get.data.last
-        else
-          response.data.last
+      def issue_locked?
+        get_lock_labels.detect {|label| label[:name] == locked_label}
+      end
+
+      def lock_issue
+        Octokit.add_labels_to_an_issue(repo, issue_id, [actor, locked_label])
+      end
+
+      def unlock_issue
+        Octokit.remove_all_labels(repo, issue_id)
+      end
+
+      def get_lock_labels
+        begin
+          Octokit.labels_for_issue(repo, issue_id)
+        rescue Octokit::NotFound
+          []
         end
-      end
-
-      def issue_open?
-        get_last_event.event == 'reopened'
-      end
-
-      def open_issue
-        Octokit.reopen_issue(repo, issue_id)
-      end
-
-      def close_issue
-        Octokit.close_issue(repo, issue_id)
       end
 
       def verify_params!
@@ -85,6 +78,14 @@ module FlashFlow
 
       def issue_id
         config['issue_id']
+      end
+
+      def locked_label
+        config['lock_label'] || 'IS_LOCKED'
+      end
+
+      def actor
+        @user_login ||= Octokit.user.login
       end
     end
   end
