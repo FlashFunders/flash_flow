@@ -14,6 +14,8 @@ module FlashFlow
         @release_branches = parse_branches(opts[:release_branches])
 
         @data = Data::Base.new({}, Config.configuration.branch_info_file, @git, logger: logger)
+
+        @release_branches.each {|b| b.merge_order = @data.collection.get(b.ref).merge_order }
       end
 
       def run
