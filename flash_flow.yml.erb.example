@@ -65,6 +65,7 @@ branch_info_file: 'your/random/file'
 #    token: <%= ENV['GH_TOKEN'] %>
 #    repo: # Your github repo. For example, the flash_flow repo is 'flashfunders/flash_flow'
 #    issue_id: # Your github issue id goes here
+#    lock_label: # optional - default value is 'IS_LOCKED'
 
 
 ## We use Github as our source of truth for which branches to merge. All open pull requests that don't
