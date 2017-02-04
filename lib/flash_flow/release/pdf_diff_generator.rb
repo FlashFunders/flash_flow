@@ -47,15 +47,15 @@ module FlashFlow
         pdf.text("Compliance Diffs Generated At: #{Time.now.to_s}")
       end
 
-      def compute_scale_factor(column_width, page_height, info)
-        x_scale_factor = column_width / info[:width]
-        y_scale_factor = page_height / info[:height]
+      def compute_scale_factor(column_width, page_height, width, height)
+        x_scale_factor = column_width / width
+        y_scale_factor = page_height / height
         [x_scale_factor, y_scale_factor].min
       end
 
-      def compute_scale_and_orientation(info)
-        scale_portrait = compute_scale_factor(@column_portrait, [@page_width, @page_height].max, info)
-        scale_landscape = compute_scale_factor(@column_landscape, [@page_width, @page_height].min, info)
+      def compute_scale_and_orientation(width, height)
+        scale_portrait = compute_scale_factor(@column_portrait, [@page_width, @page_height].max, width, height)
+        scale_landscape = compute_scale_factor(@column_landscape, [@page_width, @page_height].min, width, height)
         if scale_portrait > scale_landscape
           @orientation = :portrait
           @column_width = @column_portrait
@@ -67,14 +67,25 @@ module FlashFlow
         end
       end
 
+      def max_width(comparison)
+        max_by(comparison, :width)
+      end
+
+      def max_height(comparison)
+        max_by(comparison, :height)
+      end
+
+      def max_by(comparison, key)
+        [comparison['head-screenshot'][key], comparison['base-screenshot'][key], comparison['pdiff'][key]].max
+      end
+
       def add_comparison_to_pdf(pdf, comparison)
-        scale_factor = compute_scale_and_orientation(comparison['head-screenshot'])
+        scale_factor = compute_scale_and_orientation(max_width(comparison), max_height(comparison))
         options = { vposition: :top, scale: scale_factor }
 
         pdf.start_new_page(layout: @orientation)
-
-        place_image(pdf, comparison.dig('head-screenshot', :url), options, 1)
-        place_image(pdf, comparison.dig('base-screenshot', :url), options, 2)
+        place_image(pdf, comparison.dig('base-screenshot', :url), options, 1)
+        place_image(pdf, comparison.dig('head-screenshot', :url), options, 2)
         place_image(pdf, comparison.dig('base-screenshot', :url), options, 3)
         place_image(pdf, comparison.dig('pdiff', :url), options, 3)
       end
@@ -82,8 +93,13 @@ module FlashFlow
       def place_image(pdf, url, options, column)
         pdf.float do
           options[:position] = (column - 1) * (@column_width + SPACE_BETWEEN)
-          pdf.image(open(url), options)
+          pdf.image(get_url_once(url), options)
         end
+      end
+
+      def get_url_once(url)
+        @already_gotten_urls ||= {}
+        @already_gotten_urls[url] ||= open(url)
       end
 
       ####################################
@@ -93,14 +109,11 @@ module FlashFlow
       ####################################
 
       def collect_comparison_info(compare_info, threshold=0.0)
-        [].tap do |result|
-          compare_info['data'].each do |record|
-            if record['type'] == 'comparisons'
-              comparison_urls = get_comparison_info(record, compare_info)
-              result << comparison_urls if comparison_urls&.dig('diff-ratio').to_f > threshold
-            end
-          end
-        end
+        compare_info['data']
+            .select { |record| record['type'] == 'comparisons' }
+            .map { |record| get_comparison_info(record, compare_info) }
+            .select { |record| record&.dig('diff-ratio').to_f > threshold }
+            .sort { |a, b| b['diff-ratio'] <=> a['diff-ratio'] }
       end
 
       def get_comparison_info(record, data)
