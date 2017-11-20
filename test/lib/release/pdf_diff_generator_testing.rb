@@ -31,7 +31,7 @@ module FlashFlow
         create_destination(location)
 
         info.each do |row|
-          %w(head-screenshot base-screenshot pdiff).each do |attr|
+          %w(head-screenshot base-screenshot diff-image).each do |attr|
             source_url = row.dig(attr, :url)
             target = File.join(location, "#{source_url.split('/').last}.png")
             # Copy the file locally if it doesn't exist
@@ -59,4 +59,3 @@ module FlashFlow
     end
   end
 end
-
