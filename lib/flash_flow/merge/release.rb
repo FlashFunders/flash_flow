@@ -35,9 +35,7 @@ module FlashFlow
               raise PendingReleaseError.new("The release branch '#{@git.release_branch}' has commits that are not in master")
             end
 
-            @git.in_original_merge_branch do
-              @git.initialize_rerere
-            end
+            initialize_rerere
 
             @git.reset_temp_merge_branch
             @git.in_temp_merge_branch do

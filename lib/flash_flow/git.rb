@@ -1,17 +1,19 @@
 require 'flash_flow/cmd_runner'
 require 'shellwords'
+require 'rugged'
 
 module FlashFlow
   class Git
     ATTRIBUTES = [:remote, :merge_branch, :master_branch, :release_branch, :use_rerere]
 
-    attr_reader *ATTRIBUTES
-    attr_reader :working_branch
+    attr_reader(*ATTRIBUTES)
+    attr_reader :working_branch, :repo
 
     UNMERGED_STATUSES = %w{DD AU UD UA DU AA UU}
 
     def initialize(config, logger=nil)
       @cmd_runner = CmdRunner.new(logger: logger)
+      @repo = Rugged::Repository.new(@cmd_runner.dir)
 
       config['release_branch'] ||= config['master_branch']
       config['remote'] ||= config['merge_remote'] # For backwards compatibility
@@ -33,6 +35,10 @@ module FlashFlow
       end
     end
 
+    def dir
+      @cmd_runner.dir
+    end
+
     def last_stdout
       @cmd_runner.last_stdout
     end
@@ -51,12 +57,28 @@ module FlashFlow
 
     def add_and_commit(files, message, opts={})
       files = [files].flatten
-      run("add #{'-f ' if opts[:add] && opts[:add][:force]}#{files.join(' ')}")
-      run("commit -m '#{message}'")
-    end
 
-    def merge(branch)
-      run("merge #{branch}")
+      index = repo.index
+      index.read_tree(repo.head.target.tree)
+
+      files.each do |file|
+        oid = Rugged::Blob.from_workdir(repo, file)
+        index.add(:path => file, :oid => oid, :mode => 0100644)
+      end
+
+      current_tree = index.write_tree(repo)
+      options = {}
+      options[:tree] = current_tree
+
+      options[:author] = { :email => config_as_hash['user.email'], :name => config_as_hash['user.name'], :time => Time.now }
+      options[:committer] = options[:author]
+      options[:message] ||= message
+      options[:parents] = repo.empty? ? [] : [ repo.head.target ].compact
+      options[:update_ref] = 'HEAD'
+
+      Rugged::Commit.create(repo, options)
+
+      index.write
     end
 
     def branch_contains?(branch, ref)
@@ -99,12 +121,13 @@ module FlashFlow
     def rerere_resolve!
       return false unless use_rerere
 
+      require 'byebug'; debugger
       if unresolved_conflicts.empty?
-        merging_files = staged_and_working_dir_files.select { |s| UNMERGED_STATUSES.include?(s[0..1]) }.map { |s| s[3..-1] }
+        # merging_files = staged_and_working_dir_files.select { |s| s.last.empty? }.map(&:first)
         conflicts = conflicted_files
 
-        run("add #{merging_files.join(" ")}")
-        run('commit --no-edit')
+        # run("add #{conflicts.join(" ")}")
+        # run('commit --no-edit')
 
         resolutions(conflicts)
       else
@@ -144,49 +167,72 @@ module FlashFlow
     end
 
     def staged_and_working_dir_files
-      run("status --porcelain")
-      last_stdout.split("\n").reject { |line| line[0..1] == '??' }
+      non_new_or_ignored = []
+
+      repo.status do |file, status|
+        non_new_or_ignored << [ file, status ] unless status.include?(:ignored) || status.include?(:worktree_new)
+      end
+
+      non_new_or_ignored
     end
 
     def conflicted_files
-      run("diff --name-only --diff-filter=U")
-      last_stdout.split("\n")
+      staged_and_working_dir_files.select { |s| s.last.empty? }.map(&:first)
+      # run("diff --name-only --diff-filter=U")
+      # last_stdout.split("\n")
     end
 
     def current_branch
-      run("rev-parse --abbrev-ref HEAD")
-      last_stdout.strip
-    end
-
-    def most_recent_commit
-      run("show -s --format=%cd head")
+      repo.head.name.sub(/^refs\/heads\//, '')
     end
 
     def reset_temp_merge_branch
-      in_branch(master_branch) do
-        run("fetch #{remote}")
-        run("branch -D #{temp_merge_branch}")
-        run("checkout -b #{temp_merge_branch}")
-        run("reset --hard #{remote}/#{master_branch}")
-      end
+      repo.checkout(master_branch)
+      delete_branch(temp_merge_branch)
+      repo.branches.create(temp_merge_branch, repo.branches["#{remote}/#{master_branch}"].target.oid, force: true)
+      repo.checkout(temp_merge_branch)
+    end
+
+    def delete_branch(branch)
+      repo.branches.delete(branch) if repo.branches[branch]
     end
 
     def push(branch, force=false)
       run("push #{'-f' if force} #{remote} #{branch}")
     end
 
+    def fetch
+      run("fetch #{remote}")
+    end
+
     def copy_temp_to_branch(branch, squash_message = nil)
-      run("checkout #{temp_merge_branch}")
-      run("merge --strategy=ours --no-edit #{branch}")
-      run("checkout #{branch}")
-      run("merge #{temp_merge_branch}")
+      repo.references.update "refs/heads/#{merge_branch}", repo.branches["refs/remotes/#{remote}/#{merge_branch}"].target.oid
+
+      temp_merge = repo.branches[temp_merge_branch]
+      merge = repo.branches[branch]
+
+      temp_merge_commit = temp_merge.target
+      merge_commit = merge.target
+
+      index=repo.merge_commits(temp_merge_commit, merge_commit, favor: :ours)
+      repo.checkout merge_branch
+
+      options = commit_defaults.merge(
+        tree: index.write_tree(repo),
+        message: 'merge existing into temp',
+        parents: repo.empty? ? [] : [ repo.branches["#{remote}/#{merge_branch}"].target ],
+      )
+      commit_oid = Rugged::Commit.create(repo, options)
+
+      repo.references.update "refs/heads/#{merge_branch}", commit_oid
+      repo.reset(repo.head.target, :hard)
 
       squash_commits(branch, squash_message) if squash_message
     end
 
     def delete_temp_merge_branch
       in_branch(master_branch) do
-        run("branch -d #{temp_merge_branch}")
+        # run("branch -d #{temp_merge_branch}")
       end
     end
 
@@ -201,11 +247,11 @@ module FlashFlow
     def in_branch(branch)
       begin
         starting_branch = current_branch
-        run("checkout #{branch}")
+        repo.checkout(branch)
 
         yield
       ensure
-        run("checkout #{starting_branch}")
+        repo.checkout(starting_branch)
       end
     end
 
@@ -214,17 +260,16 @@ module FlashFlow
     end
 
     def get_sha(branch, opts={})
-      if opts[:short]
-        run("rev-parse --short #{branch}")
-      else
-        run("rev-parse #{branch}")
-      end
-      last_stdout.strip if last_success?
+      repo.rev_parse(branch).oid
+    rescue Rugged::ReferenceError
+      nil
     end
 
     def branch_exists?(branch)
-      run("rev-parse --verify #{branch}")
-      last_success?
+      repo.rev_parse(branch)
+      true
+    rescue Rugged::ReferenceError
+      false
     end
 
     def ahead_of_master?(branch)
@@ -233,20 +278,48 @@ module FlashFlow
 
     private
 
+    def config_as_hash
+      Rugged::Config.global.to_hash.merge(repo.config.to_hash)
+    end
+
     def squash_commits(branch, commit_message)
       unless branch_exists?("#{remote}/#{branch}")
         run("push #{remote} #{master_branch}:#{branch}")
       end
 
-      # Get all the files that differ between existing acceptance and new acceptance
-      run("diff --name-only #{remote}/#{branch} #{branch}")
-      files = last_stdout.split("\n")
-      run("reset #{remote}/#{branch}")
+      repo.diff("#{remote}/#{branch}", 'origin/test_acceptance').deltas.each do |delta|
+        new_file = delta.new_file
+        repo.index.add(path: new_file[:path], oid: new_file[:oid], mode: new_file[:mode])
+      end
 
-      run("add -f #{files.map { |f| "\"#{Shellwords.escape(f)}\"" }.join(" ")}")
+      repo.references.update "refs/heads/#{merge_branch}", repo.branches["#{remote}/#{merge_branch}"].target.oid
+      options = commit_defaults.merge(
+          tree: repo.index.write_tree(repo),
+          message: commit_message,
+          parents: repo.empty? ? [] : [ repo.branches["#{remote}/#{merge_branch}"].target ],
+      )
+      commit_oid = Rugged::Commit.create(repo, options)
 
-      run("commit -m '#{commit_message}'")
+      repo.references.update "refs/heads/#{merge_branch}", commit_oid
+      repo.reset(repo.head.target, :hard)
+
+      # # Get all the files that differ between existing acceptance and new acceptance
+      # files = repo.diff("#{remote}/#{branch}", 'origin/test_acceptance').deltas.map {|d| d.new_file[:path]}
+      # run("diff --name-only #{remote}/#{branch} #{branch}")
+      # files = last_stdout.split("\n")
+      # run("reset #{remote}/#{branch}")
+      #
+      # run("add -f #{files.map { |f| "\"#{Shellwords.escape(f)}\"" }.join(" ")}")
+      #
+      # run("commit -m '#{commit_message}'")
     end
 
+    def commit_defaults
+      {}.tap do |defaults|
+        defaults[:author] = { :email => config_as_hash['user.email'], :name => config_as_hash['user.name'], :time => Time.now }
+        defaults[:committer] = defaults[:author]
+        defaults[:update_ref] = 'HEAD'
+      end
+    end
   end
 end

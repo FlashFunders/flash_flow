@@ -47,15 +47,44 @@ module FlashFlow
         end
       end
 
-      def merge_branches(branches)
+      def initialize_rerere
+        @git.in_original_merge_branch do
+          @git.initialize_rerere
+        end
+      end
+
+      def merge_branches(branches, &block)
         ordered_branches = MergeOrder.new(@git, branches).get_order
+        do_x(ordered_branches, &block)
+        # ordered_branches.each_with_index do |branch, index|
+        #   branch.merge_order = index + 1
+        #
+        #   merger = git_merge(branch)
+        #
+        #   yield(branch, merger)
+        # end
+      end
+
+      def do_x(ordered_branches, &block)
+        base_commit = @git.repo.branches[@git.temp_merge_branch].target
         ordered_branches.each_with_index do |branch, index|
           branch.merge_order = index + 1
+          merger = git_merge_x(base_commit, branch)
+          base_commit = merger.result_sha
 
-          merger = git_merge(branch)
-
-          yield(branch, merger)
+          block.call(branch, merger)
         end
+      end
+
+      def git_merge_x(base_commit, branch)
+        merge_commit = @git.repo.branches["#{@git.remote}/#{branch.ref}"].target
+        merger = BranchMerger.new(@git, base_commit, merge_commit)
+
+        forget_rerere = is_working_branch(branch) && @rerere_forget
+
+        merger.do_merge_new(forget_rerere)
+
+        merger
       end
 
       def git_merge(branch)

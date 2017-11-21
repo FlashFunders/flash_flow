@@ -15,6 +15,8 @@ module FlashFlow
       run("fetch #{remote}")
       run("remote prune #{remote}")
       run("reset --hard HEAD")
+
+      @repo = Rugged::Repository.new(flash_flow_dir)
     end
 
     def create_shadow_repo

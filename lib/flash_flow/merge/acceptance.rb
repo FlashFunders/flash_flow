@@ -26,9 +26,7 @@ module FlashFlow
           open_pull_request
 
           @lock.with_lock do
-            @git.in_original_merge_branch do
-              @git.initialize_rerere
-            end
+            initialize_rerere
 
             @git.reset_temp_merge_branch
             @git.in_temp_merge_branch do
@@ -99,9 +97,11 @@ module FlashFlow
 
         @local_git.push(@local_git.working_branch, @force)
         raise OutOfSyncWithRemote.new("Your branch is out of sync with the remote. If you want to force push, run 'flash_flow -f'") unless @local_git.last_success?
+        #
+        @git.fetch
 
         if @do_not_merge
-          @data.remove_from_merge(@local_git.remote, @local_git.working_branch)
+          @data.remove_from_merge(@local_git.working_branch)
         else
           @data.add_to_merge(@local_git.working_branch)
         end

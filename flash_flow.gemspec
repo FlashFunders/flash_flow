@@ -25,10 +25,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'mail'
   spec.add_dependency 'prawn'
   spec.add_dependency 'google-api-client'
+  spec.add_dependency 'rugged'
 
   spec.add_development_dependency "bundler", "~> 1.6"
   spec.add_development_dependency "rake", "> 0"
   spec.add_development_dependency "minitest", "> 0"
   spec.add_development_dependency "byebug", "> 0"
   spec.add_development_dependency 'minitest-stub_any_instance', "> 0"
+  spec.add_development_dependency 'simplecov', "> 0"
 end

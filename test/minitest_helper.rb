@@ -1,3 +1,6 @@
+require 'simplecov'
+SimpleCov.start
+
 require 'minitest'
 require 'minitest/autorun'
 require 'flash_flow'
@@ -13,6 +16,7 @@ class Minitest::Test
     def initialize(opts={}); super(); end
     def run(_, opts={}); end
     def last_success?; true; end
+    def dir; '.'; end
     def dir=(other); other; end
     def last_stdout; ''; end
     def last_stderr; ''; end

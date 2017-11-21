@@ -67,6 +67,7 @@ module FlashFlow
       cmd_runner = Minitest::Mock.new
       cmd_runner.expect(:run, true, ['git rev-parse --abbrev-ref HEAD', {}])
       cmd_runner.expect(:last_stdout, 'current_branch', [])
+      cmd_runner.expect(:dir, '.', [])
       cmd_runner
     end
   end
