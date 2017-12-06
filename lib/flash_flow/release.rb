@@ -31,8 +31,8 @@ module FlashFlow
         @release.send_release_email if @release.respond_to?(:send_release_email)
       end
 
-      def gen_pdf_diffs(output_file, threshold=0.0)
-        @release.gen_pdf_diffs(output_file, threshold) if @release.respond_to?(:gen_pdf_diffs)
+      def gen_pdf_diffs(output_file, build_id=nil, threshold=0.0)
+        @release.gen_pdf_diffs(output_file, build_id, threshold) if @release.respond_to?(:gen_pdf_diffs)
       end
 
       def qa_approved?(sha)

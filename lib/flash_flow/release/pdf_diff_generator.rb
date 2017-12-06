@@ -76,7 +76,7 @@ module FlashFlow
       end
 
       def max_by(comparison, key)
-        [comparison['head-screenshot'][key], comparison['base-screenshot'][key], comparison['pdiff'][key]].max
+        [comparison['head-screenshot'][key], comparison['base-screenshot'][key], comparison['diff-image'][key]].max
       end
 
       def add_comparison_to_pdf(pdf, comparison)
@@ -87,7 +87,7 @@ module FlashFlow
         place_image(pdf, comparison.dig('base-screenshot', :url), options, 1)
         place_image(pdf, comparison.dig('head-screenshot', :url), options, 2)
         place_image(pdf, comparison.dig('base-screenshot', :url), options, 3)
-        place_image(pdf, comparison.dig('pdiff', :url), options, 3)
+        place_image(pdf, comparison.dig('diff-image', :url), options, 3)
       end
 
       def place_image(pdf, url, options, column)
@@ -118,20 +118,20 @@ module FlashFlow
 
       def get_comparison_info(record, data)
         { id: record['id'] }.tap do |h|
-          %w(head-screenshot base-screenshot pdiff).each do |attr|
+          %w(head-screenshot base-screenshot diff-image).each do |attr|
             info = record.dig('relationships', attr, 'data')
             unless info.nil?
               attr_record = lookup_record(info['id'], info['type'], 'included', data)
               h[attr] = lookup_image_url(lookup_image_id(attr_record, attr), data)
-              h['diff-ratio'] = attr_record.dig('attributes', 'diff-ratio') if attr == 'pdiff'
+              h['diff-ratio'] = record.dig('attributes', 'diff-ratio') if attr == 'diff-image'
             end
           end
         end
       end
 
       def lookup_image_id(record, attr)
-        if attr == 'pdiff'
-          record.dig('relationships', 'diff-image', 'data', 'id')
+        if attr == 'diff-image'
+          record['id']
         else
           record.dig('relationships', 'image', 'data', 'id')
         end
@@ -169,4 +169,3 @@ module FlashFlow
     end
   end
 end
-
