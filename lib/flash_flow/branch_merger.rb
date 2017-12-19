@@ -37,7 +37,7 @@ module FlashFlow
       repo = @git.repo
       index = repo.merge_commits(@result_sha, @branch)
 
-      require 'byebug'; debugger
+      # require 'byebug'; debugger
 
       if !index.conflicts? || try_rerere_x(index, rerere_forget)
         tree = index.write_tree(@git.repo)
@@ -97,4 +97,3 @@ module FlashFlow
     end
   end
 end
-

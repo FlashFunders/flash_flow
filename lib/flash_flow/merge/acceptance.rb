@@ -39,7 +39,7 @@ module FlashFlow
 
             @git.copy_temp_to_branch(@git.merge_branch, commit_message)
             @git.delete_temp_merge_branch
-            @git.push(@git.merge_branch)
+            # @git.push(@git.merge_branch)
           end
 
           raise OutOfSyncWithRemote.new("#{@git.merge_branch} is out of sync with the remote.") unless @git.last_success?
