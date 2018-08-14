@@ -18,6 +18,7 @@ module FlashFlow
 
       def run
         check_version
+        check_git_version
         check_repo
         puts "Building #{@local_git.merge_branch}... Log can be found in #{FlashFlow::Config.configuration.log_file}"
         logger.info "\n\n### Beginning #{@local_git.merge_branch} merge ###\n\n"

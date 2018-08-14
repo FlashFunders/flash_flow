@@ -47,6 +47,19 @@ module FlashFlow
         end
       end
 
+      def check_git_version
+        git_version = @local_git.version
+        return if git_version.nil?
+
+        running_version = git_version.split(".").map(&:to_i)
+        expected_version = FlashFlow::GIT_VERSION.split(".").map(&:to_i)
+
+        if running_version[0] < expected_version[0] ||
+          (running_version[0] == expected_version[0] && running_version[1] < expected_version[1]) # Ignore the point release number
+          puts "Warning: Your version of git (#{git_version}) is behind the version that is tested (#{FlashFlow::GIT_VERSION}). We recommend to upgrade to at least #{expected_version[0]}.#{expected_version[1]}.0"
+        end
+      end
+
       def merge_branches(branches)
         ordered_branches = MergeOrder.new(@git, branches).get_order
         ordered_branches.each_with_index do |branch, index|
