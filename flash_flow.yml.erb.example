@@ -26,16 +26,6 @@ branch_info_file: 'your/random/file'
 ### Everything below here is optional and should be deleted or remain commented out if you don't need it
 
 
-## This will send merge conflict notifications to the hipchat room configured below, only for branches
-## other than your own.
-
-#notifier:
-#  class:
-#    name: 'FlashFlow::Notifier::Hipchat'
-#    token: <%= ENV['HIPCHAT_TOKEN'] %>
-#    room: 'Flash Flow Notifications'
-
-
 ## If you use Pivotal Tracker, this integration can finish, deliver, un-deliver, and comment when
 ## deployed to production if you set it up.
 ## Must be used in conjuction with the "--story or --stories" options.

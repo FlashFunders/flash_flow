@@ -82,11 +82,6 @@ In addition, as part of our production deploy script, we run `flash_flow --prod-
 that are newly in the `master_branch` and adds a comment "Deployed to production on 12/25/2015 at 11:11pm". Tracker
 doesn't support a real state for "In production", so for us this comment serves as that state.
 
-### Configuring hipchat
-When a branch other than the one you're on doesn't merge cleanly and can't be fixed by rerere (more on that later
-too), a notification can go out to Hipchat. The Hipchat notifier needs your token (api v2 token) and the room
-to which the message will be sent.
-
 ### Runtime options
 
 #### -v, --version
