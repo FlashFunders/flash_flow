@@ -15,6 +15,7 @@ module FlashFlow
 
       def send_mail
         check_version
+        check_git_version
         puts "Checking #{@git.release_branch} QA approval"
         logger.info "\n\n### Beginning check of #{@git.release_branch} QA ###\n\n"
 
@@ -36,6 +37,7 @@ module FlashFlow
       def run
         begin
           check_version
+          check_git_version
           puts "Merging #{@git.release_branch} into #{@git.master_branch}"
           logger.info "\n\n### Beginning merge of #{@git.release_branch} into #{@git.master_branch} ###\n\n"
 

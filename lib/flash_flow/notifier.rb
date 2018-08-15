@@ -1,5 +1,4 @@
 require 'flash_flow/data'
-require 'flash_flow/notifier/hipchat'
 
 module FlashFlow
   module Notifier

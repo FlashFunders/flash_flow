@@ -231,6 +231,15 @@ module FlashFlow
       branch_exists?(branch) && !master_branch_contains?(get_sha(branch))
     end
 
+    def version
+      run('--version')
+      semver_regex = Regexp.new('.*(\d+\.\d+\.\d+).*')
+      running_version = last_stdout.strip
+      if semver = semver_regex.match(running_version)
+        semver[1]
+      end
+    end
+
     private
 
     def squash_commits(branch, commit_message)

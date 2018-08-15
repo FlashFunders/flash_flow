@@ -47,8 +47,30 @@ module FlashFlow
         end
       end
 
-      def test_check_version_equal
+      def test_git_version_is_nil
+        with_git_versions(nil, '2.0.0') do
+          assert_nil(@deploy.check_git_version)
+        end
+      end
 
+      def test_check_git_version_greater
+        with_git_versions('3.0.0', '2.0.0') do
+          assert_nil(@deploy.check_git_version)
+        end
+
+        with_git_versions('2.15.1', '2.0.0') do
+          assert_nil(@deploy.check_git_version)
+        end
+      end
+
+      def test_check_git_version_less_raises
+        with_git_versions('2.0.0', '2.15.1') do
+          assert_output(/Warning/) { @deploy.check_git_version }
+        end
+
+        with_git_versions('1.7.8', '2.15.1') do
+          assert_output(/Warning/) { @deploy.check_git_version }
+        end
       end
 
       def test_print_errors_with_no_errors
@@ -162,6 +184,17 @@ module FlashFlow
         FlashFlow.const_set(:VERSION, original_version)
       end
 
+      def with_git_versions(running, expected)
+        original_version = FlashFlow::GIT_VERSION
+        FlashFlow.send(:remove_const, :GIT_VERSION)
+        FlashFlow.const_set(:GIT_VERSION, expected)
+        local_git.expect(:version, running)
+        yield
+        local_git.verify
+        FlashFlow.send(:remove_const, :GIT_VERSION)
+        FlashFlow.const_set(:GIT_VERSION, original_version)
+      end
+
       def merger
         @merger ||= Minitest::Mock.new
       end
@@ -178,6 +211,13 @@ module FlashFlow
 
         @data = Minitest::Mock.new
         @deploy.instance_variable_set('@data'.to_sym, @data)
+      end
+
+      def local_git
+        return @local_git if @local_git
+
+        @local_git = Minitest::Mock.new
+        @deploy.instance_variable_set('@local_git'.to_sym, @local_git)
       end
 
       def sample_branches
