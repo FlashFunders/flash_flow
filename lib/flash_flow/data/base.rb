@@ -25,7 +25,7 @@ module FlashFlow
       def initialize_collection(branch_config)
         stored_collection = Collection.from_hash(stored_branches)
 
-        if ! branch_config.empty?
+        if branch_config && !branch_config.empty?
           collection = Collection.fetch(branch_config)
           # Order matters. We are marking the PRs as current, not the branches stored in the json
           collection.mark_all_as_current
