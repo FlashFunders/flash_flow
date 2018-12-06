@@ -8,9 +8,9 @@ git:
   # Which remote your branches use
   remote: origin
 
-  # This branch is owned by flash_flow, it force pushes every time. So don't use a branch to which you make
-  # commits. Treat this as 100% ephemeral, but if you can you should deploy it automatically to your
-  # review/staging env when it gets pushed.
+  # This branch is owned by flash_flow, and will be overwritten. Don't use a branch to which you make
+  # commits. Treat this as 100% ephemeral, this is the branch that you should deploy automatically to
+  # your review/staging env.
   merge_branch: acceptance
 
   # This is your mainline production branch that is the basis for the merge branch
@@ -19,7 +19,7 @@ git:
 # An arbitrary file that flash_flow will write to in the merge branch and use to store branch information.
 # Make sure it doesn't collide with a file you actually need in your application. You don't need to look at
 # this file in general.
-branch_info_file: 'your/random/file'
+branch_info_file: 'flash_flow.json'
 
 
 
