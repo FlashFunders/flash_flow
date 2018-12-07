@@ -49,6 +49,10 @@ module FlashFlow
       @cmd_runner.run("git #{cmd}", opts)
     end
 
+    def working_dir
+      @cmd_runner.dir
+    end
+
     def add_and_commit(files, message, opts={})
       files = [files].flatten
       run("add #{'-f ' if opts[:add] && opts[:add][:force]}#{files.join(' ')}")
@@ -77,11 +81,12 @@ module FlashFlow
       last_stdout
     end
 
-    def initialize_rerere
+    def initialize_rerere(copy_from_dir=nil)
       return unless use_rerere
 
       @cmd_runner.run('mkdir .git/rr-cache')
       @cmd_runner.run('cp -R rr-cache/* .git/rr-cache/')
+      @cmd_runner.run("cp -R #{File.join(copy_from_dir, '.git/rr-cache/*')} .git/rr-cache/") if copy_from_dir
     end
 
     def commit_rerere(current_rereres)
@@ -168,11 +173,12 @@ module FlashFlow
         run("branch -D #{temp_merge_branch}")
         run("checkout -b #{temp_merge_branch}")
         run("reset --hard #{remote}/#{master_branch}")
+        run("clean -x -f -d")
       end
     end
 
     def push(branch, force=false)
-      run("push #{'-f' if force} #{remote} #{branch}")
+      run("push #{'-f' if force} #{remote} #{branch}:#{branch}")
     end
 
     def copy_temp_to_branch(branch, squash_message = nil)
@@ -210,7 +216,7 @@ module FlashFlow
     end
 
     def temp_merge_branch
-      "flash_flow/#{merge_branch}"
+      "flash_flow-#{merge_branch}"
     end
 
     def get_sha(branch, opts={})

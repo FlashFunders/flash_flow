@@ -2,6 +2,7 @@ require 'logger'
 require 'singleton'
 require 'yaml'
 require 'erb'
+require 'fileutils'
 
 module FlashFlow
   class Config
@@ -40,11 +41,22 @@ module FlashFlow
         instance.instance_variable_set("@#{attr_name}", config[attr_name])
       end
 
-      instance.instance_variable_set(:@logger, Logger.new(instance.log_file))
+      instance.instance_variable_set(:@logger, get_logger(instance.log_file))
 
       raise IncompleteConfiguration.new("Missing attributes:\n #{missing_attrs.join("\n ")}") unless missing_attrs.empty?
 
       instance.instance_variable_set(:@configured, true)
+    end
+
+    def self.get_logger(log_file)
+      if log_file.to_s.empty?
+        log_file = '/dev/null'
+      else
+        dir = File.dirname(log_file)
+        FileUtils.mkdir_p(dir)
+      end
+      Logger.new(log_file)
+
     end
 
     def self.defaults

@@ -92,10 +92,6 @@ module FlashFlow
         pull_requests.detect { |p| branch.ref == p.head.ref }
       end
 
-      def update_pr(pr_number)
-        octokit.update_pull_request(repo, pr_number, {})
-      end
-
       def create_pr(branch, title, body)
         pr = octokit.create_pull_request(repo, @master_branch, branch, title, body)
         pull_requests << pr

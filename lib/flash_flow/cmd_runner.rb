@@ -10,7 +10,7 @@ module FlashFlow
     attr_accessor :dir
 
     def initialize(opts={})
-      @dir = opts[:dir] || '.'
+      @dir = opts[:dir] || `pwd`.strip
       @dry_run = opts[:dry_run]
       @logger = opts[:logger] || Logger.new('/dev/null')
     end

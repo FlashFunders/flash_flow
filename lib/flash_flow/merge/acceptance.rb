@@ -28,12 +28,14 @@ module FlashFlow
 
           @lock.with_lock do
             @git.in_original_merge_branch do
-              @git.initialize_rerere
+              @git.initialize_rerere(@local_git.working_dir)
             end
 
             @git.reset_temp_merge_branch
             @git.in_temp_merge_branch do
               merge_branches(@data.mergeable) do |branch, merger|
+                # Do not merge the master branch or the merge branch
+                next if [@git.merge_branch, @git.master_branch].include?(branch.ref)
                 process_result(branch, merger)
               end
               commit_branch_info

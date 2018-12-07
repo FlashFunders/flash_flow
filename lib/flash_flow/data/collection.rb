@@ -1,5 +1,6 @@
 require 'flash_flow/data/branch'
 require 'flash_flow/data/github'
+require 'flash_flow/data/bitbucket'
 
 module FlashFlow
   module Data
