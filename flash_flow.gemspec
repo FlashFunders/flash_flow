@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'octokit', "~> 4.1"
-  spec.add_dependency 'tb-bjb', "~> 1.6"
+  spec.add_dependency 'tb-bjb', ">= 1.6.2"
   spec.add_dependency 'pivotal-tracker', "~> 0.5"
   spec.add_dependency 'ruby-graphviz', "> 0"
   spec.add_dependency 'percy-client'
