@@ -182,12 +182,22 @@ module FlashFlow
     end
 
     def copy_temp_to_branch(branch, squash_message = nil)
+      reset_local_merge_branch
       run("checkout #{temp_merge_branch}")
       run("merge --strategy=ours --no-edit #{branch}")
       run("checkout #{branch}")
       run("merge #{temp_merge_branch}")
 
       squash_commits(branch, squash_message) if squash_message
+    end
+
+    def reset_local_merge_branch
+      in_branch(master_branch) do
+        run("branch -D #{merge_branch}")
+        run("checkout -b #{merge_branch}")
+        run("reset --hard #{remote}/#{merge_branch}")
+        run("clean -x -f -d")
+      end
     end
 
     def delete_temp_merge_branch
