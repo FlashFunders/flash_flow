@@ -28,7 +28,7 @@ GEM
     declarative-option (0.1.0)
     domain_name (0.5.20180417)
       unf (>= 0.0.5, < 1.0.0)
-    excon (0.62.0)
+    excon (0.71.0)
     faraday (0.15.2)
       multipart-post (>= 1.2, < 3)
     google-api-client (0.23.4)
